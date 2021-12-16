@@ -18,7 +18,7 @@ import functools
 from typing import Any, Callable
 
 import chex
-from jax3d.utils import np_utils
+from etils import enp
 from jax3d.utils.typing import Tree
 import numpy as np
 
@@ -67,7 +67,7 @@ def _compare_array(x, y, *, return_err: bool, **kwargs):
   err_msg = 'Error in value equality check: Values not approximately equal'
 
   try:
-    if np_utils.is_array_str(x):
+    if enp.is_array_str(x):
       # str arrays can't be compared with `assert_allclose`
       np.testing.assert_equal(x, y)
     else:

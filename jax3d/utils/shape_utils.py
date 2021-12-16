@@ -18,11 +18,11 @@ import functools
 from typing import Any, Callable, TypeVar, Union
 
 from etils import array_types
+from etils import enp
 from etils.array_types import Array  # pylint: disable=g-multiple-import
 import jax
 import jax.numpy as jnp
 from jax3d.utils import jax_utils
-from jax3d.utils import np_utils
 from jax3d.utils.typing import Tensor, Tree  # pylint: disable=g-multiple-import
 import numpy as np
 import tensorflow as tf
@@ -257,6 +257,6 @@ def _maybe_standardize_array(
   else:
     return _UNKNOWN_TYPE
 
-  if np_utils.is_dtype_str(dtype):  # Normalize `str` dtype
+  if enp.is_dtype_str(dtype):  # Normalize `str` dtype
     dtype = np.dtype('O')
   return jax.ShapedArray(shape=shape, dtype=dtype)

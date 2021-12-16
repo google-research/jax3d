@@ -18,6 +18,4 @@ from jax3d.utils.dataclass_utils import DataclassField
 from jax3d.utils.dataclass_utils import EnumField
 from jax3d.utils.file_utils import open_seekable
 from jax3d.utils.file_utils import PathField
-from jax3d.utils.np_utils import is_array_str
-from jax3d.utils.np_utils import is_dtype_str
 from jax3d.utils.py_utils import *
