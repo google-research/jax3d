@@ -1,0 +1,35 @@
+name: Publish jax3d to PyPI
+
+on:
+  # Event manually triggered (in the Github UI)
+  workflow_dispatch:
+    inputs:
+      git-ref:
+        description: Git ref (e.g. SHA or tag) (Optional)
+        default: ""
+        required: false
+
+jobs:
+  publish-job:
+    if: github.repository == 'google-research/jax3d'  # prevents action from running on forks
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        ref: ${{ github.event.inputs.git-ref }}
+
+    # Install deps
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.7
+
+    # Publish the package
+    - run: pip install build twine
+    - run: python -m build
+    - run: twine check dist/*
+    - run: twine upload dist/*
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
