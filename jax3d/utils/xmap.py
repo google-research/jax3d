@@ -1,4 +1,4 @@
-# Copyright 2021 The jax3d Authors.
+# Copyright 2022 The jax3d Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
