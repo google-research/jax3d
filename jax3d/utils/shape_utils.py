@@ -237,7 +237,7 @@ def types_like(array: jax.ShapedArray) -> tf.TensorSpec:
 
 def _maybe_standardize_array(
     array: _ArrayInput,
-) -> Union[None, jax.ShapedArray, Literal[_UNKNOWN_TYPE]]:
+) -> Union[None, jax.ShapedArray, Literal[_UNKNOWN_TYPE]]:  # pytype: disable=invalid-annotation
   """Normalize `tf.Tensor`, `jnp.ndarray`,... as `jax.ShapedArray`."""
   if isinstance(array, (jax.ShapeDtypeStruct, jnp.ndarray, np.ndarray,
                         np.generic)):
