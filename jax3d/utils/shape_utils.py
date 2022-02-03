@@ -26,7 +26,7 @@ from jax3d.utils import jax_utils
 from jax3d.utils.typing import Tensor, Tree  # pylint: disable=g-multiple-import
 import numpy as np
 import tensorflow as tf
-from typing_extensions import Final, Literal  # pylint: disable=g-multiple-import  # pytype: disable=not-supported-yet
+from typing_extensions import Final  # pylint: disable=g-multiple-import  # pytype: disable=not-supported-yet
 
 
 _ArrayInput = Union[
@@ -45,7 +45,12 @@ _T1 = TypeVar(
 )
 _T2 = TypeVar('_T2')
 
-_UNKNOWN_TYPE: Final = object()
+
+class _UnknownType:
+  pass
+
+
+_UNKNOWN_TYPE: Final = _UnknownType()
 
 
 def _tree_map(
@@ -237,7 +242,7 @@ def types_like(array: jax.ShapedArray) -> tf.TensorSpec:
 
 def _maybe_standardize_array(
     array: _ArrayInput,
-) -> Union[None, jax.ShapedArray, Literal[_UNKNOWN_TYPE]]:  # pytype: disable=invalid-annotation
+) -> Union[None, jax.ShapedArray, _UnknownType]:
   """Normalize `tf.Tensor`, `jnp.ndarray`,... as `jax.ShapedArray`."""
   if isinstance(array, (jax.ShapeDtypeStruct, jnp.ndarray, np.ndarray,
                         np.generic)):
