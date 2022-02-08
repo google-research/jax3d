@@ -75,3 +75,38 @@ def test_fold_in_stateless():
   # Applying fold-in twice yield the same results
   rng = j3d.RandomState(17)
   assert jnp.allclose(jax_rng, rng.fold_in_stateless(19).curr_key)
+
+
+@pytest.mark.parametrize('shape', [(1000000,), (1000, 1000), (100, 100, 100)])
+def test_uniform_points_on_sphere(shape, tol=2e-03):
+  rng = j3d.RandomState(0)
+
+  output_shape = shape + (3,)
+  points = j3d.uniform_points_on_sphere(rng, output_shape)
+  assert points.shape == output_shape
+
+  # Is average of all points the origin?
+  centroid = jnp.mean(points, axis=range(len(shape)))
+  assert jnp.allclose(centroid, jnp.array([0.0, 0.0, 0.0]), atol=tol)
+
+  # Split the points along each plane. Compute the average point, and compare
+  # against the center of mass for a hollow hemisphere, R/2.
+  # (see "hollow hemisphere" in
+  # https://en.wikipedia.org/wiki/Centroid#Of_a_hemisphere)
+  centroid = jnp.mean(points[points[..., 0] > 0.0], axis=0)
+  assert jnp.allclose(centroid, jnp.array([0.5, 0.0, 0.0]), atol=tol)
+  centroid = jnp.mean(points[points[..., 0] < 0.0], axis=0)
+  assert jnp.allclose(centroid, jnp.array([-0.5, 0.0, 0.0]), atol=tol)
+  centroid = jnp.mean(points[points[..., 1] > 0.0], axis=0)
+  assert jnp.allclose(centroid, jnp.array([0.0, 0.5, 0.0]), atol=tol)
+  centroid = jnp.mean(points[points[..., 1] < 0.0], axis=0)
+  assert jnp.allclose(centroid, jnp.array([0.0, -0.5, 0.0]), atol=tol)
+  centroid = jnp.mean(points[points[..., 2] > 0.0], axis=0)
+  assert jnp.allclose(centroid, jnp.array([0.0, 0.0, 0.5]), atol=tol)
+  centroid = jnp.mean(points[points[..., 2] < 0.0], axis=0)
+  assert jnp.allclose(centroid, jnp.array([0.0, 0.0, -0.5]), atol=tol)
+
+
+
+
+

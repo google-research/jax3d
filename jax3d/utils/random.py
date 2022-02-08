@@ -14,11 +14,12 @@
 
 """Small wrapper around `jax.random`."""
 
-from typing import overload, Optional, Union
+from typing import Optional, Union, overload
 
 from etils.array_types import PRNGKey, ui32  # pylint: disable=g-multiple-import
 import jax
 from jax import numpy as jnp
+import jax.random
 import numpy as np
 
 
@@ -120,3 +121,42 @@ class RandomState:
       raise ValueError(
           "`bind_to` should be one of the `[None, 'host', 'device']`")
 
+
+def uniform_polar_points_on_sphere(rng: RandomState, shape):
+  """Return an array of points evenly distributed on a sphere."""
+
+  # Last dimension must equal 2 for [theta, phi]
+  assert shape[-1] == 2
+  u = jax.random.uniform(
+      rng.next(), shape[0:-1] + (1,), minval=-1.0, maxval=1.0)
+  phi = jnp.arccos(u)
+  theta = jax.random.uniform(
+      rng.next(), shape[0:-1] + (1,), minval=0.0, maxval=2.0 * jnp.pi)
+  return jnp.concatenate([theta, phi], axis=-1)
+
+
+def polar_to_cartesian(theta_phi):
+  """Convert polar coordinates to cartesian coordinates."""
+
+  # Define theta & phi according to the "mathematical" coordinate system
+  # (https://en.wikipedia.org/wiki/Spherical_coordinate_system)
+  # Last dimension must equal 2 for [theta, phi]
+  assert theta_phi.shape[-1] == 2
+
+  sin_theta = jnp.sin(theta_phi[..., 0])
+  cos_theta = jnp.cos(theta_phi[..., 0])
+  sin_phi = jnp.sin(theta_phi[..., 1])
+  cos_phi = jnp.cos(theta_phi[..., 1])
+  return jnp.stack([sin_theta * sin_phi, cos_theta * sin_phi, cos_phi],
+                   axis=-1)
+
+
+def uniform_points_on_sphere(rng: RandomState, shape):
+  """Return an array of shape of points evenly distributed on a sphere."""
+
+  # Last dimension must equal 3 for cartesian coordinates [i, j, k]
+  assert shape[-1] == 3
+
+  theta_phi = uniform_polar_points_on_sphere(rng, shape[0:-1] + (2,))
+  points = polar_to_cartesian(theta_phi)
+  return points

@@ -23,6 +23,8 @@ from jax3d.utils.file_utils import j3d_dir
 from jax3d.utils.file_utils import nf_dir
 from jax3d.utils.geo_utils import get_coords_grid
 from jax3d.utils.random import RandomState
+from jax3d.utils.random import uniform_points_on_sphere
+from jax3d.utils.random import uniform_polar_points_on_sphere
 from jax3d.utils.shape_utils import shape_dtype_like
 from jax3d.utils.shape_utils import tensor_spec_like
 from jax3d.utils.shape_utils import types_like
