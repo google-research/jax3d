@@ -32,6 +32,7 @@ def _load_requirements(path: str) -> list[str]:
 
 requirements = _load_requirements('requirements.txt')
 requirements_dev = _load_requirements('requirements-dev.txt')
+requirements_nesf = _load_requirements('jax3d/projects/nesf/requirements.txt')
 
 setuptools.setup(
     # Package metadata
@@ -64,6 +65,7 @@ setuptools.setup(
     install_requires=requirements,
     extras_require={
         'dev': requirements_dev,
+        'nesf': requirements_nesf,
     },
     python_requires='>=3.7',
     entry_points={},

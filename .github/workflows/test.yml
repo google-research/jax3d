@@ -23,6 +23,7 @@ jobs:
         python-version: 3.7
     - run: pip install -e .
     - run: pip install -e .[dev]  # Install dev requirements
+    - run: pip install -e .[nesf] # Install nesf requirements
 
     - name: Run core tests
       run: |
