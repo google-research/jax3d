@@ -14,4 +14,4 @@
 
 """Common 3D math operations and functions."""
 
-import volume_rendering
+from jax3d.math import volume_rendering

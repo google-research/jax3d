@@ -2,7 +2,7 @@ chex
 clu
 einops
 flax
-gin
+gin-config
 imageio
 jax[cpu]
 mediapy
@@ -10,11 +10,11 @@ numpy
 pandas
 simple_parsing
 sunds
-tf-nightly
+tensorflow
 tfds-nightly
 typing_extensions
 xmanager
 
 # Install etils from head
 # Note: Each sub-modules deps should be installed individually
-etils[array_types,enp,epath,epy,etqdm,etree_jax] @ git+git://github.com/google/etils
+etils[array-types,enp,epath-no-tf,epy,etqdm,etree-jax] @ git+git://github.com/google/etils
