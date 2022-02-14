@@ -25,4 +25,6 @@ jobs:
     - run: pip install -e .[dev]  # Install dev requirements
 
     - name: Run core tests
-      run: pytest -vv -n auto
+      run: |
+        pytest -vv -n auto \
+          --ignore="jax3d/visu3d"
