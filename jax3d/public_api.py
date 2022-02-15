@@ -15,7 +15,9 @@
 """Jax3d public API."""
 # pylint: disable=unused-import
 
+from jax3d import math
 from jax3d import utils
+from jax3d.math import volume_rendering
 from jax3d.utils import testing
 from jax3d.utils import tree_utils as tree
 from jax3d.utils import typing

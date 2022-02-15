@@ -20,7 +20,11 @@ from jax3d.math import volume_rendering
 import pytest
 
 
-DATA_TYPES = [jnp.bfloat16, jnp.float32, jnp.float64]
+# f64 tests require JAX_ENABLE_X64 which is not set by default
+DATA_TYPES = [
+    jnp.bfloat16,
+    jnp.float32,
+]
 
 
 @pytest.mark.parametrize("strategy", [

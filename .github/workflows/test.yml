@@ -28,16 +28,4 @@ jobs:
     - name: Run core tests
       run: |
         pytest -vv -n auto \
-          --ignore="jax3d/visu3d" \
-          --deselect="jax3d/math/volume_rendering_test.py::test_volume_rendering[float64-True-True-pytree]" \
-          --deselect="jax3d/math/volume_rendering_test.py::test_volume_rendering[float64-True-True-array]" \
-          --deselect="jax3d/math/volume_rendering_test.py::test_volume_rendering[float64-True-True-empty]" \
-          --deselect="jax3d/math/volume_rendering_test.py::test_volume_rendering[float64-True-False-pytree]" \
-          --deselect="jax3d/math/volume_rendering_test.py::test_volume_rendering[float64-True-False-array]" \
-          --deselect="jax3d/math/volume_rendering_test.py::test_volume_rendering[float64-True-False-empty]" \
-          --deselect="jax3d/math/volume_rendering_test.py::test_volume_rendering[float64-False-True-pytree]" \
-          --deselect="jax3d/math/volume_rendering_test.py::test_volume_rendering[float64-False-True-array]" \
-          --deselect="jax3d/math/volume_rendering_test.py::test_volume_rendering[float64-False-True-empty]" \
-          --deselect="jax3d/math/volume_rendering_test.py::test_volume_rendering[float64-False-False-pytree]" \
-          --deselect="jax3d/math/volume_rendering_test.py::test_volume_rendering[float64-False-False-array]" \
-          --deselect="jax3d/math/volume_rendering_test.py::test_volume_rendering[float64-False-False-empty]"
+          --ignore="jax3d/visu3d"
