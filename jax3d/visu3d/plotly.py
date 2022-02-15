@@ -1,0 +1,248 @@
+# Copyright 2022 The jax3d Authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""Plotly utils."""
+
+from __future__ import annotations
+
+import abc
+from collections.abc import Sequence  # pylint: disable=g-importing-member
+from typing import Dict, List, Optional, Union
+
+from etils import enp
+from etils.array_types import Array, FloatArray  # pylint: disable=g-multiple-import
+from jax3d.visu3d.lazy_imports import plotly_base
+from jax3d.visu3d.lazy_imports import plotly_go as go
+import numpy as np
+
+_Primitive = Union[str, int, bool, float]
+_PlotlyKwargs = Dict[str, Union[np.ndarray, _Primitive]]
+
+
+del abc  # TODO(epot): Why pytype doesn't like abc.ABC ?
+
+
+class Visualizable:  # (abc.ABC):
+  """Interface for elements which are visualizable."""
+
+  # @abc.abstractmethod
+  def make_traces(self) -> list[plotly_base.BaseTraceType]:
+    """Construct the traces of the given object."""
+    raise NotImplementedError
+
+  @property
+  def fig(self) -> go.Figure:
+    """Construct the figure of the given object."""
+    return make_fig([self])
+
+  # TODO(epot): Could add a button to switch between repr <> plotly ?
+  # Using `_repr_html_` ?
+
+
+VisualizableItem = Union[Visualizable, Array[...]]
+VisualizableArg = Union[VisualizableItem, List[VisualizableItem]]
+
+
+# TODO(epot): Potential improvement:
+# * Accept a `dict[str, data]` (to have trace name)
+# * Allow wrapping data in some `v3d.FigData(data, **kwargs)` to allow
+#   customize metadata (color, point name,...) ?
+# * Allow nested structure to auto-group multiple traces ?
+def make_fig(data: VisualizableArg) -> go.Figure:
+  """Returns the figure from the given data."""
+  traces = make_traces(data)
+  fig = go.Figure(data=traces)
+  fig.update_scenes(aspectmode='data')  # Keep equal axis
+  return fig
+
+
+def make_traces(data: VisualizableArg) -> list[plotly_base.BaseTraceType]:
+  """Returns the traces from the given data."""
+  if not isinstance(data, list):
+    data = [data]
+
+  # TODO(epot): Should dynamically sub-sample across all traces, instead of
+  # subsampling individual traces.
+  traces = []
+  for val in data:
+    if isinstance(val, Visualizable):
+      sub_traces = val.make_traces()
+      # Normalizing trace
+      if isinstance(sub_traces, plotly_base.BaseTraceType):
+        sub_traces = [sub_traces]
+      traces.extend(sub_traces)
+    elif enp.is_array(val):
+      traces.extend(_traces_from_array(val))
+    elif isinstance(val, plotly_base.BaseTraceType):  # Already a trace
+      traces.append(val)
+    else:
+      raise TypeError(f'Unsuported {type(data)}')
+  return traces
+
+
+def _traces_from_array(array: Array[...]) -> list[plotly_base.BaseTraceType]:
+  """Uses simple heuristic to display the plot matching the array content."""
+  if array.shape[-1] != 3:
+    raise ValueError('Only Array[..., 3] supported for now. Got '
+                     f'shape={array.shape}')
+
+  # TODO(epot): Subsample array if nb points >500
+
+  points_xyz_kwargs = to_xyz_dict(array)
+  point_cloud = go.Scatter3d(
+      **points_xyz_kwargs,
+      mode='markers',
+      marker=go.scatter3d.Marker(size=2.,),
+  )
+  return [point_cloud]
+
+
+def make_lines_traces(
+    start: FloatArray['... 3'],
+    end: FloatArray['... 3'],
+    *,
+    axis: int = -1,
+    end_marker: Optional[str] = None,
+) -> list[plotly_base.BaseTraceType]:
+  """Trace lines."""
+  # TODO(epot): Add `legendgroup` so cones are toogled together
+  lines_xyz_kwargs = make_lines_kwargs(
+      start=start,
+      end=end,
+      axis=axis,
+  )
+  lines_trace = go.Scatter3d(
+      **lines_xyz_kwargs,
+      mode='lines',
+  )
+  traces = [lines_trace]
+  if end_marker is None:
+    pass
+  elif end_marker == 'cone':
+    cone_kwargs = make_cones_kwargs(
+        start=start,
+        direction=end - start,
+        axis=axis,
+    )
+    cone_traces = go.Cone(
+        **cone_kwargs,
+        showlegend=False,
+        showscale=False,
+        sizemode='absolute',  # Not sure what's the difference with `scaled`
+        sizeref=.5,
+        # TODO(epot): Add color
+        # colorscale=[[0, 'rgb(255,0,0)'], [1, 'rgb(255,0,0)']]
+    )
+    traces.append(cone_traces)
+  else:
+    raise ValueError(f'Invalid end_marker={end_marker!r}')
+  return traces
+
+
+def make_lines_kwargs(
+    start: FloatArray['... 3'],
+    end: FloatArray['... 3'],
+    *,
+    axis: int = -1,
+) -> _PlotlyKwargs:
+  """Returns the kwargs to plot lines."""
+  assert axis == -1
+  # 1) Flatten the arrays
+  # Shape is `*d 3`
+  assert start.shape == end.shape
+  assert start.shape[-1] == 3
+
+  start = start.reshape((-1, 3))
+  end = end.reshape((-1, 3))
+
+  # 2) Build the lines
+  lines_xyz = [[], [], []]
+  for s, e in zip(start, end):
+    for i in range(3):
+      lines_xyz[i].append(s[i])
+      lines_xyz[i].append(e[i])
+      lines_xyz[i].append(None)
+  return to_xyz_dict(lines_xyz, axis=0)
+
+
+def make_cones_kwargs(
+    start: FloatArray['... 3'],
+    direction: FloatArray['... 3'],
+    *,
+    start_ratio: float = 0.98,
+    axis: int = -1,
+) -> _PlotlyKwargs:
+  """Returns the kwargs to plot cones."""
+  assert axis == -1
+  # 1) Flatten the arrays
+  # Shape is `*d 3`
+  assert start.shape == direction.shape
+  assert start.shape[-1] == 3
+
+  start = start.reshape((-1, 3))
+  direction = direction.reshape((-1, 3))
+
+  # 2) Build the lines
+  xyz = start + start_ratio * direction
+  # uvw = (1. - start_ratio) * direction
+  uvw = direction
+  return {
+      **to_xyz_dict(xyz),
+      **to_xyz_dict(uvw, names='uvw'),
+  }
+
+
+def to_xyz_dict(
+    arr: Array['... 3'],
+    *,
+    pattern: str = '{}',
+    names: Union[str, Sequence[str]] = 'xyz',
+    axis: int = -1,
+) -> _PlotlyKwargs:
+  """Convert np.array to xyz dict.
+
+  Useful to create plotly kwargs from numpy arrays.
+
+  Example:
+
+  ```python
+  to_xyz_dict(np.zeros((1, 3))) == {'x': [0], 'y': [0], 'z': [0]}
+  to_xyz_dict(
+    [0, 1, 2],
+    pattern='axis_{}'
+    names='uvw',
+  ) == {'axis_u': 0, 'axis_v': 1, 'axis_w': 2}
+  ```
+
+  Args:
+    arr: Array to convert
+    pattern: Pattern to use for the axis names
+    names: Names of the axis (default to 'x', 'y', 'z')
+    axis: Axis containing the x, y, z coordinates to dispatch
+
+  Returns:
+    xyz_dict: The dict containing plotly kwargs.
+  """
+  arr = np.asarray(arr)
+  if arr.shape[axis] != len(names):
+    raise ValueError(f'Invalid shape: {arr.shape}[{axis}] != {len(names)}')
+
+  # Build the `dict(x=arr[..., 0], y=arr[..., 1], z=arr[..., 2])`
+  vals = {
+      pattern.format(axis_name): arr_slice.flatten()
+      for axis_name, arr_slice in zip(names, np.moveaxis(arr, axis, 0))
+  }
+  # Normalize scalars (as plotly reject `np.array(1)`)
+  vals = {k: v if v.shape else v.item() for k, v in vals.items()}
+  return vals
