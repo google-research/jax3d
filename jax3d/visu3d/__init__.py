@@ -17,7 +17,9 @@
 from __future__ import annotations
 
 from jax3d.visu3d import lazy_imports
+from jax3d.visu3d import plotly
 from jax3d.visu3d import typing
 from jax3d.visu3d.array_dataclass import array_field
 from jax3d.visu3d.array_dataclass import DataclassArray
 from jax3d.visu3d.array_dataclass import stack
+from jax3d.visu3d.plotly import make_fig
