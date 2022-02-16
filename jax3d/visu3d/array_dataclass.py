@@ -17,7 +17,7 @@
 from __future__ import annotations
 
 import dataclasses
-from typing import Any, Callable, Iterable, Iterator, TypeVar, Union
+from typing import Any, Callable, Iterable, Iterator, Tuple, TypeVar, Union
 
 from etils import edc
 from etils import enp
@@ -28,8 +28,10 @@ import numpy as np
 
 lazy = enp.lazy
 
-# Any valid numpy slice ([x], [x:y], [:,...], ...)
-_SliceArg = Any
+# Any valid numpy indices slice ([x], [x:y], [:,...], ...)
+_IndiceItem = Union[type(Ellipsis), None, int, slice, Any]
+_Indices = Tuple[_IndiceItem]  # Normalized slicing
+_IndicesArg = Union[_IndiceItem, _Indices]
 
 _Dc = TypeVar('_Dc')
 
@@ -136,6 +138,13 @@ class DataclassArray:
     """Flatten the batch shape."""
     return self.reshape((-1,))
 
+  def __getitem__(self: _Dc, indices: _IndicesArg) -> _Dc:
+    """Slice indexing."""
+    indices = np.index_exp[indices]  # Normalize indices
+    # Replace `...` by explicit shape
+    indices = _to_absolute_indices(indices, shape=self.shape)
+    return self._map_field(lambda f: f.value[indices])
+
   # _Dc[n *d] -> Iterator[_Dc[*d]]
   def __iter__(self: _Dc) -> Iterator[_Dc]:
     """Iterate over the outermost dimension."""
@@ -209,6 +218,30 @@ def stack(
       ) for f in first_arr._array_fields  # pylint: disable=protected-access
   }
   return cls(**new_vals)
+
+
+def _count_not_none(indices: _Indices) -> int:
+  """Count the number of non-None and non-ellipsis elements."""
+  return len([k for k in indices if k is not np.newaxis and k is not Ellipsis])
+
+
+def _to_absolute_indices(indices: _Indices, *, shape: Shape) -> _Indices:
+  """Normalize the indices to replace `...`, by `:, :, :`."""
+  assert isinstance(indices, tuple)
+  ellipsis_count = indices.count(Ellipsis)
+  if ellipsis_count > 1:
+    raise IndexError("an index can only have a single ellipsis ('...')")
+  valid_count = _count_not_none(indices)
+  if valid_count > len(shape):
+    raise IndexError(f'too many indices for array. Batch shape is {shape}, but '
+                     f'rank-{valid_count} was provided.')
+  if not ellipsis_count:
+    return indices
+  ellipsis_index = indices.index(Ellipsis)
+  start_elems = indices[:ellipsis_index]
+  end_elems = indices[ellipsis_index + 1:]
+  ellipsis_replacement = [slice(None)] * (len(shape) - valid_count)
+  return (*start_elems, *ellipsis_replacement, *end_elems)
 
 
 def array_field(

@@ -106,6 +106,11 @@ def test_point(xnp: enp.NpModule):
   _assert_point(p, (3, 2), xnp=xnp)
   _assert_point(p.reshape((2, 1, 3, 1, 1)), (2, 1, 3, 1, 1), xnp=xnp)
   _assert_point(p.flatten(), (6,), xnp=xnp)
+  _assert_point(p[0], (2,), xnp=xnp)
+  _assert_point(p[1, 1], (), xnp=xnp)
+  _assert_point(p[:, 0], (3,), xnp=xnp)
+  _assert_point(p[..., 0], (3,), xnp=xnp)
+  _assert_point(p[0, ...], (2,), xnp=xnp)
 
   p0, p1, p2 = list(p)
   _assert_point(p0, (2,), xnp=xnp)
@@ -124,6 +129,13 @@ def test_isometrie(xnp: enp.NpModule):
   _assert_isometrie(p, (3, 2, 1, 1), xnp=xnp)
   _assert_isometrie(p.reshape((2, 1, 3, 1, 1)), (2, 1, 3, 1, 1), xnp=xnp)
   _assert_isometrie(p.flatten(), (6,), xnp=xnp)
+  _assert_isometrie(p[0], (2, 1, 1), xnp=xnp)
+  _assert_isometrie(p[1, 1], (1, 1), xnp=xnp)
+  _assert_isometrie(p[:, 0], (3, 1, 1), xnp=xnp)
+  _assert_isometrie(p[:, 0, 0, :], (3, 1), xnp=xnp)
+  _assert_isometrie(p[..., 0], (3, 2, 1), xnp=xnp)
+  _assert_isometrie(p[0, ...], (2, 1, 1), xnp=xnp)
+  _assert_isometrie(p[0, ..., 0], (2, 1), xnp=xnp)
 
   p0, p1, p2 = list(p)
   _assert_isometrie(p0, (2, 1, 1), xnp=xnp)
@@ -162,3 +174,38 @@ def test_isometrie_wrong_input():
   )
   with pytest.raises(ValueError, match='cannot reshape array'):
     p.reshape((2, 2))
+
+
+@pytest.mark.parametrize('batch_shape, indices', [
+    ((), np.index_exp[...]),
+    ((2,), np.index_exp[...]),
+    ((3, 2), np.index_exp[...]),
+    ((3, 2), np.index_exp[0]),
+    ((3, 2), np.index_exp[0, ...]),
+    ((3, 2), np.index_exp[..., 0]),
+    ((3, 2), np.index_exp[0, 0]),
+    ((3, 2), np.index_exp[..., 0, 0]),
+    ((3, 2), np.index_exp[0, ..., 0]),
+    ((3, 2), np.index_exp[0, 0, ...]),
+    ((3, 2), np.index_exp[0, :, ...]),
+    ((3, 2), np.index_exp[:, ..., :]),
+    ((3, 2), np.index_exp[None,]),
+    ((3, 2), np.index_exp[None, :]),
+    ((3, 2), np.index_exp[np.newaxis, :]),
+    ((2,), np.index_exp[None, ..., None, 0, None, None]),
+    ((2,), np.index_exp[None, ..., None, 0, None, None]),
+    ((3, 2), np.index_exp[None, ..., None, 0, None, None]),
+    ((3, 1, 2), np.index_exp[None, ..., None, 0, None, None]),
+])
+def test_normalize_indices(batch_shape: Shape, indices):
+  # Compare the indexing with and without the extra batch shcape
+  x0 = np.ones(batch_shape + (4, 2))
+  x1 = np.ones(batch_shape)
+
+  normalized_indices = v3d.array_dataclass._to_absolute_indices(
+      indices,
+      shape=batch_shape,
+  )
+  x0 = x0[normalized_indices]
+  x1 = x1[indices]
+  assert x0.shape == x1.shape + (4, 2)
