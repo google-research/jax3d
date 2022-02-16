@@ -17,13 +17,28 @@
 from __future__ import annotations
 
 import collections
-from typing import Callable, Iterable, TypeVar
+import dataclasses
+import importlib
+import types
+from typing import Any, Callable, Iterable, Optional, TypeVar
 
 # If these are reused, we could move them to `epy`.
 
 _K = TypeVar('_K')
 _Tin = TypeVar('_Tin')
 _Tout = TypeVar('_Tout')
+
+
+@dataclasses.dataclass
+class LazyModule:
+  """Module loaded lazily during first call."""
+  module_name: str
+  module: Optional[types.ModuleType] = None
+
+  def __getattr__(self, name: str) -> Any:
+    if self.module is None:  # Load on first call
+      self.module = importlib.import_module(self.module_name)
+    return getattr(self.module, name)
 
 
 def identity(x: _Tin) -> _Tin:
