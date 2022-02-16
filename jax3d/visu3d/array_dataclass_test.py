@@ -19,20 +19,17 @@ from __future__ import annotations
 import dataclasses
 
 from etils import enp
+from etils import etree
 from etils.array_types import IntArray, FloatArray  # pylint: disable=g-multiple-import
-import jax.numpy as jnp
 from jax3d import visu3d as v3d
+from jax3d.visu3d import testing
 from jax3d.visu3d.typing import Shape  # pylint: disable=g-multiple-import
 import numpy as np
 import pytest
-import tensorflow.experimental.numpy as tnp
 
 
-@pytest.fixture(scope='module', autouse=True)
-def set_tnp():
-  """Enable numpy behavior."""
-  # This is required to have TF follow the same casting rules as numpy
-  tnp.experimental_enable_numpy_behavior(prefer_float32=True)
+# Activate the fixture
+set_tnp = testing.set_tnp
 
 
 @dataclasses.dataclass
@@ -75,7 +72,7 @@ def _assert_isometrie(p: Isometrie, shape: Shape, xnp: enp.NpModule = None):
   assert isinstance(p.t, xnp.ndarray)
 
 
-@pytest.mark.parametrize('xnp', [None, np, jnp, tnp])
+@testing.parametrize_xnp(with_none=True)
 @pytest.mark.parametrize('x, y, shape', [
     (1, 2, ()),
     ([1, 2], [3, 4], (2,)),
@@ -97,7 +94,54 @@ def test_point_infered_np(
   _assert_point(p, shape, xnp=xnp)
 
 
-@pytest.mark.parametrize('xnp', [np, jnp, tnp])
+# Test on jax.tree_utils, tf.nest & DM tree
+parametrize_tree_api = pytest.mark.parametrize('tree_api', [
+    etree.nest.backend,
+    etree.tree.backend,
+    etree.jax.backend,
+])
+
+
+@parametrize_tree_api
+def test_tree_map(tree_api: etree.backend.Backend):
+  """Test that array works with `tree`, `tf.nest`, `jax`."""
+  # TODO(epot): Also support optional arrays
+  p = Point(x=[0, 0, 0], y=[1, 2, 3])
+
+  # tree_api.map
+  p = tree_api.map(lambda x: x + 1, p)
+  assert isinstance(p, Point)
+  np.testing.assert_array_almost_equal(p.x, [1, 1, 1])
+  np.testing.assert_array_almost_equal(p.y, [2, 3, 4])
+
+  # tree_api.map with `iter` called inside
+  p = tree_api.map(lambda x: list(x) + [3], p)
+  assert isinstance(p, Point)
+  np.testing.assert_array_almost_equal(p.x, [1, 1, 1, 3])
+  np.testing.assert_array_almost_equal(p.y, [2, 3, 4, 3])
+
+
+@parametrize_tree_api
+def test_tree_flatten_unflatten(tree_api: etree.backend.Backend):
+  """Test that array works with `tree`, `tf.nest`, `jax`."""
+  # TODO(epot): Also support optional arrays
+  p = Point(x=[0, 0, 0], y=[1, 2, 3])
+  # tree_api.flatten
+  values, treedef = tree_api.flatten(p)
+  assert len(values) == 2
+  np.testing.assert_array_almost_equal(values[0], [0, 0, 0])
+  np.testing.assert_array_almost_equal(values[1], [1, 2, 3])
+
+  # tree_api.unflatten
+  new_p = tree_api.unflatten(treedef, values)
+  assert isinstance(p, Point)
+  np.testing.assert_array_almost_equal(new_p.x, [0, 0, 0])  # pytype: disable=attribute-error
+  np.testing.assert_array_almost_equal(new_p.y, [1, 2, 3])  # pytype: disable=attribute-error
+
+  # TODO(epot): Test other functions (flatten, assert shape ==)
+
+
+@testing.parametrize_xnp()
 def test_point(xnp: enp.NpModule):
   p = Point(
       x=xnp.zeros((3, 2)),
@@ -120,7 +164,7 @@ def test_point(xnp: enp.NpModule):
   _assert_point(v3d.stack([p0, p0, p1, p1]), (4, 2), xnp=xnp)
 
 
-@pytest.mark.parametrize('xnp', [np, jnp, tnp])
+@testing.parametrize_xnp()
 def test_isometrie(xnp: enp.NpModule):
   p = Isometrie(
       r=xnp.zeros((3, 2, 1, 1, 3, 3)),
