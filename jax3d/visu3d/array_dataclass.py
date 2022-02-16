@@ -16,8 +16,12 @@
 
 from __future__ import annotations
 
+import collections.abc
 import dataclasses
-from typing import Any, Callable, Iterable, Iterator, Tuple, TypeVar, Union
+import functools
+import sys
+import types
+from typing import Any, Callable, Iterable, Iterator, Optional, Tuple, TypeVar, Union
 
 from etils import edc
 from etils import enp
@@ -63,16 +67,34 @@ class DataclassArray:
   """
   _shape: Shape
   _xnp: enp.NpModule
-  _array_fields: list[_ArrayField]
+  _name_to_array_fields: dict[str, _ArrayField]
 
   def __init_subclass__(cls, **kwargs):
     super().__init_subclass__(**kwargs)
     # TODO(epot): Could have smart __repr__ which display types if array have
     # too many values.
     edc.dataclass_utils.add_repr(cls)
+    cls._v3d_tree_map_registered = False
+
+  def __new__(cls, *args, **kwargs):
+    # TODO(b/152678472): Remove hack once tf.nest / DM tree support registration
+    # When `__init_subclass__` is called, `dataclasses.dataclass` hasn't yet
+    # been called, so `__init__` isn't created either.
+    # So overwrite the `__init__` the first time the instance is created.
+    if not hasattr(cls.__init__, '_is_v3d_tree_init'):
+      cls.__init__ = _wrap_init_for_tree_compatibility(cls.__init__)
+    del args, kwargs
+    return super().__new__(cls)
 
   def __post_init__(self) -> None:
     """Validate and normalize inputs."""
+    # Register the tree_map here instead of `__init_subclass__` as `jax` may
+    # not have been registered yet during import
+    cls = type(self)
+    if enp.lazy.has_jax and not cls._v3d_tree_map_registered:  # pylint: disable=protected-access
+      enp.lazy.jax.tree_util.register_pytree_node_class(cls)
+      cls._v3d_tree_map_registered = True  # pylint: disable=protected-access
+
     # Validate and normalize array fields (e.g. list -> np.array,...)
     array_fields = [
         _ArrayField(  # pylint: disable=g-complex-comprehension
@@ -112,7 +134,7 @@ class DataclassArray:
     # Should the state be stored in a separate object to avoid collisions ?
     self._setattr('_shape', shape)
     self._setattr('_xnp', xnp)
-    self._setattr('_array_fields', array_fields)
+    self._setattr('_name_to_array_fields', {f.name: f for f in array_fields})
 
   # ====== Array functions ======
 
@@ -140,6 +162,11 @@ class DataclassArray:
 
   def __getitem__(self: _Dc, indices: _IndicesArg) -> _Dc:
     """Slice indexing."""
+    # TODO(b/152678472): Remove hack once tf.nest support registration
+    # Called `my_point['x']` returns `my_point.x`
+    if isinstance(indices, str):
+      return self._name_to_array_fields[indices].value  # pytype: disable=bad-return-type
+
     indices = np.index_exp[indices]  # Normalize indices
     # Replace `...` by explicit shape
     indices = _to_absolute_indices(indices, shape=self.shape)
@@ -148,14 +175,32 @@ class DataclassArray:
   # _Dc[n *d] -> Iterator[_Dc[*d]]
   def __iter__(self: _Dc) -> Iterator[_Dc]:
     """Iterate over the outermost dimension."""
+    # TODO(b/152678472): This is very hacky but tf.nest does not support
+    # extension
+    # Inside `tf.nest`, we make the dataclass behave like a
+    # `collections.abc.Mapping`
+    if _is_called_from_tree():
+      return iter(self._name_to_array_fields)  # pytype: disable=bad-return-type
+
     if not self.shape:
       raise ValueError(f'Cannot iterate on {self!r}: No batch shape.')
 
     # Similar to `etree.unzip(self)` (but work with any backend)
     field_names = [f.name for f in self._array_fields]
     field_values = [f.value for f in self._array_fields]
-    for vals in zip(*field_values):
-      yield self.replace(**dict(zip(field_names, vals)))
+    # We **must** use return (and not `yield`) to make the `return` above
+    # work.
+    return (
+        self.replace(**dict(zip(field_names, vals)))
+        for vals in zip(*field_values)
+    )
+
+  def map_field(
+      self: _Dc,
+      fn: Callable[[Array['*din']], Array['*dout']],
+  ) -> _Dc:
+    """Apply a transformation on all arrays from the fields."""
+    return self._map_field(lambda f: fn(f.value))
 
   # ====== Dataclass utils ======
 
@@ -167,6 +212,11 @@ class DataclassArray:
   def xnp(self) -> enp.NpModule:
     """Returns the numpy module of the class (np, jnp, tnp)."""
     return self._xnp
+
+  @property
+  def _array_fields(self) -> Iterable[_ArrayField]:
+    """Iterate over the field values."""
+    return self._name_to_array_fields.values()
 
   def _map_field(
       self: _Dc,
@@ -180,9 +230,89 @@ class DataclassArray:
     new_values = {f.name: fn(f) for f in self._array_fields}
     return self.replace(**new_values)
 
+  def tree_flatten(self):
+    """`jax.tree_utils` support."""
+    children_values = [f.value for f in self._array_fields]
+    children_names = [f.name for f in self._array_fields]
+    return (children_values, children_names)
+
+  @classmethod
+  def tree_unflatten(cls, children_names, children_values):
+    """`jax.tree_utils` support."""
+    children_kwargs = dict(zip(children_names, children_values))
+    return cls(**children_kwargs)
+
+  def keys(self) -> Iterable[str]:
+    """Do NOT use (internal only)."""
+    # TODO(b/152678472): Remove hack once tf.nest support registration
+    # This is only used for tf.nest but should concidered an internal function
+    return self._name_to_array_fields.keys()
+
   def _setattr(self, name: str, value: Any) -> None:
     """Like setattr, but support `frozen` dataclasses."""
     object.__setattr__(self, name, value)
+
+
+# TODO(b/152678472): Remove hack once tf.nest support registration
+# Simulate mapping for compatibility with tf.nest & DM tree
+collections.abc.Mapping.register(DataclassArray)  # pytype: disable=attribute-error
+
+
+def _wrap_init_for_tree_compatibility(old_init):
+  """Support tree transformation (`cls((k, instance[k]) for k in instance)`)."""
+
+  @functools.wraps(old_init)
+  def new_init(self, *args, **kwargs):
+    if _is_called_from_tree():
+      # Inside `tree.map_structure`, the cls is reconstructed as:
+      # cls((k, instance[k]) for k in instance)
+      # So we need to convert `generator` -> `**kwargs`
+      assert _is_args_tree(*args, **kwargs)
+      # `Cls((k, inst[k] for k in inst))`
+      (generator,) = args
+      kwargs = {k: v for k, v in generator}
+      args = ()
+    return old_init(self, *args, **kwargs)
+
+  new_init._is_v3d_tree_init = True  # pylint: disable=protected-access
+
+  return new_init
+
+
+def _is_args_tree(*args, **kwargs) -> bool:
+  """Validated the class was called as `cls((k, inst[k]) for k in inst)`."""
+  return (
+      # pyformat: disable
+      len(args) == 1  #
+      and not kwargs  #
+      and isinstance(args[0], types.GeneratorType)  #
+      # and args[0].__qualname__ == '_sequence_like.<locals>.<genexpr>'  #
+      # pyformat: enable
+  )
+
+
+def _is_called_from_tree() -> bool:
+  """Returns True if the function is called from `tf.nest` or `tree`."""
+  names = _get_last_x_frame_names(skip=2, take=6)
+  # TODO(epot): Could use better heuristic by also checking the filename
+  if '_sequence_like' in names or '_yield_sorted_items' in names:
+    called_from_tree = True
+  else:
+    called_from_tree = False
+  return called_from_tree
+
+
+def _get_last_x_frame_names(skip: int, take: int) -> list[Optional[str]]:
+  """Returns the last `x` function names of the stack trace."""
+  names = []
+  for i in range(skip, take):
+    try:
+      name = sys._getframe(i).f_code.co_name  # pylint: disable=protected-access
+    except ValueError:
+      names.append(None)
+    else:
+      names.append(name)
+  return names
 
 
 def stack(
@@ -196,14 +326,14 @@ def stack(
   cls = type(first_arr)
 
   # This might have some edge cases if user try to stack subclasses
-  types = py_utils.groupby(
+  type_to_name = py_utils.groupby(
       arrays,
       key=type,
       value=lambda x: type(x).__name__,
   )
-  if False in types:
-    raise TypeError(
-        f'v3.stack got conflicting types as input: {list(types.values())}')
+  if False in type_to_name:
+    raise TypeError('v3.stack got conflicting types as input: '
+                    f'{list(type_to_name.values())}')
 
   xnp = first_arr.xnp
   if axis != 0:
