@@ -12,12 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Visu3d API."""
+"""Lazy imports."""
 
-from __future__ import annotations
+import typing
 
-from jax3d.visu3d import lazy_imports
-from jax3d.visu3d import typing
-from jax3d.visu3d.array_dataclass import array_field
-from jax3d.visu3d.array_dataclass import DataclassArray
-from jax3d.visu3d.array_dataclass import stack
+from jax3d.visu3d import py_utils
+
+# Plotly is an optional (but strongly recommended on colab) dependency
+if typing.TYPE_CHECKING:
+  from plotly import graph_objects as plotly_go
+  from plotly import basedatatypes as plotly_base
+else:
+  # Hack: Use `globals` as a hack to avoid VS Code to infer go as
+  # `go | LazyModule`
+  globals().update(
+      plotly_go=py_utils.LazyModule('plotly.graph_objects'),
+      plotly_base=py_utils.LazyModule('plotly.basedatatypes'),
+  )

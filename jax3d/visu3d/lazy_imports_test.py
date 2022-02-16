@@ -12,12 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Visu3d API."""
+"""Tests for lazy_imports."""
 
-from __future__ import annotations
+import sys
 
-from jax3d.visu3d import lazy_imports
-from jax3d.visu3d import typing
-from jax3d.visu3d.array_dataclass import array_field
-from jax3d.visu3d.array_dataclass import DataclassArray
-from jax3d.visu3d.array_dataclass import stack
+from jax3d import visu3d as v3d
+
+
+def test_lazy():
+  assert 'plotly' not in sys.modules
+  go = v3d.lazy_imports.plotly_go
+  plotly_base = v3d.lazy_imports.plotly_base
+  assert isinstance(go.Scatter3d(), plotly_base.BaseTraceType)
