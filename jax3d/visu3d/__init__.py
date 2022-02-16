@@ -13,3 +13,9 @@
 # limitations under the License.
 
 """Visu3d API."""
+
+from __future__ import annotations
+
+from jax3d.visu3d.array_dataclass import array_field
+from jax3d.visu3d.array_dataclass import DataclassArray
+from jax3d.visu3d.array_dataclass import stack
