@@ -20,19 +20,15 @@ import dataclasses
 
 from etils import enp
 from etils.array_types import IntArray, FloatArray  # pylint: disable=g-multiple-import
-import jax.numpy as jnp
 from jax3d import visu3d as v3d
+from jax3d.visu3d import testing
 from jax3d.visu3d.typing import Shape  # pylint: disable=g-multiple-import
 import numpy as np
 import pytest
-import tensorflow.experimental.numpy as tnp
 
 
-@pytest.fixture(scope='module', autouse=True)
-def set_tnp():
-  """Enable numpy behavior."""
-  # This is required to have TF follow the same casting rules as numpy
-  tnp.experimental_enable_numpy_behavior(prefer_float32=True)
+# Activate the fixture
+set_tnp = testing.set_tnp
 
 
 @dataclasses.dataclass
@@ -75,7 +71,7 @@ def _assert_isometrie(p: Isometrie, shape: Shape, xnp: enp.NpModule = None):
   assert isinstance(p.t, xnp.ndarray)
 
 
-@pytest.mark.parametrize('xnp', [None, np, jnp, tnp])
+@testing.parametrize_xnp(with_none=True)
 @pytest.mark.parametrize('x, y, shape', [
     (1, 2, ()),
     ([1, 2], [3, 4], (2,)),
@@ -97,7 +93,7 @@ def test_point_infered_np(
   _assert_point(p, shape, xnp=xnp)
 
 
-@pytest.mark.parametrize('xnp', [np, jnp, tnp])
+@testing.parametrize_xnp()
 def test_point(xnp: enp.NpModule):
   p = Point(
       x=xnp.zeros((3, 2)),
@@ -120,7 +116,7 @@ def test_point(xnp: enp.NpModule):
   _assert_point(v3d.stack([p0, p0, p1, p1]), (4, 2), xnp=xnp)
 
 
-@pytest.mark.parametrize('xnp', [np, jnp, tnp])
+@testing.parametrize_xnp()
 def test_isometrie(xnp: enp.NpModule):
   p = Isometrie(
       r=xnp.zeros((3, 2, 1, 1, 3, 3)),
