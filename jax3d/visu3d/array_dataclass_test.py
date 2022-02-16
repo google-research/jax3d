@@ -93,6 +93,13 @@ def test_point_infered_np(
   _assert_point(p, shape, xnp=xnp)
 
 
+def test_jax_tree_map():
+  p = Point(x=[0, 0, 0], y=[1, 2, 3])
+  p = enp.lazy.jax.tree_map(lambda x: x + 1, p)
+  np.testing.assert_array_almost_equal(p.x, [1, 1, 1])
+  np.testing.assert_array_almost_equal(p.y, [2, 3, 4])
+
+
 @testing.parametrize_xnp()
 def test_point(xnp: enp.NpModule):
   p = Point(

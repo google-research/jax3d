@@ -70,9 +70,17 @@ class DataclassArray:
     # TODO(epot): Could have smart __repr__ which display types if array have
     # too many values.
     edc.dataclass_utils.add_repr(cls)
+    cls._v3d_tree_map_registered = False
 
   def __post_init__(self) -> None:
     """Validate and normalize inputs."""
+    # Register the tree_map here instead of `__init_subclass__` as `jax` may
+    # not have been registered yet during import
+    cls = type(self)
+    if enp.lazy.has_jax and not cls._v3d_tree_map_registered:  # pylint: disable=protected-access
+      enp.lazy.jax.tree_util.register_pytree_node_class(cls)
+      cls._v3d_tree_map_registered = True  # pylint: disable=protected-access
+
     # Validate and normalize array fields (e.g. list -> np.array,...)
     array_fields = [
         _ArrayField(  # pylint: disable=g-complex-comprehension
@@ -157,6 +165,13 @@ class DataclassArray:
     for vals in zip(*field_values):
       yield self.replace(**dict(zip(field_names, vals)))
 
+  def map_field(
+      self: _Dc,
+      fn: Callable[[Array['*din']], Array['*dout']],
+  ) -> _Dc:
+    """Apply a transformation on all arrays from the fields."""
+    return self._map_field(lambda f: fn(f.value))
+
   # ====== Dataclass utils ======
 
   replace = edc.dataclass_utils.replace
@@ -179,6 +194,18 @@ class DataclassArray:
     # Would be trickier to support np/TF.
     new_values = {f.name: fn(f) for f in self._array_fields}
     return self.replace(**new_values)
+
+  def tree_flatten(self):
+    """`jax.tree_utils` support."""
+    children_values = [f.value for f in self._array_fields]
+    children_names = [f.name for f in self._array_fields]
+    return (children_values, children_names)
+
+  @classmethod
+  def tree_unflatten(cls, children_names, children_values):
+    """`jax.tree_utils` support."""
+    children_kwargs = dict(zip(children_names, children_values))
+    return cls(**children_kwargs)
 
   def _setattr(self, name: str, value: Any) -> None:
     """Like setattr, but support `frozen` dataclasses."""
