@@ -89,6 +89,10 @@ class DataclassArray:
             **f.metadata[_METADATA_KEY].to_dict(),
         ) for f in dataclasses.fields(self) if _METADATA_KEY in f.metadata
     ]
+    if not array_fields:
+      raise ValueError(
+          f'{self.__class__.__qualname__} should have at least one '
+          '`v3d.array_field`')
 
     # Filter `None` values
     array_fields = [f for f in array_fields if f.value is not None]
@@ -111,6 +115,12 @@ class DataclassArray:
     )
     if len(shapes) > 1:
       raise ValueError(f'Conflicting batch shapes: {shapes}')
+
+    if not xnps:  # No values
+      # Inside `jax.tree_utils`, tree-def can be created with `None` values.
+      assert not shapes
+      xnps = (np,)
+      shapes = (None,)
 
     # TODO(epot): Support broadcasting
 

@@ -24,7 +24,29 @@ def test_normalize(xnp: enp.NpModule):
   x = xnp.array([3., 0, 0])
   y = np_utils.normalize(x)
   assert isinstance(y, xnp.ndarray)
+  assert y.shape == x.shape
   np.testing.assert_allclose(y, [1., 0., 0.])
+
+
+@enp.testing.parametrize_xnp()
+def test_normalize_batched(xnp: enp.NpModule):
+  x = xnp.array([
+      [3., 0, 0],
+      [0, 4., 0],
+      [2., 3., 0],
+  ])
+  y = np_utils.normalize(x)
+  assert isinstance(y, xnp.ndarray)
+  assert y.shape == x.shape
+  norm = np.sqrt(2**2 + 3**2)
+  np.testing.assert_allclose(
+      y,
+      [
+          [1., 0, 0],
+          [0, 1., 0],
+          [2. / norm, 3. / norm, 0],
+      ],
+  )
 
 
 @enp.testing.parametrize_xnp()

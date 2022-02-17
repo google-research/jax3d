@@ -24,10 +24,7 @@ from etils.array_types import FloatArray  # pylint: disable=g-multiple-import
 
 def normalize(x: FloatArray['*d'], axis: int = -1) -> FloatArray['*d']:
   """Normalize the vector to the unit norm."""
-  if enp.lazy.is_tf(x):  # TODO(b/219427516): tnp.linalg.norm missing
-    return x / enp.lazy.tf.norm(x, axis=axis, keepdims=True)
-  xnp = enp.get_np_module(x)
-  return x / xnp.linalg.norm(x, axis=axis, keepdims=True)
+  return x / enp.compat.norm(x, axis=axis, keepdims=True)
 
 
 def append_row(

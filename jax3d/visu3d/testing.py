@@ -13,3 +13,22 @@
 # limitations under the License.
 
 """Test utils."""
+
+from typing import Any
+
+from etils.etree import jax as etree
+from etils.etree import Tree
+import numpy as np
+
+
+# TODO(epot): Should use `chex.assert_xyz` once dataclasses support DM `tree`
+def assert_trees(assert_fn, x: Tree[Any], y: Tree[Any]) -> None:
+  """Compare all values."""
+  etree.backend.assert_same_structure(x, y)
+  # TODO(epot): Better error messages
+  etree.backend.map(assert_fn, x, y)
+
+
+def assert_allclose(x: Tree[Any], y: Tree[Any]) -> None:
+  """Assert the trees are close."""
+  assert_trees(np.testing.assert_array_almost_equal, x, y)
