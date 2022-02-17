@@ -26,6 +26,11 @@ jobs:
     - run: pip install -e .[nesf] # Install nesf requirements
 
     - name: Run core tests
+      # Args:
+      # -vv: Verbose logs
+      # -n auto: Parallelize tests in processes
+      # --durations=X: Log the X longest tests
       run: |
         pytest -vv -n auto \
+          --durations=10 \
           --ignore="jax3d/visu3d"
