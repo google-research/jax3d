@@ -19,13 +19,12 @@ from __future__ import annotations
 import chex
 from etils import enp
 from jax3d import visu3d as v3d
-from jax3d.visu3d import testing
 from jax3d.visu3d.lazy_imports import plotly_base
 from jax3d.visu3d.lazy_imports import plotly_go as go
 import numpy as np
 
 
-@testing.parametrize_xnp()
+@enp.testing.parametrize_xnp()
 def test_to_xyz_dict(xnp: enp.NpModule):
   chex.assert_tree_all_close(
       v3d.plotly.to_xyz_dict([

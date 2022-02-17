@@ -21,14 +21,13 @@ import dataclasses
 from etils import enp
 from etils.array_types import IntArray, FloatArray  # pylint: disable=g-multiple-import
 from jax3d import visu3d as v3d
-from jax3d.visu3d import testing
 from jax3d.visu3d.typing import Shape  # pylint: disable=g-multiple-import
 import numpy as np
 import pytest
 
 
 # Activate the fixture
-set_tnp = testing.set_tnp
+set_tnp = enp.testing.set_tnp
 
 
 @dataclasses.dataclass
@@ -71,7 +70,7 @@ def _assert_isometrie(p: Isometrie, shape: Shape, xnp: enp.NpModule = None):
   assert isinstance(p.t, xnp.ndarray)
 
 
-@testing.parametrize_xnp(with_none=True)
+@enp.testing.parametrize_xnp(with_none=True)
 @pytest.mark.parametrize('x, y, shape', [
     (1, 2, ()),
     ([1, 2], [3, 4], (2,)),
@@ -100,7 +99,7 @@ def test_jax_tree_map():
   np.testing.assert_array_almost_equal(p.y, [2, 3, 4])
 
 
-@testing.parametrize_xnp()
+@enp.testing.parametrize_xnp()
 def test_point(xnp: enp.NpModule):
   p = Point(
       x=xnp.zeros((3, 2)),
@@ -123,7 +122,7 @@ def test_point(xnp: enp.NpModule):
   _assert_point(v3d.stack([p0, p0, p1, p1]), (4, 2), xnp=xnp)
 
 
-@testing.parametrize_xnp()
+@enp.testing.parametrize_xnp()
 def test_isometrie(xnp: enp.NpModule):
   p = Isometrie(
       r=xnp.zeros((3, 2, 1, 1, 3, 3)),

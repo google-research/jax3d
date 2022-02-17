@@ -16,11 +16,10 @@
 
 from etils import enp
 from jax3d.visu3d import np_utils
-from jax3d.visu3d import testing
 import numpy as np
 
 
-@testing.parametrize_xnp()
+@enp.testing.parametrize_xnp()
 def test_normalize(xnp: enp.NpModule):
   x = xnp.array([3., 0, 0])
   y = np_utils.normalize(x)
@@ -28,7 +27,7 @@ def test_normalize(xnp: enp.NpModule):
   np.testing.assert_allclose(y, [1., 0., 0.])
 
 
-@testing.parametrize_xnp()
+@enp.testing.parametrize_xnp()
 def test_append_row(xnp: enp.NpModule):
   x = xnp.ones((2, 4))
   y = np_utils.append_row(x, value=4., axis=-1)
