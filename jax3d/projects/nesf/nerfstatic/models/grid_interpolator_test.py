@@ -110,7 +110,7 @@ def test_grid_interpolator_1d_simple():
 
   px = p[0][0] / 2 + 0.5
   expected = corner_latents[0] * (1 - px) + corner_latents[1] * px
-  np.testing.assert_allclose(p_latent[0], expected, rtol=1e-06)
+  np.testing.assert_allclose(p_latent[0], expected, rtol=1e-05)
 
 
 def test_grid_interpolator_2d_simple():
