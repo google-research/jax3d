@@ -22,5 +22,8 @@ from jax3d.visu3d import typing
 from jax3d.visu3d.array_dataclass import array_field
 from jax3d.visu3d.array_dataclass import DataclassArray
 from jax3d.visu3d.array_dataclass import stack
+from jax3d.visu3d.camera import Camera
+from jax3d.visu3d.camera_spec import CameraSpec
+from jax3d.visu3d.camera_spec import PinholeCamera
 from jax3d.visu3d.plotly import make_fig
 from jax3d.visu3d.ray import Ray
