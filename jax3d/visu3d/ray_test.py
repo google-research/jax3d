@@ -69,13 +69,13 @@ def test_pose(
 
   norm = p.norm()
   assert norm.shape == shape
-  np.testing.assert_array_almost_equal(
+  np.testing.assert_allclose(
       norm,
       xnp.broadcast_to(sqrt8, shape),
   )
 
   end = p.end
   assert end.shape == shape + (3,)
-  np.testing.assert_array_almost_equal(end, _broadcast(end))
+  np.testing.assert_allclose(end, _broadcast(end))
 
   _ = p.fig

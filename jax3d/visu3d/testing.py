@@ -31,4 +31,4 @@ def assert_trees(assert_fn, x: Tree[Any], y: Tree[Any]) -> None:
 
 def assert_allclose(x: Tree[Any], y: Tree[Any]) -> None:
   """Assert the trees are close."""
-  assert_trees(np.testing.assert_array_almost_equal, x, y)
+  assert_trees(np.testing.assert_allclose, x, y)
