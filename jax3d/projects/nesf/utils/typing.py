@@ -16,10 +16,10 @@
 
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar, Union
 
+from etils import epath
 import jax.numpy as jnp
 import numpy as np
 import tensorflow as tf
-import tensorflow_datasets.public_api as tfds
 
 
 # *********** Common typing ***********
@@ -35,8 +35,8 @@ Dataclass = Any
 # *********** File-related typing ***********
 
 # Accept both `str` and `pathlib.Path`-like
-PathLike = tfds.core.PathLike  # Union[os.PathLike, str]
-PathLikeCls = tfds.core.utils.PathLikeCls  # Used in isintance(p, PathLikeCls)
+PathLike = epath.PathLike  # Union[os.PathLike, str]
+PathLikeCls = epath.PathLikeCls  # Used in isintance(p, PathLikeCls)
 
 # *********** Tensor-related typing ***********
 

@@ -24,7 +24,7 @@ from etils.array_types import Array, FloatArray  # pylint: disable=g-multiple-im
 from jax3d.visu3d import array_dataclass
 from jax3d.visu3d import np_utils
 from jax3d.visu3d import plotly
-from jax3d.visu3d.lazy_imports import plotly_go as go
+from jax3d.visu3d.lazy_imports import plotly_base
 import numpy as np
 
 # TODO(epot): More dynamic sub-sampling controled in `v3d.make_fig`
@@ -70,7 +70,7 @@ class Ray(array_dataclass.DataclassArray, plotly.Visualizable):
       ray:
     """
     # Normalize list -> array
-    xnp = enp.lazy.get_xnp(pos)
+    xnp = enp.lazy.get_xnp(pos, strict=False)
     pos = xnp.asarray(pos)
     end = xnp.asarray(end)
     return cls(
@@ -116,7 +116,7 @@ class Ray(array_dataclass.DataclassArray, plotly.Visualizable):
 
   # Display functions
 
-  def make_traces(self) -> list[go.Trace]:
+  def make_traces(self) -> list[plotly_base.BaseTraceType]:
     start = self.pos
     end = self.end
     batch_size = np.prod(self.shape)
