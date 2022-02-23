@@ -36,7 +36,6 @@ from jax3d.projects.nesf.nerfstatic.utils import gin_utils
 from jax3d.projects.nesf.nerfstatic.utils import jax_process_zero
 from jax3d.projects.nesf.nerfstatic.utils import train_utils
 from jax3d.projects.nesf.nerfstatic.utils import types
-from jax3d.projects.nesf.nerfstatic.utils import xm_utils
 from jax3d.projects.nesf.utils.typing import PRNGKey, f32  # pylint: disable=g-multiple-import
 import numpy as np
 

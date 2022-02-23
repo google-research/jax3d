@@ -156,6 +156,11 @@ class DataclassArray:
     """Flatten the batch shape."""
     return self.reshape((-1,))
 
+  def broadcast_to(self: _Dc, shape: Shape) -> _Dc:
+    """Broadcast the batch shape."""
+    return self._map_field(
+        lambda f: self.xnp.broadcast_to(f.value, shape + f.inner_shape))
+
   def __getitem__(self: _Dc, indices: _IndicesArg) -> _Dc:
     """Slice indexing."""
     indices = np.index_exp[indices]  # Normalize indices
@@ -286,7 +291,9 @@ def array_field(
     dtype: DType = float,
     **field_kwargs,
 ) -> dataclasses.Field:
-  """Dataclass array field. See `v3d.DataclassArray` for example.
+  """Dataclass array field.
+
+  See `v3d.DataclassArray` for example.
 
   Args:
     shape: Inner shape of the field
