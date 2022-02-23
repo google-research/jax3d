@@ -26,7 +26,6 @@ import jax
 import jax.numpy as jnp
 import jax3d.projects.nesf as j3d
 from jax3d.projects.nesf.nerfstatic.datasets import dataset_utils
-from jax3d.projects.nesf.nerfstatic.datasets import fake_klevr  # pylint: disable=unused-import
 from jax3d.projects.nesf.nerfstatic.datasets import klevr  # pylint: disable=unused-import
 from jax3d.projects.nesf.nerfstatic.datasets import scene_understanding  # pylint: disable=unused-import
 from jax3d.projects.nesf.nerfstatic.datasets.dataset_utils import ExampleType
