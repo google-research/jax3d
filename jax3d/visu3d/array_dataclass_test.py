@@ -25,7 +25,6 @@ from jax3d.visu3d.typing import Shape  # pylint: disable=g-multiple-import
 import numpy as np
 import pytest
 
-
 # Activate the fixture
 set_tnp = enp.testing.set_tnp
 
@@ -108,6 +107,7 @@ def test_point(xnp: enp.NpModule):
   _assert_point(p, (3, 2), xnp=xnp)
   _assert_point(p.reshape((2, 1, 3, 1, 1)), (2, 1, 3, 1, 1), xnp=xnp)
   _assert_point(p.flatten(), (6,), xnp=xnp)
+  _assert_point(p.broadcast_to((7, 4, 3, 2)), (7, 4, 3, 2), xnp=xnp)
   _assert_point(p[0], (2,), xnp=xnp)
   _assert_point(p[1, 1], (), xnp=xnp)
   _assert_point(p[:, 0], (3,), xnp=xnp)
@@ -131,6 +131,7 @@ def test_isometrie(xnp: enp.NpModule):
   _assert_isometrie(p, (3, 2, 1, 1), xnp=xnp)
   _assert_isometrie(p.reshape((2, 1, 3, 1, 1)), (2, 1, 3, 1, 1), xnp=xnp)
   _assert_isometrie(p.flatten(), (6,), xnp=xnp)
+  _assert_isometrie(p.broadcast_to((7, 3, 2, 1, 1)), (7, 3, 2, 1, 1), xnp=xnp)
   _assert_isometrie(p[0], (2, 1, 1), xnp=xnp)
   _assert_isometrie(p[1, 1], (1, 1), xnp=xnp)
   _assert_isometrie(p[:, 0], (3, 1, 1), xnp=xnp)
