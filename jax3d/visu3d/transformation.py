@@ -165,23 +165,10 @@ class Transform(array_dataclass.DataclassArray, plotly.Visualizable):
     self.assert_same_xnp(other)
     if enp.lazy.is_array(other):
       return self.apply_to_pos(other)
-    elif isinstance(other, ray_lib.Ray):
-      return self.apply_to_ray(other)
-    elif isinstance(other, Transform):
-      return self.apply_to_transform(other)
+    elif isinstance(other, array_dataclass.DataclassArray):
+      return other.apply_transform(self)
     else:
       raise TypeError(f'Unexpected type: {type(other)}')
-
-  def apply_to_ray(self, ray: ray_lib.Ray) -> ray_lib.Ray:
-    """Apply the transformation on the ray."""
-    self.assert_same_xnp(ray)
-    # TODO(epot): Make this an util and auto-convert np -> xnp
-    if ray.xnp is not self.xnp:
-      raise ValueError(f'Transformation is {self.xnp} but ray is {ray.xnp}')
-    return ray.replace(
-        pos=self.apply_to_pos(ray.pos),
-        dir=self.apply_to_dir(ray.dir),
-    )
 
   def apply_to_pos(self, point: FloatArray['*d 3']) -> FloatArray['*d 3']:
     """Apply the transformation on the point cloud."""
@@ -200,17 +187,16 @@ class Transform(array_dataclass.DataclassArray, plotly.Visualizable):
     # Direction are invariant to translation
     return self.xnp.einsum('ij,...j->...i', self.R, direction)
 
-  def apply_to_transform(
-      self,
-      transform: Transform,
-  ) -> Transform:
-    self.assert_same_xnp(transform)
-    return type(transform)(
-        R=self.R @ transform.R,
-        t=self.apply_to_pos(transform.t),
-    )
+  # Protocols (inherited)
 
-  # Internal functions
+  def apply_transform(
+      self,
+      tr: Transform,
+  ) -> Transform:
+    return self.replace(
+        R=tr.R @ self.R,
+        t=tr.apply_to_pos(self.t),
+    )
 
   def make_traces(self) -> list[plotly_base.BaseTraceType]:
     base = ray_lib.Ray(

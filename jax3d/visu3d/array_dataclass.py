@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 import dataclasses
+import typing
 from typing import Any, Callable, Iterable, Iterator, Tuple, TypeVar, Union
 
 from etils import edc
@@ -26,6 +27,9 @@ from jax3d.visu3d import np_utils
 from jax3d.visu3d import py_utils
 from jax3d.visu3d.typing import DType, Shape  # pylint: disable=g-multiple-import
 import numpy as np
+
+if typing.TYPE_CHECKING:
+  from jax3d.visu3d import transformation
 
 lazy = enp.lazy
 
@@ -198,6 +202,24 @@ class DataclassArray:
   def xnp(self) -> enp.NpModule:
     """Returns the numpy module of the class (np, jnp, tnp)."""
     return self._xnp
+
+  def apply_transform(
+      self: _Dc,
+      tr: transformation.Transform,
+  ) -> _Dc:
+    """Transform protocol.
+
+    Applied the transformation on it-self. Called during:
+
+    ```python
+    my_obj = tr @ my_obj  # Call `my_obj.apply_transform(tr)`
+    ```
+
+    Args:
+      tr: Transformation to apply
+    """
+    raise NotImplementedError(
+        f'{self.__class__.__qualname__} does not support `v3d.Transform`.')
 
   def _map_field(
       self: _Dc,

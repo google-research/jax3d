@@ -24,6 +24,7 @@ from etils.array_types import Array, FloatArray  # pylint: disable=g-multiple-im
 from jax3d.visu3d import array_dataclass
 from jax3d.visu3d import np_utils
 from jax3d.visu3d import plotly
+from jax3d.visu3d import transformation
 from jax3d.visu3d.lazy_imports import plotly_base
 import numpy as np
 
@@ -114,7 +115,13 @@ class Ray(array_dataclass.DataclassArray, plotly.Visualizable):
     end = self.xnp.asarray(end)
     return self.replace(dir=end - self.pos)
 
-  # Display functions
+  # Protocols (inherited)
+
+  def apply_transform(self, tr: transformation.Transform) -> Ray:
+    return self.replace(
+        pos=tr.apply_to_pos(self.pos),
+        dir=tr.apply_to_dir(self.dir),
+    )
 
   def make_traces(self) -> list[plotly_base.BaseTraceType]:
     start = self.pos

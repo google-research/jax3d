@@ -178,7 +178,6 @@ def _assert_ray_transformed(
   expected_ray = expected_ray.broadcast_to(shape)
   assert ray.shape == shape
   _assert_equal(tr @ ray, expected_ray)
-  _assert_equal(tr.apply_to_ray(ray), expected_ray)
 
 
 def _assert_point_transformed(
