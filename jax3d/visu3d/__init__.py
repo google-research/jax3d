@@ -39,6 +39,7 @@ from jax3d.visu3d.plotly import make_fig
 from jax3d.visu3d.point import Point
 from jax3d.visu3d.ray import Ray
 from jax3d.visu3d.transformation import Transform
+from jax3d.visu3d.vectorization import vectorize_self
 
 # Inside tests, can use `v3d.testing`
 if pytest:  # < Ensure open source does not trigger import

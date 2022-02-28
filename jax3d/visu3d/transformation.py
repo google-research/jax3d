@@ -27,8 +27,8 @@ from jax3d.visu3d import array_dataclass
 from jax3d.visu3d import np_utils
 from jax3d.visu3d import plotly
 from jax3d.visu3d import ray as ray_lib
+from jax3d.visu3d import vectorization
 from jax3d.visu3d.lazy_imports import plotly_base
-import numpy as np
 
 _T = TypeVar('_T')
 
@@ -112,36 +112,43 @@ class Transform(array_dataclass.DataclassArray, plotly.Visualizable):
     )
 
   @property
+  @vectorization.vectorize_self
   def x_dir(self) -> FloatArray['*shape 3']:
     """`x` axis of the transformation (`[x0, x1, x2]`)."""
     return self.R[:, 0]
 
   @property
+  @vectorization.vectorize_self
   def y_dir(self) -> FloatArray['*shape 3']:
     """`y` axis of the transformation (`[y0, y1, y2]`)."""
     return self.R[:, 1]
 
   @property
+  @vectorization.vectorize_self
   def z_dir(self) -> FloatArray['*shape 3']:
     """`z` axis of the transformation (`[z0, z1, z2]`)."""
     return self.R[:, 2]
 
   @property
+  @vectorization.vectorize_self
   def x_ray(self) -> ray_lib.Ray:
     """Array pointing to `z`."""
     return ray_lib.Ray(pos=self.t, dir=self.x_dir)
 
   @property
+  @vectorization.vectorize_self
   def y_ray(self) -> ray_lib.Ray:
     """Array pointing to `z`."""
     return ray_lib.Ray(pos=self.t, dir=self.y_dir)
 
   @property
+  @vectorization.vectorize_self
   def z_ray(self) -> ray_lib.Ray:
     """Array pointing to `z`."""
     return ray_lib.Ray(pos=self.t, dir=self.z_dir)
 
   @property
+  @vectorization.vectorize_self
   def matrix4x4(self) -> FloatArray['*shape 4 4']:
     """Returns the 4x4 transformation matrix.
 
@@ -155,13 +162,33 @@ class Transform(array_dataclass.DataclassArray, plotly.Visualizable):
     return self.xnp.concatenate([matrix3x4, last_row], axis=-2)
 
   @property
+  @vectorization.vectorize_self
   def inv(self) -> Transform:
     """Returns the inverse camera transform."""
     # Might be a more optimized way than stacking/unstacking matrix
     return type(self).from_matrix(enp.compat.inv(self.matrix4x4))
 
+  @vectorization.vectorize_self
   def __matmul__(self, other: _T) -> _T:
-    """Apply the transformation."""
+    """Apply the transformation the array or dataclass array.
+
+    Transformation & inputs can be arbitrarly batched. Transform will be
+    applied on individual elements (distributed, NOT broadcasted).
+
+    ```python
+    # Transform['*tr_shape'] @ Array['*shape'] -> Array['*tr_shape *shape']
+    other = tr @ other
+    ```
+
+    Args:
+      other: The array or dataclass array on which apply the transformation.
+        Arrays are interpreted as 3d point cloud so should be `Array[..., 3]`.
+        `v3d.DataclassArray` should implement the `apply_transform` protocol (
+        see `v3d.DataclassArray.apply_transform` for details)
+
+    Returns:
+      The new `other` object after transformation.
+    """
     self.assert_same_xnp(other)
     if enp.lazy.is_array(other):
       return self.apply_to_pos(other)
@@ -170,6 +197,9 @@ class Transform(array_dataclass.DataclassArray, plotly.Visualizable):
     else:
       raise TypeError(f'Unexpected type: {type(other)}')
 
+  # TODO(epot): Also add a `tr.apply_to` method which supports broadcasting
+
+  @vectorization.vectorize_self
   def apply_to_pos(self, point: FloatArray['*d 3']) -> FloatArray['*d 3']:
     """Apply the transformation on the point cloud."""
     self.assert_same_xnp(point)
@@ -178,6 +208,7 @@ class Transform(array_dataclass.DataclassArray, plotly.Visualizable):
       raise ValueError(f'point shape should be `(..., 3)`. Got {point.shape}')
     return self.apply_to_dir(point) + self.t
 
+  @vectorization.vectorize_self
   def apply_to_dir(
       self,
       direction: FloatArray['*d 3'],
@@ -189,6 +220,7 @@ class Transform(array_dataclass.DataclassArray, plotly.Visualizable):
 
   # Protocols (inherited)
 
+  @vectorization.vectorize_self
   def apply_transform(
       self,
       tr: Transform,
@@ -199,17 +231,21 @@ class Transform(array_dataclass.DataclassArray, plotly.Visualizable):
     )
 
   def make_traces(self) -> list[plotly_base.BaseTraceType]:
-    base = ray_lib.Ray(
+    base = self._get_base_ray()
+    return base.make_traces()
+
+  @vectorization.vectorize_self
+  def _get_base_ray(self) -> ray_lib.Ray:
+    return ray_lib.Ray(
         # We can use `np` for the display
-        pos=np.broadcast_to(self.t, self.shape + (
+        pos=self.xnp.broadcast_to(self.t, self.shape + (
             3,
             3,
         )),
         # R is [[x0, y0, z0], [x1, y1, z1], [x2, y2, z2]] so we transpose
         # so dir is [[x0, x1, x2], [y0, y1, y2], [z0, z1, z2]]
-        dir=np.asarray(self.R.T),
+        dir=self.xnp.asarray(self.R.T),
     )
-    return base.make_traces()
 
 
 def _assert_shape(array: FloatArray['*d 4'], name: str) -> None:
