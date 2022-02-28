@@ -18,6 +18,14 @@ from __future__ import annotations
 
 import sys
 
+# pylint: disable=g-import-not-at-top
+
+pytest = sys.modules.get('pytest')
+if pytest:
+  # Inside tests, rewrite `assert` statement in `v3d.testing` for better
+  # debug messages
+  pytest.register_assert_rewrite('jax3d.visu3d.testing')
+
 from jax3d.visu3d import lazy_imports
 from jax3d.visu3d import plotly
 from jax3d.visu3d import typing
@@ -33,10 +41,10 @@ from jax3d.visu3d.ray import Ray
 from jax3d.visu3d.transformation import Transform
 
 # Inside tests, can use `v3d.testing`
-if 'pytest' in sys.modules:  # < Ensure open source does not trigger import
+if pytest:  # < Ensure open source does not trigger import
   try:
-    from jax3d.visu3d import testing  # pylint: disable=g-import-not-at-top
+    from jax3d.visu3d import testing
   except ImportError:
     pass
 
-del sys
+del sys, pytest
