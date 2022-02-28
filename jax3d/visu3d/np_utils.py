@@ -16,10 +16,25 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from etils import enp
 from etils.array_types import FloatArray  # pylint: disable=g-multiple-import
+from jax3d.visu3d import array_dataclass
 
 # Maybe some of those could live in `enp` ?
+
+
+def get_xnp(x: Any) -> enp.NpModule:
+  """Returns the np module associated with the given array or DataclassArray."""
+  if isinstance(x, array_dataclass.DataclassArray):
+    xnp = x.xnp
+  elif enp.lazy.is_array(x):
+    xnp = enp.lazy.get_xnp(x)
+  else:
+    raise TypeError(
+        f'Unexpected array type: {type(x)}. Could not infer numpy module.')
+  return xnp
 
 
 def normalize(x: FloatArray['*d'], axis: int = -1) -> FloatArray['*d']:

@@ -15,8 +15,22 @@
 """Tests for np_utils."""
 
 from etils import enp
+from jax3d import visu3d as v3d
 from jax3d.visu3d import np_utils
 import numpy as np
+import pytest
+
+
+@enp.testing.parametrize_xnp()
+def test_get_xnp(xnp: enp.NpModule):
+  # Dataclass array support
+  r = v3d.Ray(pos=xnp.array([3., 0, 0]), dir=xnp.array([3., 0, 0]))
+  assert np_utils.get_xnp(r) is xnp
+  # Array support
+  assert np_utils.get_xnp(xnp.array([3., 0, 0])) is xnp
+
+  with pytest.raises(TypeError, match='Unexpected array type'):
+    np_utils.get_xnp('abc')
 
 
 @enp.testing.parametrize_xnp()

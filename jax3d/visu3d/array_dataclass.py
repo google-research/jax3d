@@ -22,6 +22,7 @@ from typing import Any, Callable, Iterable, Iterator, Tuple, TypeVar, Union
 from etils import edc
 from etils import enp
 from etils.array_types import Array
+from jax3d.visu3d import np_utils
 from jax3d.visu3d import py_utils
 from jax3d.visu3d.typing import DType, Shape  # pylint: disable=g-multiple-import
 import numpy as np
@@ -225,6 +226,14 @@ class DataclassArray:
   def _setattr(self, name: str, value: Any) -> None:
     """Like setattr, but support `frozen` dataclasses."""
     object.__setattr__(self, name, value)
+
+  def assert_same_xnp(self, x: Union[Array[...], DataclassArray]) -> None:
+    """Assert the given array is of the same type as the current object."""
+    xnp = np_utils.get_xnp(x)
+    if xnp is not self.xnp:
+      raise ValueError(
+          f'{self.__class__.__name__} is {self.xnp.__name__} but got input '
+          f'{xnp.__name__}. Please cast input first.')
 
 
 def stack(
