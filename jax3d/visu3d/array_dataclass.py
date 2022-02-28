@@ -192,9 +192,25 @@ class DataclassArray:
     """Apply a transformation on all arrays from the fields."""
     return self._map_field(lambda f: fn(f.value))
 
-  # ====== Dataclass utils ======
+  # ====== Dataclass/Conversion utils ======
 
   replace = edc.dataclass_utils.replace
+
+  def as_np(self: _Dc) -> _Dc:
+    """Returns the instance as containing `np.ndarray`."""
+    return self.as_xnp(enp.lazy.np)
+
+  def as_jax(self: _Dc) -> _Dc:
+    """Returns the instance as containing `jnp.ndarray`."""
+    return self.as_xnp(enp.lazy.jnp)
+
+  def as_tf(self: _Dc) -> _Dc:
+    """Returns the instance as containing `tf.Tensor`."""
+    return self.as_xnp(enp.lazy.tnp)
+
+  def as_xnp(self: _Dc, xnp: enp.NpModule) -> _Dc:
+    """Returns the instance as containing `xnp.ndarray`."""
+    return self.map_field(xnp.asarray)
 
   # ====== Internal ======
 

@@ -212,3 +212,18 @@ def test_normalize_indices(batch_shape: Shape, indices):
   x0 = x0[normalized_indices]
   x1 = x1[indices]
   assert x0.shape == x1.shape + (4, 2)
+
+
+@enp.testing.parametrize_xnp()
+def test_convert(xnp: enp.NpModule):
+  p = Point(
+      x=xnp.array([2, 5, -7]),
+      y=xnp.array([1, 3, -1]),
+  )
+  assert p.xnp is xnp
+  assert p.as_np().xnp is enp.lazy.np
+  assert p.as_jax().xnp is enp.lazy.jnp
+  assert p.as_tf().xnp is enp.lazy.tnp
+  assert p.as_xnp(np).xnp is enp.lazy.np
+  assert p.as_xnp(enp.lazy.jnp).xnp is enp.lazy.jnp
+  assert p.as_xnp(enp.lazy.tnp).xnp is enp.lazy.tnp
