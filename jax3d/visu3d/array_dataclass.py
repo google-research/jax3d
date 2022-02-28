@@ -22,6 +22,7 @@ from typing import Any, Callable, Generic, Iterable, Iterator, Optional, Tuple, 
 
 from etils import edc
 from etils import enp
+from etils import epy
 from etils.array_types import Array
 from jax3d.visu3d import np_utils
 from jax3d.visu3d import py_utils
@@ -70,7 +71,6 @@ class DataclassArray:
   """
   _shape: Shape
   _xnp: enp.NpModule
-  _array_fields: list[_ArrayField]
 
   def __init_subclass__(cls, **kwargs):
     super().__init_subclass__(**kwargs)
@@ -81,32 +81,30 @@ class DataclassArray:
 
   def __post_init__(self) -> None:
     """Validate and normalize inputs."""
+    cls = type(self)
+
+    # Make sure the dataclass was registered and frozen
+    if not dataclasses.is_dataclass(cls) or not cls.__dataclass_params__.frozen:  # pytype: disable=attribute-error
+      raise ValueError(
+          '`v3d.DataclassArray` need to be @dataclasses.dataclass(frozen=True)')
+
     # Register the tree_map here instead of `__init_subclass__` as `jax` may
     # not have been registered yet during import
-    cls = type(self)
     if enp.lazy.has_jax and not cls._v3d_tree_map_registered:  # pylint: disable=protected-access
       enp.lazy.jax.tree_util.register_pytree_node_class(cls)
       cls._v3d_tree_map_registered = True  # pylint: disable=protected-access
 
-    # Validate and normalize array fields (e.g. list -> np.array,...)
-    array_fields = [
-        _ArrayField(  # pylint: disable=g-complex-comprehension
-            name=f.name,
-            host=self,
-            **f.metadata[_METADATA_KEY].to_dict(),
-        ) for f in dataclasses.fields(self) if _METADATA_KEY in f.metadata
-    ]
-    if not array_fields:
+    # Note: Calling the `_all_array_fields` property during `__init__` will
+    # normalize the arrays (`list` -> `np.ndarray`). This is done in the
+    # `_ArrayField` contructor
+    if not self._all_array_fields:
       raise ValueError(
           f'{self.__class__.__qualname__} should have at least one '
           '`v3d.array_field`')
 
-    # Filter `None` values
-    array_fields = [f for f in array_fields if f.value is not None]
-
     # Validate the array type is consistent (all np or all jnp but not both)
     xnps = py_utils.groupby(
-        array_fields,
+        self._array_fields,
         key=lambda f: f.xnp,
         value=lambda f: f.name,
     )
@@ -116,7 +114,7 @@ class DataclassArray:
 
     # Validate the batch shape is consistent
     shapes = py_utils.groupby(
-        array_fields,
+        self._array_fields,
         key=lambda f: f.host_shape,
         value=lambda f: f.name,
     )
@@ -138,7 +136,6 @@ class DataclassArray:
     assert shape is None or isinstance(shape, tuple), shape
     self._setattr('_shape', shape)
     self._setattr('_xnp', xnp)
-    self._setattr('_array_fields', array_fields)
 
   # ====== Array functions ======
 
@@ -279,6 +276,24 @@ class DataclassArray:
     """Returns the numpy module of the class (np, jnp, tnp)."""
     return self._xnp
 
+  @epy.cached_property
+  def _all_array_fields(self) -> list[_ArrayField]:
+    """All array fields, including `None` values."""
+    # Validate and normalize array fields (e.g. list -> np.array,...)
+    return [
+        _ArrayField(  # pylint: disable=g-complex-comprehension
+            name=f.name,
+            host=self,
+            **f.metadata[_METADATA_KEY].to_dict(),
+        ) for f in dataclasses.fields(self) if _METADATA_KEY in f.metadata
+    ]
+
+  @epy.cached_property
+  def _array_fields(self) -> list[_ArrayField]:
+    """All active array fields (non-None)."""
+    # Filter `None` values
+    return [f for f in self._all_array_fields if not f.is_value_missing]
+
   def apply_transform(
       self: _Dc,
       tr: transformation.Transform,
@@ -330,8 +345,10 @@ class DataclassArray:
 
   def tree_flatten(self):
     """`jax.tree_utils` support."""
-    children_values = [f.value for f in self._array_fields]
-    children_names = [f.name for f in self._array_fields]
+    # We flatten all values (and not just the non-None ones)
+    # TODO(epot): Also propagate other metadata (static fields)
+    children_values = [f.value for f in self._all_array_fields]
+    children_names = [f.name for f in self._all_array_fields]
     return (children_values, children_names)
 
   @classmethod
@@ -499,7 +516,7 @@ class _ArrayField(_ArrayFieldMetadata, Generic[_DcOrArrayT]):
   xnp: enp.NpModule = dataclasses.field(init=False)
 
   def __post_init__(self):
-    if self.value is None:  # No validation when there is no value
+    if self.is_value_missing:  # No validation when there is no value
       return
     if self.is_dataclass:
       self._init_dataclass()
@@ -532,6 +549,14 @@ class _ArrayField(_ArrayFieldMetadata, Generic[_DcOrArrayT]):
   def value(self) -> _DcOrArrayT:
     """Access the `host.<field-name>`."""
     return getattr(self.host, self.name)
+
+  @property
+  def is_value_missing(self) -> bool:
+    """Returns `True` if the value wasn't set."""
+    # Checking for `object` is a hack required for `@jax.vmap` compatibility:
+    # In `jax/_src/api_util.py` for `flatten_axes`, jax set all values to a
+    # dummy sentinel `object()` value.
+    return self.value is None or type(self.value) is object  # pylint: disable=unidiomatic-typecheck
 
   @property
   def host_shape(self) -> Shape:

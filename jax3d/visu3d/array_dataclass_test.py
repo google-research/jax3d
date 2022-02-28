@@ -30,7 +30,7 @@ import pytest
 set_tnp = enp.testing.set_tnp
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class Point(v3d.DataclassArray):
   x: FloatArray[''] = v3d.array_field(shape=())
   y: FloatArray[''] = v3d.array_field(shape=())
@@ -168,16 +168,6 @@ def test_point_infered_np(
 
   p = Point(x=x, y=y)
   _assert_point(p, shape, xnp=xnp)
-
-
-@parametrize_dataclass_arrays
-def test_jax_tree_map(
-    make_dc_array_fn: Callable[..., v3d.DataclassArray],
-    assert_dc_array_fn: Callable[..., None],
-):
-  p = make_dc_array_fn(shape=(3,), xnp=np)
-  p = enp.lazy.jax.tree_map(lambda x: x[None, ...], p)
-  assert_dc_array_fn(p, (1, 3), xnp=np)
 
 
 @enp.testing.parametrize_xnp()
@@ -349,3 +339,32 @@ def test_convert(
   assert p.as_xnp(np).xnp is enp.lazy.np
   assert p.as_xnp(enp.lazy.jnp).xnp is enp.lazy.jnp
   assert p.as_xnp(enp.lazy.tnp).xnp is enp.lazy.tnp
+
+
+@parametrize_dataclass_arrays
+def test_jax_tree_map(
+    make_dc_array_fn: Callable[..., v3d.DataclassArray],
+    assert_dc_array_fn: Callable[..., None],
+):
+  p = make_dc_array_fn(shape=(3,), xnp=np)
+  p = enp.lazy.jax.tree_map(lambda x: x[None, ...], p)
+  assert_dc_array_fn(p, (1, 3), xnp=np)
+
+
+def test_jax_vmap():
+  batch_shape = 3
+
+  @enp.lazy.jax.vmap
+  def fn(ray: v3d.Ray) -> v3d.Ray:
+    assert isinstance(ray, v3d.Ray)
+    assert ray.shape == ()  # pylint:disable=g-explicit-bool-comparison
+    return ray + 1
+
+  x = v3d.Ray(pos=[0, 0, 0], dir=[1, 1, 1])
+  x = x.broadcast_to((batch_shape,))
+  x = x.as_jax()
+  y = fn(x)
+  assert isinstance(y, v3d.Ray)
+  assert y.shape == (batch_shape,)
+  # pos was updated
+  np.testing.assert_allclose(y.pos, np.ones((batch_shape, 3)))
