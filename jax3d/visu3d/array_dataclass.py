@@ -27,6 +27,7 @@ from jax3d.visu3d import np_utils
 from jax3d.visu3d import py_utils
 from jax3d.visu3d.typing import DType, Shape  # pylint: disable=g-multiple-import
 import numpy as np
+from typing_extensions import Literal
 
 if typing.TYPE_CHECKING:
   from jax3d.visu3d import transformation
@@ -191,6 +192,55 @@ class DataclassArray:
     field_values = [f.value for f in self._array_fields]
     for vals in zip(*field_values):
       yield self.replace(**dict(zip(field_names, vals)))
+
+  def __len__(self) -> int:
+    """Length of the first array dimension."""
+    if not self.shape:
+      raise TypeError(
+          f'len() of unsized {self.__class__.__name__} (shape={self.shape})')
+    return self.shape[0]
+
+  def __bool__(self) -> Literal[True]:
+    """`v3d.DataclassArray` always evaluate to `True`.
+
+    Like all python objects (including dataclasses), `v3d.DataclassArray` always
+    evaluate to `True`. So:
+    `Ray(pos=None)`, `Ray(pos=0)` all evaluate to `True`.
+
+    This allow construct like:
+
+    ```python
+    def fn(ray: Optional[v3d.Ray] = None):
+      if ray:
+        ...
+    ```
+
+    Or:
+
+    ```python
+    def fn(ray: Optional[v3d.Ray] = None):
+      ray = ray or default_ray
+    ```
+
+    Only in the very rare case of empty-tensor (`shape=(0, ...)`)
+
+    ```python
+    assert ray is not None
+    assert len(ray) == 0
+    bool(ray)  # TypeError: Truth value is ambigous
+    ```
+
+    Returns:
+      True
+
+    Raises:
+      ValueError: If `len(self) == 0` to avoid ambiguity.
+    """
+    if self.shape and not len(self):  # pylint: disable=g-explicit-length-test
+      raise ValueError(
+          f'The truth value of {self.__class__.__name__} when `len(x) == 0` '
+          'is ambigous. Use `len(x)` or `x is not None`.')
+    return True
 
   def map_field(
       self: _Dc,

@@ -89,8 +89,14 @@ def _assert_nested(p: Nested, shape: Shape, xnp: enp.NpModule = None):
 
 def _assert_common(p: v3d.DataclassArray, shape: Shape, xnp: enp.NpModule):
   """Test the len(p)."""
+  assert p  # Object evaluate to True
   assert p.shape == shape
   assert p.xnp is xnp
+  if shape:
+    assert len(p) == shape[0]
+  else:
+    with pytest.raises(TypeError, match='of unsized '):
+      _ = len(p)
 
 
 def _make_point(shape: Shape, xnp: enp.NpModule) -> Point:
@@ -317,6 +323,14 @@ def test_normalize_indices(batch_shape: Shape, indices):
   x0 = x0[normalized_indices]
   x1 = x1[indices]
   assert x0.shape == x1.shape + (4, 2)
+
+
+@enp.testing.parametrize_xnp()
+def test_empty(xnp: enp.NpModule):
+  p = Point(x=xnp.empty((0, 3)), y=xnp.empty((0, 3)))  # Empty array
+
+  with pytest.raises(ValueError, match='The truth value of'):
+    bool(p)
 
 
 @enp.testing.parametrize_xnp()
