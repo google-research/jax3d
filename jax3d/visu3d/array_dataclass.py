@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import dataclasses
 import typing
-from typing import Any, Callable, Iterable, Iterator, Tuple, TypeVar, Union
+from typing import Any, Callable, Generic, Iterable, Iterator, Optional, Tuple, TypeVar, Union
 
 from etils import edc
 from etils import enp
@@ -38,7 +38,8 @@ _IndiceItem = Union[type(Ellipsis), None, int, slice, Any]
 _Indices = Tuple[_IndiceItem]  # Normalized slicing
 _IndicesArg = Union[_IndiceItem, _Indices]
 
-_Dc = TypeVar('_Dc')
+_Dc = TypeVar('_Dc', bound='DataclassArray')
+_DcOrArrayT = TypeVar('_DcOrArrayT')  # Union[Array['...'], DataclassArray]:
 
 _METADATA_KEY = 'v3d_field'
 
@@ -133,6 +134,7 @@ class DataclassArray:
     (xnp,) = xnps
     (shape,) = shapes
     # Should the state be stored in a separate object to avoid collisions ?
+    assert shape is None or isinstance(shape, tuple), shape
     self._setattr('_shape', shape)
     self._setattr('_xnp', xnp)
     self._setattr('_array_fields', array_fields)
@@ -152,10 +154,10 @@ class DataclassArray:
       # einops.rearrange(x,)
       raise NotImplementedError
 
-    def _reshape(f):
-      return f.value.reshape((*shape, *f.inner_shape))
+    def _reshape(f: _ArrayField):
+      return f.value.reshape(shape + f.inner_shape)
 
-    return self._map_field(_reshape)
+    return self._map_field(_reshape, nest_fn=_reshape)
 
   def flatten(self: _Dc) -> _Dc:
     """Flatten the batch shape."""
@@ -164,20 +166,25 @@ class DataclassArray:
   def broadcast_to(self: _Dc, shape: Shape) -> _Dc:
     """Broadcast the batch shape."""
     return self._map_field(
-        lambda f: self.xnp.broadcast_to(f.value, shape + f.inner_shape))
+        lambda f: self.xnp.broadcast_to(f.value, shape + f.inner_shape),
+        nest_fn=lambda f: f.value.broadcast_to(shape + f.inner_shape),
+    )
 
   def __getitem__(self: _Dc, indices: _IndicesArg) -> _Dc:
     """Slice indexing."""
     indices = np.index_exp[indices]  # Normalize indices
     # Replace `...` by explicit shape
     indices = _to_absolute_indices(indices, shape=self.shape)
-    return self._map_field(lambda f: f.value[indices])
+    return self._map_field(
+        lambda f: f.value[indices],
+        nest_fn=lambda f: f.value[indices],
+    )
 
   # _Dc[n *d] -> Iterator[_Dc[*d]]
   def __iter__(self: _Dc) -> Iterator[_Dc]:
     """Iterate over the outermost dimension."""
     if not self.shape:
-      raise ValueError(f'Cannot iterate on {self!r}: No batch shape.')
+      raise TypeError(f'iteration over 0-d array: {self!r}')
 
     # Similar to `etree.unzip(self)` (but work with any backend)
     field_names = [f.name for f in self._array_fields]
@@ -190,7 +197,10 @@ class DataclassArray:
       fn: Callable[[Array['*din']], Array['*dout']],
   ) -> _Dc:
     """Apply a transformation on all arrays from the fields."""
-    return self._map_field(lambda f: fn(f.value))
+    return self._map_field(
+        lambda f: fn(f.value),
+        nest_fn=lambda f: f.value.map_field(fn),
+    )
 
   # ====== Dataclass/Conversion utils ======
 
@@ -237,16 +247,35 @@ class DataclassArray:
     raise NotImplementedError(
         f'{self.__class__.__qualname__} does not support `v3d.Transform`.')
 
+  # TODO(epot): Should we have a non-batched version where the transformation
+  # is applied on each leaf (with some vectorization) ?
+  # Like: .map_leaf(Callable[[_Dc], _Dc])
+  # Would be trickier to support np/TF.
   def _map_field(
       self: _Dc,
       fn: Callable[[_ArrayField], Array['*dout']],
+      nest_fn: Optional[Callable[[_ArrayField[_Dc]], _Dc]] = None,
   ) -> _Dc:
-    """Apply a transformation on all array fields structure."""
-    # TODO(epot): Should we have a non-batched version where the transformation
-    # is applied on each leaf (with some vectorization) ?
-    # Like: .map_leaf(Callable[[_Dc], _Dc])
-    # Would be trickier to support np/TF.
-    new_values = {f.name: fn(f) for f in self._array_fields}
+    """Apply a transformation on all array fields structure.
+
+    Args:
+      fn: Function applied on the leaf (`xnp.ndarray`)
+      nest_fn: Function applied on the `v3d.DataclassArray` (to recurse)
+
+    Returns:
+      The transformed dataclass array.
+    """
+
+    def _apply_field_dn(f: _ArrayField):
+      if f.is_dataclass:  # Recurse on dataclasses
+        if nest_fn is None:
+          raise NotImplementedError(
+              'Function does not support nested dataclasses')
+        return nest_fn(f)  # pylint: disable=protected-access
+      else:
+        return fn(f)
+
+    new_values = {f.name: _apply_field_dn(f) for f in self._array_fields}
     return self.replace(**new_values)
 
   def tree_flatten(self):
@@ -282,7 +311,6 @@ def stack(
   """Stack dataclasses together."""
   arrays = list(arrays)
   first_arr = arrays[0]
-  cls = type(first_arr)
 
   # This might have some edge cases if user try to stack subclasses
   types = py_utils.groupby(
@@ -300,13 +328,16 @@ def stack(
     # before the inner shape
     # axis = self._to_absolute_axis(axis)
     raise NotImplementedError('Please open an issue.')
-  new_vals = {  # pylint: disable=g-complex-comprehension
-      f.name: xnp.stack(
-          [getattr(arr, f.name) for arr in arrays],
-          axis=axis,
-      ) for f in first_arr._array_fields  # pylint: disable=protected-access
-  }
-  return cls(**new_vals)
+
+  # Iterating over only the fields of the `first_arr` will skip optional fields
+  # if those are not set in `first_arr`, even if they are present in others.
+  # But is consistent with `jax.tree_map`:
+  # jax.tree_map(lambda x, y: x+y, (None, 10), (1, 2)) == (None, 12)
+  merged_arr = first_arr._map_field(  # pylint: disable=protected-access
+      lambda f: xnp.stack([getattr(arr, f.name) for arr in arrays], axis=axis),
+      nest_fn=lambda f: stack([getattr(arr, f.name) for arr in arrays]),
+  )
+  return merged_arr
 
 
 def _count_not_none(indices: _Indices) -> int:
@@ -365,29 +396,47 @@ class _ArrayFieldMetadata:
 
   Attributes:
     inner_shape: Inner shape
-    dtype: Type of the array
+    dtype: Type of the array. Can be `int`, `float`, `np.dtype` or
+      `v3d.DataclassArray` for nested arrays.
   """
   inner_shape: Shape
-  dtype: DType
+  dtype: Union[DType, DataclassArray]
 
   def __post_init__(self):
     """Normalizing/validating the shape/dtype."""
+    # Validate shape
     self.inner_shape = tuple(self.inner_shape)
     if None in self.inner_shape:
       raise ValueError(f'Shape should be defined. Got: {self.inner_shape}')
-    if self.dtype is int:
-      self.dtype = np.int32
-    if self.dtype is float:
-      self.dtype = np.float32
+
+    # Validate dtype
+    if not self.is_dataclass:
+      dtype = self.dtype
+      if dtype is int:
+        dtype = np.int32
+      elif dtype is float:
+        dtype = np.float32
+
+      dtype = np.dtype(dtype)
+      if dtype.kind == 'O':
+        raise ValueError(f'Array field dtype={self.dtype} not supported.')
+      self.dtype = dtype
 
   def to_dict(self) -> dict[str, Any]:
     """Returns the dict[field_name, field_value]."""
     return {f.name: getattr(self, f.name) for f in dataclasses.fields(self)}
 
+  @property
+  def is_dataclass(self) -> bool:
+    """Returns `True` if the field is a dataclass."""
+    # Need to check `type` first as `issubclass` fails for `np.dtype('int32')`
+    dtype = self.dtype
+    return isinstance(dtype, type) and issubclass(dtype, DataclassArray)
+
 
 @edc.dataclass
 @dataclasses.dataclass
-class _ArrayField(_ArrayFieldMetadata):
+class _ArrayField(_ArrayFieldMetadata, Generic[_DcOrArrayT]):
   """Array field of a specific dataclass instance.
 
   Attributes:
@@ -402,17 +451,35 @@ class _ArrayField(_ArrayFieldMetadata):
   def __post_init__(self):
     if self.value is None:  # No validation when there is no value
       return
+    if self.is_dataclass:
+      self._init_dataclass()
+    else:
+      self._init_array()
+
+    # Common assertions to all fields types
+    if self.host_shape + self.inner_shape != self.value.shape:
+      raise ValueError(f'Expected last dimensions to be {self.inner_shape} for '
+                       f'field {self.name!r} with shape {self.value.shape}')
+
+  def _init_array(self) -> None:
+    """Initialize when the field is an array."""
+    if isinstance(self.value, DataclassArray):
+      raise TypeError(
+          f'{self.name} should be {self.dtype}. Got: {type(self.value)}')
     # Convert and normalize the array
     self.xnp = lazy.get_xnp(self.value, strict=False)
     value = self.xnp.asarray(self.value, dtype=self.dtype)
     self.host._setattr(self.name, value)  # pylint: disable=protected-access
-    if self.host_shape + self.inner_shape != value.shape:
-      raise ValueError(
-          f'Expected {value.shape} last dimensions to be {self.inner_shape} '
-          f'for {self.name!r}')
+
+  def _init_dataclass(self) -> None:
+    """Initialize when the field is a nested dataclass array."""
+    if not isinstance(self.value, self.dtype):
+      raise TypeError(
+          f'{self.name} should be {self.dtype}. Got: {type(self.value)}')
+    self.xnp = self.value.xnp
 
   @property
-  def value(self) -> Array['...']:
+  def value(self) -> _DcOrArrayT:
     """Access the `host.<field-name>`."""
     return getattr(self.host, self.name)
 
@@ -420,6 +487,9 @@ class _ArrayField(_ArrayFieldMetadata):
   def host_shape(self) -> Shape:
     """Host shape (batch shape shared by all fields)."""
     if not self.inner_shape:
-      return self.value.shape
+      shape = self.value.shape
     else:
-      return self.value.shape[:-len(self.inner_shape)]
+      shape = self.value.shape[:-len(self.inner_shape)]
+    # TODO(b/198633198): We need to convert to tuple because TF evaluate
+    # empty shapes to True `bool(shape) == True` when `shape=()`
+    return tuple(shape)

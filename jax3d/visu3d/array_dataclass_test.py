@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 import dataclasses
+from typing import Callable
 
 from etils import enp
 from etils.array_types import IntArray, FloatArray  # pylint: disable=g-multiple-import
@@ -41,16 +42,24 @@ class Isometrie(v3d.DataclassArray):
   t: IntArray['2'] = v3d.array_field(shape=(2,), dtype=int)
 
 
+@dataclasses.dataclass(frozen=True)
+class Nested(v3d.DataclassArray):
+  # pytype: disable=annotation-type-mismatch
+  pt: Point = v3d.array_field(shape=(3,), dtype=Point)
+  iso: Isometrie = v3d.array_field(shape=(), dtype=Isometrie)
+  iso_batched: Isometrie = v3d.array_field(shape=(3, 7), dtype=Isometrie)
+  # pytype: enable=annotation-type-mismatch
+
+
 def _assert_point(p: Point, shape: Shape, xnp: enp.NpModule = None):
   """Validate the point."""
   xnp = xnp or np
   assert isinstance(p, Point)
-  assert p.shape == shape
+  _assert_common(p, shape=shape, xnp=xnp)
   assert p.x.shape == shape
   assert p.y.shape == shape
   assert p.x.dtype == np.float32
   assert p.y.dtype == np.float32
-  assert p.xnp is xnp
   assert isinstance(p.x, xnp.ndarray)
   assert isinstance(p.y, xnp.ndarray)
 
@@ -59,14 +68,78 @@ def _assert_isometrie(p: Isometrie, shape: Shape, xnp: enp.NpModule = None):
   """Validate the point."""
   xnp = xnp or np
   assert isinstance(p, Isometrie)
-  assert p.shape == shape
+  _assert_common(p, shape=shape, xnp=xnp)
   assert p.r.shape == shape + (3, 3)
   assert p.t.shape == shape + (2,)
   assert p.r.dtype == np.float32
   assert p.t.dtype == np.int32
-  assert p.xnp is xnp
   assert isinstance(p.r, xnp.ndarray)
   assert isinstance(p.t, xnp.ndarray)
+
+
+def _assert_nested(p: Nested, shape: Shape, xnp: enp.NpModule = None):
+  """Validate the nested."""
+  xnp = xnp or np
+  assert isinstance(p, Nested)
+  _assert_common(p, shape=shape, xnp=xnp)
+  _assert_point(p.pt, shape=shape + (3,), xnp=xnp)
+  _assert_isometrie(p.iso, shape=shape, xnp=xnp)
+  _assert_isometrie(p.iso_batched, shape=shape + (3, 7), xnp=xnp)
+
+
+def _assert_common(p: v3d.DataclassArray, shape: Shape, xnp: enp.NpModule):
+  """Test the len(p)."""
+  assert p.shape == shape
+  assert p.xnp is xnp
+
+
+def _make_point(shape: Shape, xnp: enp.NpModule) -> Point:
+  """Construct the dataclass array with the given shape."""
+  return Point(
+      x=xnp.zeros(shape),
+      y=xnp.zeros(shape),
+  )
+
+
+def _make_isometrie(shape: Shape, xnp: enp.NpModule) -> Isometrie:
+  """Construct the dataclass array with the given shape."""
+  return Isometrie(
+      r=xnp.zeros(shape + (3, 3)),
+      t=xnp.zeros(shape + (2,)),
+  )
+
+
+def _make_nested(shape: Shape, xnp: enp.NpModule) -> Nested:
+  """Construct the dataclass array with the given shape."""
+  return Nested(
+      pt=Point(
+          x=xnp.zeros(shape + (3,)),
+          y=xnp.zeros(shape + (3,)),
+      ),
+      iso=Isometrie(
+          r=xnp.zeros(shape + (3, 3)),
+          t=xnp.zeros(shape + (2,)),
+      ),
+      iso_batched=Isometrie(
+          r=xnp.zeros(shape + (3, 7, 3, 3)),
+          t=xnp.zeros(shape + (3, 7, 2)),
+      ),
+  )
+
+
+parametrize_dataclass_arrays = pytest.mark.parametrize(
+    ['make_dc_array_fn', 'assert_dc_array_fn'],
+    [
+        (_make_point, _assert_point),
+        (_make_isometrie, _assert_isometrie),
+        (_make_nested, _assert_nested),
+    ],
+    ids=[
+        'point',
+        'isometrie',
+        'nested',
+    ],
+)
 
 
 @enp.testing.parametrize_xnp(with_none=True)
@@ -91,61 +164,93 @@ def test_point_infered_np(
   _assert_point(p, shape, xnp=xnp)
 
 
-def test_jax_tree_map():
-  p = Point(x=[0, 0, 0], y=[1, 2, 3])
-  p = enp.lazy.jax.tree_map(lambda x: x + 1, p)
-  np.testing.assert_allclose(p.x, [1, 1, 1])
-  np.testing.assert_allclose(p.y, [2, 3, 4])
+@parametrize_dataclass_arrays
+def test_jax_tree_map(
+    make_dc_array_fn: Callable[..., v3d.DataclassArray],
+    assert_dc_array_fn: Callable[..., None],
+):
+  p = make_dc_array_fn(shape=(3,), xnp=np)
+  p = enp.lazy.jax.tree_map(lambda x: x[None, ...], p)
+  assert_dc_array_fn(p, (1, 3), xnp=np)
 
 
 @enp.testing.parametrize_xnp()
-def test_point(xnp: enp.NpModule):
-  p = Point(
-      x=xnp.zeros((3, 2)),
-      y=xnp.zeros((3, 2)),
-  )
-  _assert_point(p, (3, 2), xnp=xnp)
-  _assert_point(p.reshape((2, 1, 3, 1, 1)), (2, 1, 3, 1, 1), xnp=xnp)
-  _assert_point(p.flatten(), (6,), xnp=xnp)
-  _assert_point(p.broadcast_to((7, 4, 3, 2)), (7, 4, 3, 2), xnp=xnp)
-  _assert_point(p[0], (2,), xnp=xnp)
-  _assert_point(p[1, 1], (), xnp=xnp)
-  _assert_point(p[:, 0], (3,), xnp=xnp)
-  _assert_point(p[..., 0], (3,), xnp=xnp)
-  _assert_point(p[0, ...], (2,), xnp=xnp)
+@parametrize_dataclass_arrays
+def test_scalar_shape(
+    xnp: enp.NpModule,
+    make_dc_array_fn: Callable[..., v3d.DataclassArray],
+    assert_dc_array_fn: Callable[..., None],
+):
+  p = make_dc_array_fn(shape=(), xnp=xnp)
+  assert_dc_array_fn(p, (), xnp=xnp)
+  assert_dc_array_fn(p.reshape((1, 1, 1)), (1, 1, 1), xnp=xnp)
+  assert_dc_array_fn(p.flatten(), (1,), xnp=xnp)
+  assert_dc_array_fn(p.broadcast_to((7, 4, 3)), (7, 4, 3), xnp=xnp)
 
-  p0, p1, p2 = list(p)
-  _assert_point(p0, (2,), xnp=xnp)
-  _assert_point(p1, (2,), xnp=xnp)
-  _assert_point(p2, (2,), xnp=xnp)
+  with pytest.raises(TypeError, match='iteration over'):
+    _ = list(p)
 
-  _assert_point(v3d.stack([p0, p0, p1, p1]), (4, 2), xnp=xnp)
+  with pytest.raises(IndexError, match='too many indices for array'):
+    _ = p[0]
+
+  assert_dc_array_fn(p[...], (), xnp=xnp)  # Index on ... is a no-op
+
+  assert_dc_array_fn(v3d.stack([p, p, p]), (3,), xnp=xnp)
 
 
 @enp.testing.parametrize_xnp()
-def test_isometrie(xnp: enp.NpModule):
-  p = Isometrie(
-      r=xnp.zeros((3, 2, 1, 1, 3, 3)),
-      t=xnp.zeros((3, 2, 1, 1, 2)),
-  )
-  _assert_isometrie(p, (3, 2, 1, 1), xnp=xnp)
-  _assert_isometrie(p.reshape((2, 1, 3, 1, 1)), (2, 1, 3, 1, 1), xnp=xnp)
-  _assert_isometrie(p.flatten(), (6,), xnp=xnp)
-  _assert_isometrie(p.broadcast_to((7, 3, 2, 1, 1)), (7, 3, 2, 1, 1), xnp=xnp)
-  _assert_isometrie(p[0], (2, 1, 1), xnp=xnp)
-  _assert_isometrie(p[1, 1], (1, 1), xnp=xnp)
-  _assert_isometrie(p[:, 0], (3, 1, 1), xnp=xnp)
-  _assert_isometrie(p[:, 0, 0, :], (3, 1), xnp=xnp)
-  _assert_isometrie(p[..., 0], (3, 2, 1), xnp=xnp)
-  _assert_isometrie(p[0, ...], (2, 1, 1), xnp=xnp)
-  _assert_isometrie(p[0, ..., 0], (2, 1), xnp=xnp)
+@parametrize_dataclass_arrays
+def test_simple_shape(
+    xnp: enp.NpModule,
+    make_dc_array_fn: Callable[..., v3d.DataclassArray],
+    assert_dc_array_fn: Callable[..., None],
+):
+  p = make_dc_array_fn(shape=(3, 2), xnp=xnp)
+  assert_dc_array_fn(p, (3, 2), xnp=xnp)
+  assert_dc_array_fn(p.reshape((2, 1, 3, 1, 1)), (2, 1, 3, 1, 1), xnp=xnp)
+  assert_dc_array_fn(p.flatten(), (6,), xnp=xnp)
+  assert_dc_array_fn(p.broadcast_to((7, 4, 3, 2)), (7, 4, 3, 2), xnp=xnp)
+  assert_dc_array_fn(p[0], (2,), xnp=xnp)
+  assert_dc_array_fn(p[1, 1], (), xnp=xnp)
+  assert_dc_array_fn(p[:, 0], (3,), xnp=xnp)
+  assert_dc_array_fn(p[..., 0], (3,), xnp=xnp)
+  assert_dc_array_fn(p[0, ...], (2,), xnp=xnp)
+  assert_dc_array_fn(p[...], (3, 2), xnp=xnp)
 
   p0, p1, p2 = list(p)
-  _assert_isometrie(p0, (2, 1, 1), xnp=xnp)
-  _assert_isometrie(p1, (2, 1, 1), xnp=xnp)
-  _assert_isometrie(p2, (2, 1, 1), xnp=xnp)
+  assert_dc_array_fn(p0, (2,), xnp=xnp)
+  assert_dc_array_fn(p1, (2,), xnp=xnp)
+  assert_dc_array_fn(p2, (2,), xnp=xnp)
 
-  _assert_isometrie(v3d.stack([p0, p0, p1, p1]), (4, 2, 1, 1), xnp=xnp)
+  assert_dc_array_fn(v3d.stack([p0, p0, p1, p1]), (4, 2), xnp=xnp)
+
+
+@enp.testing.parametrize_xnp()
+@parametrize_dataclass_arrays
+def test_complex_shape(
+    xnp: enp.NpModule,
+    make_dc_array_fn: Callable[..., v3d.DataclassArray],
+    assert_dc_array_fn: Callable[..., None],
+):
+  p = make_dc_array_fn(shape=(3, 2, 1, 1), xnp=xnp)
+  assert_dc_array_fn(p, (3, 2, 1, 1), xnp=xnp)
+  assert_dc_array_fn(p.reshape((2, 1, 3, 1, 1)), (2, 1, 3, 1, 1), xnp=xnp)
+  assert_dc_array_fn(p.flatten(), (6,), xnp=xnp)
+  assert_dc_array_fn(p.broadcast_to((7, 3, 2, 1, 1)), (7, 3, 2, 1, 1), xnp=xnp)
+  assert_dc_array_fn(p[0], (2, 1, 1), xnp=xnp)
+  assert_dc_array_fn(p[1, 1], (1, 1), xnp=xnp)
+  assert_dc_array_fn(p[:, 0], (3, 1, 1), xnp=xnp)
+  assert_dc_array_fn(p[:, 0, 0, :], (3, 1), xnp=xnp)
+  assert_dc_array_fn(p[..., 0], (3, 2, 1), xnp=xnp)
+  assert_dc_array_fn(p[0, ...], (2, 1, 1), xnp=xnp)
+  assert_dc_array_fn(p[0, ..., 0], (2, 1), xnp=xnp)
+
+  p0, p1, p2 = list(p)
+  assert_dc_array_fn(p0, (2, 1, 1), xnp=xnp)
+  assert_dc_array_fn(p1, (2, 1, 1), xnp=xnp)
+  assert_dc_array_fn(p2, (2, 1, 1), xnp=xnp)
+
+  assert_dc_array_fn(v3d.stack([p0, p0, p1, p1]), (4, 2, 1, 1), xnp=xnp)
 
 
 def test_isometrie_wrong_input():
@@ -215,11 +320,14 @@ def test_normalize_indices(batch_shape: Shape, indices):
 
 
 @enp.testing.parametrize_xnp()
-def test_convert(xnp: enp.NpModule):
-  p = Point(
-      x=xnp.array([2, 5, -7]),
-      y=xnp.array([1, 3, -1]),
-  )
+@parametrize_dataclass_arrays
+def test_convert(
+    xnp: enp.NpModule,
+    make_dc_array_fn: Callable[..., v3d.DataclassArray],
+    assert_dc_array_fn: Callable[..., None],
+):
+  del assert_dc_array_fn
+  p = make_dc_array_fn(xnp=xnp, shape=(2,))
   assert p.xnp is xnp
   assert p.as_np().xnp is enp.lazy.np
   assert p.as_jax().xnp is enp.lazy.jnp
