@@ -17,7 +17,6 @@
 from etils import enp
 from etils.array_types import Array
 from jax3d import visu3d as v3d
-from jax3d.visu3d import testing
 import numpy as np
 import pytest
 
@@ -29,7 +28,7 @@ assert not v3d.Ray._v3d_tree_map_registered
 
 @enp.testing.parametrize_xnp()
 @pytest.mark.parametrize('shape', [(), (2,), (2, 3)])
-def test_pose(
+def test_ray(
     xnp: enp.NpModule,
     shape: v3d.typing.Shape,
 ):
@@ -37,7 +36,7 @@ def test_pose(
   def _broadcast(x: Array['*d'], shape=shape) -> Array['*d 3']:
     return xnp.broadcast_to(x, shape + (3,))
 
-  def _pose_broadcast(
+  def _ray_broadcast(
       t: Array['3'],
       d: Array['3'],
       shape=shape,
@@ -50,16 +49,16 @@ def test_pose(
   def _assert_pose_match(p, t, d, shape=shape):
     assert p.xnp is xnp
     assert p.shape == shape
-    testing.assert_allclose(p, _pose_broadcast(t=t, d=d, shape=shape))
+    v3d.testing.assert_allclose(p, _ray_broadcast(t=t, d=d, shape=shape))
 
   t = xnp.array([1, 0, 0])
   d = xnp.array([0, 2, 2])
   sqrt8 = np.sqrt(0**2 + 2**2 + 2**2.)
 
-  p = _pose_broadcast(t=t, d=d)
+  p = _ray_broadcast(t=t, d=d)
 
   p_brodcast = v3d.Ray(pos=t, dir=d).map_field(_broadcast)
-  testing.assert_allclose(p, p_brodcast)
+  v3d.testing.assert_allclose(p, p_brodcast)
 
   _assert_pose_match(p.mean(), t=t, d=d, shape=())
   _assert_pose_match(p + [3, 2, -1], t=[4, 2, -1], d=d)

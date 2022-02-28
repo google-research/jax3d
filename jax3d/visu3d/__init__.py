@@ -16,6 +16,8 @@
 
 from __future__ import annotations
 
+import sys
+
 from jax3d.visu3d import lazy_imports
 from jax3d.visu3d import plotly
 from jax3d.visu3d import typing
@@ -28,3 +30,12 @@ from jax3d.visu3d.camera_spec import PinholeCamera
 from jax3d.visu3d.plotly import make_fig
 from jax3d.visu3d.ray import Ray
 from jax3d.visu3d.transformation import Transform
+
+# Inside tests, can use `v3d.testing`
+if 'pytest' in sys.modules:  # < Ensure open source does not trigger import
+  try:
+    from jax3d.visu3d import testing  # pylint: disable=g-import-not-at-top
+  except ImportError:
+    pass
+
+del sys

@@ -19,7 +19,6 @@ import dataclasses
 from etils import enp
 from etils.array_types import FloatArray
 from jax3d import visu3d as v3d
-from jax3d.visu3d import testing
 import numpy as np
 import pytest
 
@@ -143,17 +142,17 @@ def _assert_tr_common(tr: v3d.Transform):
   identity_tr = v3d.Transform(R=tr.xnp.eye(3), t=tr.xnp.zeros((3,)))
 
   # Inverting the matrix is equivalent to the matrix of the invert transform
-  _assert_equal(tr.inv.matrix4x4, enp.compat.inv(tr.matrix4x4))
+  v3d.testing.assert_array_equal(tr.inv.matrix4x4, enp.compat.inv(tr.matrix4x4))
 
   # Inverting twice the transformation should be a no-op
-  _assert_equal(tr.inv.inv, tr)
+  v3d.testing.assert_array_equal(tr.inv.inv, tr)
 
   # Composing the transformation with the inverse should be identity
-  _assert_equal(tr.inv @ tr, identity_tr)
-  _assert_equal(tr @ tr.inv, identity_tr)
+  v3d.testing.assert_array_equal(tr.inv @ tr, identity_tr)
+  v3d.testing.assert_array_equal(tr @ tr.inv, identity_tr)
 
   # Exporting/importing matrix from 4x4 should be a no-op
-  _assert_equal(v3d.Transform.from_matrix(tr.matrix4x4), tr)
+  v3d.testing.assert_array_equal(v3d.Transform.from_matrix(tr.matrix4x4), tr)
 
   # Figure should work
   _ = tr.fig
@@ -177,7 +176,7 @@ def _assert_ray_transformed(
   ray = ray.broadcast_to(shape)
   expected_ray = expected_ray.broadcast_to(shape)
   assert ray.shape == shape
-  _assert_equal(tr @ ray, expected_ray)
+  v3d.testing.assert_array_equal(tr @ ray, expected_ray)
 
 
 def _assert_point_transformed(
@@ -195,8 +194,8 @@ def _assert_point_transformed(
   point_pos = xnp.array(_RAY_POS)
   point_pos = xnp.broadcast_to(point_pos, shape + (3,))
 
-  _assert_equal(tr @ point_pos, expected_point_pos)
-  _assert_equal(tr.apply_to_pos(point_pos), expected_point_pos)
+  v3d.testing.assert_array_equal(tr @ point_pos, expected_point_pos)
+  v3d.testing.assert_array_equal(tr.apply_to_pos(point_pos), expected_point_pos)
 
   # Test transform point direction
   expected_point_dir = xnp.array(test_values.expected_dir)
@@ -205,7 +204,7 @@ def _assert_point_transformed(
   point_dir = xnp.array(_RAY_DIR)
   point_dir = xnp.broadcast_to(point_dir, shape + (3,))
 
-  _assert_equal(tr.apply_to_dir(point_dir), expected_point_dir)
+  v3d.testing.assert_array_equal(tr.apply_to_dir(point_dir), expected_point_dir)
 
 
 def _assert_tr_transformed(
@@ -222,18 +221,9 @@ def _assert_tr_transformed(
       R=xnp.array(test_values.expected_r),
       t=xnp.array(test_values.expected_t),
   )
-  _assert_equal(tr @ other_tr, expected_tr)
+  v3d.testing.assert_array_equal(tr @ other_tr, expected_tr)
   # Composing transformations or matrix is equivalent
-  _assert_equal(
+  v3d.testing.assert_array_equal(
       v3d.Transform.from_matrix(tr.matrix4x4 @ other_tr.matrix4x4),
       expected_tr,
   )
-
-
-def _assert_equal(x, y):
-  """Test that the 2 objects are identical."""
-  assert isinstance(x, type(y))
-  assert x.shape == y.shape  # pytype: disable=attribute-error
-  testing.assert_allclose(x, y)
-  if isinstance(x, v3d.DataclassArray):
-    assert x.xnp is y.xnp
