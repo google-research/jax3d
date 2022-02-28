@@ -28,6 +28,7 @@ from jax3d.visu3d.camera import Camera
 from jax3d.visu3d.camera_spec import CameraSpec
 from jax3d.visu3d.camera_spec import PinholeCamera
 from jax3d.visu3d.plotly import make_fig
+from jax3d.visu3d.point import Point
 from jax3d.visu3d.ray import Ray
 from jax3d.visu3d.transformation import Transform
 

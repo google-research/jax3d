@@ -26,7 +26,6 @@ from jax3d.visu3d import np_utils
 from jax3d.visu3d import plotly
 from jax3d.visu3d import transformation
 from jax3d.visu3d.lazy_imports import plotly_base
-import numpy as np
 
 # TODO(epot): More dynamic sub-sampling controled in `v3d.make_fig`
 _MAX_NUM_SAMPLE = 500  # pylint: disable=invalid-name
@@ -126,12 +125,7 @@ class Ray(array_dataclass.DataclassArray, plotly.Visualizable):
   def make_traces(self) -> list[plotly_base.BaseTraceType]:
     start = self.pos
     end = self.end
-    batch_size = np.prod(self.shape)
-    if batch_size > _MAX_NUM_SAMPLE:
-      rng = np.random.default_rng(0)
-      idx = rng.choice(batch_size, size=_MAX_NUM_SAMPLE, replace=False)
-      start = start.reshape((batch_size, 3))[idx]
-      end = end.reshape((batch_size, 3))[idx]
+    start, end = plotly.subsample(start, end, num_samples=_MAX_NUM_SAMPLE)
     return plotly.make_lines_traces(
         start=start,
         end=end,

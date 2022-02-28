@@ -22,6 +22,7 @@ from jax3d import visu3d as v3d
 from jax3d.visu3d.lazy_imports import plotly_base
 from jax3d.visu3d.lazy_imports import plotly_go as go
 import numpy as np
+import pytest
 
 
 @enp.testing.parametrize_xnp()
@@ -86,3 +87,12 @@ def test_make_fig():
       x_array,
   ])
   assert isinstance(fig, go.Figure)
+
+
+@pytest.mark.parametrize('shape', [(), (4, 3), (700,), (3, 100, 4)])
+def test_subsample(shape: v3d.typing.Shape):
+  r = v3d.Ray(pos=np.ones(shape + (3,)), dir=np.ones(shape + (3,)))
+  _ = r.fig
+
+  r = v3d.Point(p=np.ones(shape + (3,)), rgb=np.ones(shape + (3,)))
+  _ = r.fig

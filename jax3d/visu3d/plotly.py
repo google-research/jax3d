@@ -21,7 +21,8 @@ from collections.abc import Sequence  # pylint: disable=g-importing-member
 from typing import Dict, List, Optional, Union
 
 from etils import enp
-from etils.array_types import Array, FloatArray  # pylint: disable=g-multiple-import
+from etils.array_types import Array, FloatArray, IntArray  # pylint: disable=g-multiple-import
+from jax3d.visu3d import array_dataclass
 from jax3d.visu3d.lazy_imports import plotly_base
 from jax3d.visu3d.lazy_imports import plotly_go as go
 import numpy as np
@@ -29,8 +30,13 @@ import numpy as np
 _Primitive = Union[str, int, bool, float]
 _PlotlyKwargs = Dict[str, Union[np.ndarray, _Primitive]]
 
-
 del abc  # TODO(epot): Why pytype doesn't like abc.ABC ?
+
+# TODO(epot): More dynamic sub-sampling:
+# * controled in `v3d.make_fig`
+# * globally assigned (collect the global batch shape)
+# * Add a tqdm bar ?
+_MAX_NUM_SAMPLE = 10_000  # pylint: disable=invalid-name
 
 
 class Visualizable:  # (abc.ABC):
@@ -77,33 +83,48 @@ def make_traces(data: VisualizableArg) -> list[plotly_base.BaseTraceType]:
   traces = []
   for val in data:
     if isinstance(val, Visualizable):
+      if isinstance(val, array_dataclass.DataclassArray):
+        val = val.as_np()
       sub_traces = val.make_traces()
       # Normalizing trace
       if isinstance(sub_traces, plotly_base.BaseTraceType):
         sub_traces = [sub_traces]
       traces.extend(sub_traces)
-    elif enp.is_array(val):
-      traces.extend(_traces_from_array(val))
+    elif enp.lazy.is_array(val) or isinstance(val, list):
+      val = np.asarray(val)
+      traces.extend(make_points(val))
     elif isinstance(val, plotly_base.BaseTraceType):  # Already a trace
       traces.append(val)
     else:
-      raise TypeError(f'Unsuported {type(data)}')
+      raise TypeError(f'Unsuported {type(val)}')
   return traces
 
 
-def _traces_from_array(array: Array[...]) -> list[plotly_base.BaseTraceType]:
+def make_points(
+    array: FloatArray['*d 3'],
+    *,
+    rgb: IntArray['*d 3'] = None,
+) -> list[plotly_base.BaseTraceType]:
   """Uses simple heuristic to display the plot matching the array content."""
   if array.shape[-1] != 3:
     raise ValueError('Only Array[..., 3] supported for now. Got '
                      f'shape={array.shape}')
 
   # TODO(epot): Subsample array if nb points >500
+  array, rgb = subsample(array, rgb, num_samples=_MAX_NUM_SAMPLE)  # pylint: disable=unbalanced-tuple-unpacking
+
+  if rgb is not None:
+    assert rgb.shape == array.shape
+    rgb = [f'rgb({r}, {g}, {b})' for r, g, b in rgb]
 
   points_xyz_kwargs = to_xyz_dict(array)
   point_cloud = go.Scatter3d(
       **points_xyz_kwargs,
       mode='markers',
-      marker=go.scatter3d.Marker(size=2.,),
+      marker=go.scatter3d.Marker(
+          size=2.,
+          color=rgb,
+      ),
   )
   return [point_cloud]
 
@@ -245,3 +266,37 @@ def to_xyz_dict(
   # Normalize scalars (as plotly reject `np.array(1)`)
   vals = {k: v if v.shape else v.item() for k, v in vals.items()}
   return vals
+
+
+def subsample(
+    *arrays: Optional[Array['... d']],
+    num_samples: int,
+) -> list[Optional[Array['...']]]:
+  """Flatten and subsample the arrays (keeping the last dimension)."""
+  assert arrays[0] is not None
+  shape = arrays[0].shape
+  assert len(shape) >= 1
+  # TODO(b/198633198): Warning: In TF `bool(shape) == True` for `shape==()`
+  if len(shape) == 1:
+    batch_size = 1  # Special case because `np.prod([]) == 1.0`
+  else:
+    batch_size = np.prod(shape[:-1])
+
+  if batch_size > num_samples:
+    # All arrays are sub-sampled the same way, so generate ids separately
+    rng = np.random.default_rng(0)
+    idx = rng.choice(batch_size, size=num_samples, replace=False)
+
+  arrays_out = []
+  for arr in arrays:
+    if arr is None:
+      arrays_out.append(None)
+      continue
+    if arr.shape != shape:
+      raise ValueError('Incompatible shape')
+    arr = arr.reshape((batch_size, 3))  # Flatten
+    if batch_size > num_samples:
+      arr = arr[idx]
+    arrays_out.append(arr)
+
+  return arrays_out
