@@ -29,7 +29,8 @@ def _load_requirements(path: str) -> list[str]:
   reqs = [r for r in reqs if r and not r.startswith('#')]
   return reqs
 
-
+# WARNING: If you add a new file here, please also update
+# `.github/worflows/test.yml`
 requirements = _load_requirements('requirements.txt')
 requirements_dev = _load_requirements('requirements-dev.txt')
 requirements_nesf = _load_requirements('jax3d/projects/nesf/requirements.txt')
