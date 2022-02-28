@@ -29,11 +29,10 @@ from jax3d.visu3d import camera
 from jax3d.visu3d import np_utils
 from jax3d.visu3d import ray as ray_lib
 
-
 del abc  # TODO(epot): Why pytype don't like abc ?
 
 
-class CameraSpec:  # (abc.ABC):
+class CameraSpec(array_dataclass.DataclassArray):  # (abc.ABC):
   """Camera intrinsics specification.
 
   Define the interface of camera model. See `PinholeCamera` for an example of
