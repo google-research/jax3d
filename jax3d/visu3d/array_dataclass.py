@@ -417,10 +417,16 @@ def _count_not_none(indices: _Indices) -> int:
   return len([k for k in indices if k is not np.newaxis and k is not Ellipsis])
 
 
+def _count_ellipsis(elems: _Indices) -> int:
+  """Returns the number of `...` in the indices."""
+  # Cannot use `elems.count(Ellipsis)` because `np.array() == Ellipsis` fail
+  return len([elem for elem in elems if elem is Ellipsis])
+
+
 def _to_absolute_indices(indices: _Indices, *, shape: Shape) -> _Indices:
   """Normalize the indices to replace `...`, by `:, :, :`."""
   assert isinstance(indices, tuple)
-  ellipsis_count = indices.count(Ellipsis)
+  ellipsis_count = _count_ellipsis(indices)
   if ellipsis_count > 1:
     raise IndexError("an index can only have a single ellipsis ('...')")
   valid_count = _count_not_none(indices)
