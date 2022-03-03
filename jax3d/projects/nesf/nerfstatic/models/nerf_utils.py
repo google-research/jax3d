@@ -135,7 +135,7 @@ def volumetric_rendering(
   eps = 1e-10
   dists = jnp.concatenate([
       z_vals[..., 1:] - z_vals[..., :-1],
-      jnp.broadcast_to([1e10], z_vals[..., :1].shape)
+      jnp.broadcast_to(1e10, z_vals[..., :1].shape)
   ], -1)
 
   # Note: If norm(dirs) == 0, dists == 0 too.
