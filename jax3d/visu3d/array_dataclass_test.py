@@ -51,6 +51,14 @@ class Nested(v3d.DataclassArray):
   # pytype: enable=annotation-type-mismatch
 
 
+@dataclasses.dataclass(frozen=True)
+class WithStatic(v3d.DataclassArray):
+  """Mix of static and array fields."""
+  static: str
+  x: FloatArray['3'] = v3d.array_field(shape=(3,))
+  y: FloatArray['2 2'] = v3d.array_field(shape=(2, 2))
+
+
 def _assert_point(p: Point, shape: Shape, xnp: enp.NpModule = None):
   """Validate the point."""
   xnp = xnp or np
@@ -85,6 +93,22 @@ def _assert_nested(p: Nested, shape: Shape, xnp: enp.NpModule = None):
   _assert_point(p.pt, shape=shape + (3,), xnp=xnp)
   _assert_isometrie(p.iso, shape=shape, xnp=xnp)
   _assert_isometrie(p.iso_batched, shape=shape + (3, 7), xnp=xnp)
+
+
+def _assert_with_static(p: WithStatic, shape: Shape, xnp: enp.NpModule = None):
+  """Validate the point."""
+  xnp = xnp or np
+  assert isinstance(p, WithStatic)
+  _assert_common(p, shape=shape, xnp=xnp)
+  assert p.x.shape == shape + (3,)
+  assert p.y.shape == shape + (2, 2)
+  assert p.x.dtype == np.float32
+  assert p.y.dtype == np.float32
+  assert isinstance(p.x, xnp.ndarray)
+  assert isinstance(p.y, xnp.ndarray)
+  # Static field is correctly forwarded
+  assert isinstance(p.static, str)
+  assert p.static == 'abc'
 
 
 def _assert_common(p: v3d.DataclassArray, shape: Shape, xnp: enp.NpModule):
@@ -134,17 +158,28 @@ def _make_nested(shape: Shape, xnp: enp.NpModule) -> Nested:
   )
 
 
+def _make_with_static(shape: Shape, xnp: enp.NpModule) -> WithStatic:
+  """Construct the dataclass array with the given shape."""
+  return WithStatic(
+      x=xnp.zeros(shape + (3,)),
+      y=xnp.zeros(shape + (2, 2)),
+      static='abc',
+  )
+
+
 parametrize_dataclass_arrays = pytest.mark.parametrize(
     ['make_dc_array_fn', 'assert_dc_array_fn'],
     [
         (_make_point, _assert_point),
         (_make_isometrie, _assert_isometrie),
         (_make_nested, _assert_nested),
+        (_make_with_static, _assert_with_static),
     ],
     ids=[
         'point',
         'isometrie',
         'nested',
+        'with_static',
     ],
 )
 
@@ -367,16 +402,14 @@ def test_jax_vmap():
   batch_shape = 3
 
   @enp.lazy.jax.vmap
-  def fn(ray: v3d.Ray) -> v3d.Ray:
-    assert isinstance(ray, v3d.Ray)
-    assert ray.shape == ()  # pylint:disable=g-explicit-bool-comparison
-    return ray + 1
+  def fn(p: WithStatic) -> WithStatic:
+    assert isinstance(p, WithStatic)
+    assert p.shape == ()  # pylint:disable=g-explicit-bool-comparison
+    return p.replace(x=p.x + 1)
 
-  x = v3d.Ray(pos=[0, 0, 0], dir=[1, 1, 1])
-  x = x.broadcast_to((batch_shape,))
-  x = x.as_jax()
+  x = _make_with_static((batch_shape,), xnp=enp.lazy.jnp)
   y = fn(x)
-  assert isinstance(y, v3d.Ray)
-  assert y.shape == (batch_shape,)
+  _assert_with_static(y, (batch_shape,), xnp=enp.lazy.jnp)
   # pos was updated
-  np.testing.assert_allclose(y.pos, np.ones((batch_shape, 3)))
+  np.testing.assert_allclose(y.x, np.ones((batch_shape, 3)))
+  np.testing.assert_allclose(y.y, np.zeros((batch_shape, 2, 2)))

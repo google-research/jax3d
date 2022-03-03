@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import dataclasses
 import typing
-from typing import Any, Callable, Generic, Iterable, Iterator, Optional, Tuple, TypeVar, Union
+from typing import Any, Callable, Generic, Iterable, Iterator, Optional, Tuple, Type, TypeVar, Union
 
 from etils import edc
 from etils import enp
@@ -41,6 +41,7 @@ _Indices = Tuple[_IndiceItem]  # Normalized slicing
 _IndicesArg = Union[_IndiceItem, _Indices]
 
 _Dc = TypeVar('_Dc', bound='DataclassArray')
+_DcOrArray = Union[Array['...'], 'DataclassArray']
 _DcOrArrayT = TypeVar('_DcOrArrayT')  # Union[Array['...'], DataclassArray]:
 
 _METADATA_KEY = 'v3d_field'
@@ -282,22 +283,24 @@ class DataclassArray:
     return self._xnp
 
   @epy.cached_property
-  def _all_array_fields(self) -> list[_ArrayField]:
+  def _all_array_fields(self) -> dict[str, _ArrayField]:
     """All array fields, including `None` values."""
     # Validate and normalize array fields (e.g. list -> np.array,...)
-    return [
-        _ArrayField(  # pylint: disable=g-complex-comprehension
+    return {  # pylint: disable=g-complex-comprehension
+        f.name: _ArrayField(  # pylint: disable=g-complex-comprehension
             name=f.name,
             host=self,
             **f.metadata[_METADATA_KEY].to_dict(),
         ) for f in dataclasses.fields(self) if _METADATA_KEY in f.metadata
-    ]
+    }
 
   @epy.cached_property
   def _array_fields(self) -> list[_ArrayField]:
     """All active array fields (non-None)."""
     # Filter `None` values
-    return [f for f in self._all_array_fields if not f.is_value_missing]
+    return [
+        f for f in self._all_array_fields.values() if not f.is_value_missing
+    ]
 
   def apply_transform(
       self: _Dc,
@@ -348,19 +351,30 @@ class DataclassArray:
     new_values = {f.name: _apply_field_dn(f) for f in self._array_fields}
     return self.replace(**new_values)
 
-  def tree_flatten(self):
+  def tree_flatten(self) -> tuple[list[_DcOrArray], _TreeMetadata]:
     """`jax.tree_utils` support."""
     # We flatten all values (and not just the non-None ones)
-    # TODO(epot): Also propagate other metadata (static fields)
-    children_values = [f.value for f in self._all_array_fields]
-    children_names = [f.name for f in self._all_array_fields]
-    return (children_values, children_names)
+    array_field_values = [f.value for f in self._all_array_fields.values()]
+    metadata = _TreeMetadata(
+        array_field_names=list(self._all_array_fields.keys()),
+        non_array_field_kwargs={
+            f.name: getattr(self, f.name)
+            for f in dataclasses.fields(self)
+            if f.name not in self._all_array_fields
+        },
+    )
+    return (array_field_values, metadata)
 
   @classmethod
-  def tree_unflatten(cls, children_names, children_values):
+  def tree_unflatten(
+      cls: Type[_Dc],
+      metadata: _TreeMetadata,
+      array_field_values: list[_DcOrArray],
+  ) -> _Dc:
     """`jax.tree_utils` support."""
-    children_kwargs = dict(zip(children_names, children_values))
-    return cls(**children_kwargs)
+    array_field_kwargs = dict(
+        zip(metadata.array_field_names, array_field_values))
+    return cls(**array_field_kwargs, **metadata.non_array_field_kwargs)
 
   def _setattr(self, name: str, value: Any) -> None:
     """Like setattr, but support `frozen` dataclasses."""
@@ -440,6 +454,13 @@ def _to_absolute_indices(indices: _Indices, *, shape: Shape) -> _Indices:
   end_elems = indices[ellipsis_index + 1:]
   ellipsis_replacement = [slice(None)] * (len(shape) - valid_count)
   return (*start_elems, *ellipsis_replacement, *end_elems)
+
+
+@dataclasses.dataclass(frozen=True)
+class _TreeMetadata:
+  """Metadata forwarded in ``."""
+  array_field_names: list[str]
+  non_array_field_kwargs: dict[str, Any]
 
 
 def array_field(
