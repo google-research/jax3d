@@ -34,7 +34,7 @@ def test_ray(
 ):
 
   def _broadcast(x: Array['*d'], shape=shape) -> Array['*d 3']:
-    return xnp.broadcast_to(x, shape + (3,))
+    return xnp.broadcast_to(xnp.asarray(x), shape + (3,))
 
   def _ray_broadcast(
       t: Array['3'],
