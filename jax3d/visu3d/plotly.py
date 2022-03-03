@@ -23,6 +23,7 @@ from typing import Dict, List, Optional, Union
 from etils import enp
 from etils.array_types import Array, FloatArray, IntArray  # pylint: disable=g-multiple-import
 from jax3d.visu3d import array_dataclass
+from jax3d.visu3d import np_utils
 from jax3d.visu3d.lazy_imports import plotly_base
 from jax3d.visu3d.lazy_imports import plotly_go as go
 import numpy as np
@@ -276,11 +277,7 @@ def subsample(
   assert arrays[0] is not None
   shape = arrays[0].shape
   assert len(shape) >= 1
-  # TODO(b/198633198): Warning: In TF `bool(shape) == True` for `shape==()`
-  if len(shape) == 1:
-    batch_size = 1  # Special case because `np.prod([]) == 1.0`
-  else:
-    batch_size = np.prod(shape[:-1])
+  batch_size = np_utils.size_of(shape[:-1])
 
   if batch_size > num_samples:
     # All arrays are sub-sampled the same way, so generate ids separately

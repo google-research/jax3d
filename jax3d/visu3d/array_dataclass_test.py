@@ -91,6 +91,7 @@ def _assert_common(p: v3d.DataclassArray, shape: Shape, xnp: enp.NpModule):
   """Test the len(p)."""
   assert p  # Object evaluate to True
   assert p.shape == shape
+  assert p.size == np.empty(shape).size
   assert p.xnp is xnp
   if shape:
     assert len(p) == shape[0]

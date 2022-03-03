@@ -16,7 +16,26 @@
 
 from __future__ import annotations
 
-from typing import Tuple, Type, Union
+import typing
+from typing import Tuple, Type, TypeVar, Union
+
+from etils.array_types import FloatArray
+
+if typing.TYPE_CHECKING:
+  from jax3d.visu3d import array_dataclass
 
 Shape = Tuple[int, ...]
-DType = Type[Union[int, float]]
+# pyformat: off
+DTypeArg = Type[Union[
+    int,
+    float,
+    # TODO(epot): Add `np.typing.DTypeLike` once numpy version is updated
+    'array_dataclass.DataclassArray',
+]]
+# pyformat: on
+
+DcT = TypeVar('DcT', bound='array_dataclass.DataclassArray')
+
+# Typing representing `xnp.ndarray` or `v3d.DataclassArray`
+DcOrArray = Union[FloatArray[...], 'array_dataclass.DataclassArray']
+DcOrArrayT = TypeVar('DcOrArrayT')

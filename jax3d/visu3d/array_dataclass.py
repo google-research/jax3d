@@ -26,7 +26,7 @@ from etils import epy
 from etils.array_types import Array
 from jax3d.visu3d import np_utils
 from jax3d.visu3d import py_utils
-from jax3d.visu3d.typing import DType, Shape  # pylint: disable=g-multiple-import
+from jax3d.visu3d.typing import DTypeArg, Shape  # pylint: disable=g-multiple-import
 import numpy as np
 from typing_extensions import Literal
 
@@ -143,6 +143,11 @@ class DataclassArray:
   def shape(self) -> Shape:
     """Returns the batch shape common to all fields."""
     return self._shape
+
+  @property
+  def size(self) -> int:
+    """Returns the batch shape common to all fields."""
+    return np_utils.size_of(self._shape)
 
   def reshape(self: _Dc, shape: Union[tuple[int, ...], str]) -> _Dc:
     """Reshape the batch shape according to the pattern."""
@@ -433,7 +438,7 @@ def _to_absolute_indices(indices: _Indices, *, shape: Shape) -> _Indices:
 
 def array_field(
     shape: Shape,
-    dtype: DType = float,
+    dtype: DTypeArg = float,
     **field_kwargs,
 ) -> dataclasses.Field:
   """Dataclass array field.
@@ -467,7 +472,7 @@ class _ArrayFieldMetadata:
       `v3d.DataclassArray` for nested arrays.
   """
   inner_shape: Shape
-  dtype: Union[DType, DataclassArray]
+  dtype: Union[DTypeArg, DataclassArray]
 
   def __post_init__(self):
     """Normalizing/validating the shape/dtype."""

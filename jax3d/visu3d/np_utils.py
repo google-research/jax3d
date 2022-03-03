@@ -12,7 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Numpy utils."""
+"""Numpy utils.
+
+And utils intended to work on both `xnp.ndarray` and `v3d.DataclassArray`.
+"""
 
 from __future__ import annotations
 
@@ -21,8 +24,19 @@ from typing import Any
 from etils import enp
 from etils.array_types import FloatArray  # pylint: disable=g-multiple-import
 from jax3d.visu3d import array_dataclass
+from jax3d.visu3d.typing import Shape
 
 # Maybe some of those could live in `enp` ?
+
+
+def size_of(shape: Shape) -> int:
+  """Returns the size associated with the shape."""
+  # TODO(b/198633198): Warning: In TF `bool(shape) == True` for `shape==()`
+  if not len(shape):  # pylint: disable=g-explicit-length-test
+    size = 1  # Special case because `np.prod([]) == 1.0`
+  else:
+    size = enp.lazy.np.prod(shape)
+  return size
 
 
 def get_xnp(x: Any) -> enp.NpModule:
