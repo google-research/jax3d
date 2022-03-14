@@ -26,7 +26,7 @@ from etils import epy
 from etils.array_types import Array
 from jax3d.visu3d import np_utils
 from jax3d.visu3d import py_utils
-from jax3d.visu3d.typing import DTypeArg, Shape  # pylint: disable=g-multiple-import
+from jax3d.visu3d.typing import DcOrArray, DcOrArrayT, DTypeArg, Shape  # pylint: disable=g-multiple-import
 import numpy as np
 from typing_extensions import Literal
 
@@ -35,14 +35,14 @@ if typing.TYPE_CHECKING:
 
 lazy = enp.lazy
 
+# TODO(pytype): Should use `v3d.typing.DcT` but bound does not work across
+# modules.
+_DcT = TypeVar('_DcT', bound='DataclassArray')
+
 # Any valid numpy indices slice ([x], [x:y], [:,...], ...)
 _IndiceItem = Union[type(Ellipsis), None, int, slice, Any]
 _Indices = Tuple[_IndiceItem]  # Normalized slicing
 _IndicesArg = Union[_IndiceItem, _Indices]
-
-_Dc = TypeVar('_Dc', bound='DataclassArray')
-_DcOrArray = Union[Array['...'], 'DataclassArray']
-_DcOrArrayT = TypeVar('_DcOrArrayT')  # Union[Array['...'], DataclassArray]:
 
 _METADATA_KEY = 'v3d_field'
 
@@ -150,7 +150,7 @@ class DataclassArray:
     """Returns the batch shape common to all fields."""
     return np_utils.size_of(self._shape)
 
-  def reshape(self: _Dc, shape: Union[tuple[int, ...], str]) -> _Dc:
+  def reshape(self: _DcT, shape: Union[tuple[int, ...], str]) -> _DcT:
     """Reshape the batch shape according to the pattern."""
     if isinstance(shape, str):
       # TODO(epot): Have an einops.rearange version which only look at the
@@ -163,18 +163,18 @@ class DataclassArray:
 
     return self._map_field(_reshape, nest_fn=_reshape)
 
-  def flatten(self: _Dc) -> _Dc:
+  def flatten(self: _DcT) -> _DcT:
     """Flatten the batch shape."""
     return self.reshape((-1,))
 
-  def broadcast_to(self: _Dc, shape: Shape) -> _Dc:
+  def broadcast_to(self: _DcT, shape: Shape) -> _DcT:
     """Broadcast the batch shape."""
     return self._map_field(
         lambda f: self.xnp.broadcast_to(f.value, shape + f.inner_shape),
         nest_fn=lambda f: f.value.broadcast_to(shape + f.inner_shape),
     )
 
-  def __getitem__(self: _Dc, indices: _IndicesArg) -> _Dc:
+  def __getitem__(self: _DcT, indices: _IndicesArg) -> _DcT:
     """Slice indexing."""
     indices = np.index_exp[indices]  # Normalize indices
     # Replace `...` by explicit shape
@@ -184,8 +184,8 @@ class DataclassArray:
         nest_fn=lambda f: f.value[indices],
     )
 
-  # _Dc[n *d] -> Iterator[_Dc[*d]]
-  def __iter__(self: _Dc) -> Iterator[_Dc]:
+  # _DcT[n *d] -> Iterator[_DcT[*d]]
+  def __iter__(self: _DcT) -> Iterator[_DcT]:
     """Iterate over the outermost dimension."""
     if not self.shape:
       raise TypeError(f'iteration over 0-d array: {self!r}')
@@ -246,9 +246,9 @@ class DataclassArray:
     return True
 
   def map_field(
-      self: _Dc,
+      self: _DcT,
       fn: Callable[[Array['*din']], Array['*dout']],
-  ) -> _Dc:
+  ) -> _DcT:
     """Apply a transformation on all arrays from the fields."""
     return self._map_field(
         lambda f: fn(f.value),
@@ -259,19 +259,19 @@ class DataclassArray:
 
   replace = edc.dataclass_utils.replace
 
-  def as_np(self: _Dc) -> _Dc:
+  def as_np(self: _DcT) -> _DcT:
     """Returns the instance as containing `np.ndarray`."""
     return self.as_xnp(enp.lazy.np)
 
-  def as_jax(self: _Dc) -> _Dc:
+  def as_jax(self: _DcT) -> _DcT:
     """Returns the instance as containing `jnp.ndarray`."""
     return self.as_xnp(enp.lazy.jnp)
 
-  def as_tf(self: _Dc) -> _Dc:
+  def as_tf(self: _DcT) -> _DcT:
     """Returns the instance as containing `tf.Tensor`."""
     return self.as_xnp(enp.lazy.tnp)
 
-  def as_xnp(self: _Dc, xnp: enp.NpModule) -> _Dc:
+  def as_xnp(self: _DcT, xnp: enp.NpModule) -> _DcT:
     """Returns the instance as containing `xnp.ndarray`."""
     return self.map_field(xnp.asarray)
 
@@ -303,9 +303,9 @@ class DataclassArray:
     ]
 
   def apply_transform(
-      self: _Dc,
+      self: _DcT,
       tr: transformation.Transform,
-  ) -> _Dc:
+  ) -> _DcT:
     """Transform protocol.
 
     Applied the transformation on it-self. Called during:
@@ -314,21 +314,23 @@ class DataclassArray:
     my_obj = tr @ my_obj  # Call `my_obj.apply_transform(tr)`
     ```
 
+    Inside this function, `tr.shape == ()`. Vectorization is auto-supported.
+
     Args:
-      tr: Transformation to apply
+      tr: Transformation to apply (will always have `tr.shape == ()`)
     """
     raise NotImplementedError(
         f'{self.__class__.__qualname__} does not support `v3d.Transform`.')
 
   # TODO(epot): Should we have a non-batched version where the transformation
   # is applied on each leaf (with some vectorization) ?
-  # Like: .map_leaf(Callable[[_Dc], _Dc])
+  # Like: .map_leaf(Callable[[_DcT], _DcT])
   # Would be trickier to support np/TF.
   def _map_field(
-      self: _Dc,
+      self: _DcT,
       fn: Callable[[_ArrayField], Array['*dout']],
-      nest_fn: Optional[Callable[[_ArrayField[_Dc]], _Dc]] = None,
-  ) -> _Dc:
+      nest_fn: Optional[Callable[[_ArrayField[_DcT]], _DcT]] = None,
+  ) -> _DcT:
     """Apply a transformation on all array fields structure.
 
     Args:
@@ -351,7 +353,7 @@ class DataclassArray:
     new_values = {f.name: _apply_field_dn(f) for f in self._array_fields}
     return self.replace(**new_values)
 
-  def tree_flatten(self) -> tuple[list[_DcOrArray], _TreeMetadata]:
+  def tree_flatten(self) -> tuple[list[DcOrArray], _TreeMetadata]:
     """`jax.tree_utils` support."""
     # We flatten all values (and not just the non-None ones)
     array_field_values = [f.value for f in self._all_array_fields.values()]
@@ -367,10 +369,10 @@ class DataclassArray:
 
   @classmethod
   def tree_unflatten(
-      cls: Type[_Dc],
+      cls: Type[_DcT],
       metadata: _TreeMetadata,
-      array_field_values: list[_DcOrArray],
-  ) -> _Dc:
+      array_field_values: list[DcOrArray],
+  ) -> _DcT:
     """`jax.tree_utils` support."""
     array_field_kwargs = dict(
         zip(metadata.array_field_names, array_field_values))
@@ -390,10 +392,10 @@ class DataclassArray:
 
 
 def stack(
-    arrays: Iterable[_Dc],  # list[_Dc['*shape']]
+    arrays: Iterable[_DcT],  # list[_DcT['*shape']]
     *,
     axis: int = 0,
-) -> _Dc:  # _Dc['len(arrays) *shape']:
+) -> _DcT:  # _DcT['len(arrays) *shape']:
   """Stack dataclasses together."""
   arrays = list(arrays)
   first_arr = arrays[0]
@@ -499,7 +501,7 @@ class _ArrayFieldMetadata:
       `v3d.DataclassArray` for nested arrays.
   """
   inner_shape: Shape
-  dtype: Union[DTypeArg, DataclassArray]
+  dtype: DTypeArg
 
   def __post_init__(self):
     """Normalizing/validating the shape/dtype."""
@@ -535,7 +537,7 @@ class _ArrayFieldMetadata:
 
 @edc.dataclass
 @dataclasses.dataclass
-class _ArrayField(_ArrayFieldMetadata, Generic[_DcOrArrayT]):
+class _ArrayField(_ArrayFieldMetadata, Generic[DcOrArrayT]):
   """Array field of a specific dataclass instance.
 
   Attributes:
@@ -578,17 +580,28 @@ class _ArrayField(_ArrayFieldMetadata, Generic[_DcOrArrayT]):
     self.xnp = self.value.xnp
 
   @property
-  def value(self) -> _DcOrArrayT:
+  def value(self) -> DcOrArrayT:
     """Access the `host.<field-name>`."""
     return getattr(self.host, self.name)
 
   @property
   def is_value_missing(self) -> bool:
     """Returns `True` if the value wasn't set."""
-    # Checking for `object` is a hack required for `@jax.vmap` compatibility:
-    # In `jax/_src/api_util.py` for `flatten_axes`, jax set all values to a
-    # dummy sentinel `object()` value.
-    return self.value is None or type(self.value) is object  # pylint: disable=unidiomatic-typecheck
+    if self.value is None:
+      return True
+    elif type(self.value) is object:  # pylint: disable=unidiomatic-typecheck
+      # Checking for `object` is a hack required for `@jax.vmap` compatibility:
+      # In `jax/_src/api_util.py` for `flatten_axes`, jax set all values to a
+      # dummy sentinel `object()` value.
+      return True
+    elif (
+        isinstance(self.value, DataclassArray) and
+        not self.value._array_fields  # pylint: disable=protected-access
+    ):
+      # Nested dataclass case (if all attributes are `None`, so no active
+      # array fields)
+      return True
+    return False
 
   @property
   def host_shape(self) -> Shape:
