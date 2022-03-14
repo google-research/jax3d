@@ -25,14 +25,14 @@ if typing.TYPE_CHECKING:
   from jax3d.visu3d import array_dataclass
 
 Shape = Tuple[int, ...]
-# pyformat: off
+# pyformat: disable
 DTypeArg = Type[Union[
     int,
     float,
     # TODO(epot): Add `np.typing.DTypeLike` once numpy version is updated
     'array_dataclass.DataclassArray',
 ]]
-# pyformat: on
+# pyformat: enable
 
 DcT = TypeVar('DcT', bound='array_dataclass.DataclassArray')
 

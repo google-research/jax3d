@@ -19,7 +19,7 @@ And utils intended to work on both `xnp.ndarray` and `v3d.DataclassArray`.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Optional
 
 from etils import enp
 from etils.array_types import FloatArray  # pylint: disable=g-multiple-import
@@ -49,6 +49,27 @@ def get_xnp(x: Any) -> enp.NpModule:
     raise TypeError(
         f'Unexpected array type: {type(x)}. Could not infer numpy module.')
   return xnp
+
+
+def is_array(x: Any, xnp: Optional[enp.NpModule] = None) -> bool:
+  """Returns whether `x` is an array or DataclassArray.
+
+  Args:
+    x: array to check
+    xnp: If given, raise an error if the array is from a different numpy module.
+
+  Returns:
+    True if `x` is `xnp.ndarray` or `v3d.DataclassArray`
+  """
+  try:
+    infered_xnp = get_xnp(x)
+  except TypeError:
+    return False
+  else:
+    if xnp is None:
+      return True
+    else:
+      return infered_xnp is xnp
 
 
 def normalize(x: FloatArray['*d'], axis: int = -1) -> FloatArray['*d']:
