@@ -18,39 +18,36 @@ from __future__ import annotations
 
 import dataclasses
 
-from etils import edc
 from etils.array_types import FloatArray  # pylint: disable=g-multiple-import
+from jax3d.visu3d import array_dataclass
 from jax3d.visu3d import camera_spec
 from jax3d.visu3d import plotly
 from jax3d.visu3d import point as point_lib
 from jax3d.visu3d import ray as ray_lib
 from jax3d.visu3d import transformation
+from jax3d.visu3d import vectorization
 from jax3d.visu3d.lazy_imports import plotly_base
 import numpy as np
 
-# TODO(epot): Make this DataclassArray
-# TODO(epot): Fix spec/cam_to_world xnp inconsistency
 
-
-@edc.dataclass(kw_only=True)
 @dataclasses.dataclass(frozen=True)
-class Camera(plotly.Visualizable):
+class Camera(array_dataclass.DataclassArray, plotly.Visualizable):
   """A camera located in space.
 
   Attributes:
     spec: Camera intrinsics parameters
     cam_to_world: Camera pose (`v3d.Transformation`)
   """
-  spec: camera_spec.CameraSpec
-  cam_to_world: transformation.Transform
-
-  def __post_init__(self):
-    # super().__post_init__()
-    # TODO(epot): Remove once Camera is dataclass array.
-    if self.spec.xnp is not self.cam_to_world.xnp:
-      raise ValueError(
-          f'Inconsistent camera numpy type: spec is {self.spec.xnp.__name__} '
-          f'but cam_to_world is {self.cam_to_world.xnp.__name__}')
+  # pytype: disable=annotation-type-mismatch
+  spec: camera_spec.CameraSpec = array_dataclass.array_field(
+      shape=(),
+      dtype=camera_spec.CameraSpec,
+  )
+  cam_to_world: transformation.Transform = array_dataclass.array_field(
+      shape=(),
+      dtype=transformation.Transform,
+  )
+  # pytype: enable=annotation-type-mismatch
 
   @classmethod
   def from_look_at(
@@ -113,6 +110,7 @@ class Camera(plotly.Visualizable):
     """Width in pixel."""
     return self.spec.w
 
+  @vectorization.vectorize_method(static_args={'normalize'})
   def rays(self, normalize: bool = True) -> ray_lib.Ray:
     """Creates the rays.
 
@@ -134,11 +132,24 @@ class Camera(plotly.Visualizable):
       rays = rays.normalize()
     return rays
 
+  # TODO(epot): Replace world_to_px/px_to_world by `v3d.Transform` (composed)
+
+  @vectorization.vectorize_method
   def world_to_px(self, points: FloatArray['*d 3']) -> FloatArray['*d 2']:
     """Project the world coordinates back to pixel coordinates."""
     points_cam = self.cam_to_world.inv @ points
     return self.spec.cam_to_px(points_cam)
 
+  @vectorization.vectorize_method
+  def px_to_world(self, points: FloatArray['*d 3']) -> FloatArray['*d 2']:
+    """Project the world coordinates back to pixel coordinates."""
+    # Project the points in the camera frame
+    points_cam = self.spec.px_to_cam(points)
+    # Convert cam to world coordinates
+    points_world = self.cam_to_world @ points_cam
+    return points_world
+
+  @vectorization.vectorize_method
   def render(self, points: point_lib.Point) -> FloatArray['*shape h w 3']:
     """Project 3d points to the camera screen.
 
@@ -188,19 +199,18 @@ class Camera(plotly.Visualizable):
 
   def make_traces(self) -> list[plotly_base.BaseTraceType]:
     # TODO(epot): Add arrow to indicates the orientation
+    corners_world = self._get_corner_world()
+    return plotly.make_lines_traces(
+        start=np.broadcast_to(self.cam_to_world.t, corners_world.shape),
+        end=corners_world,
+    )
 
+  @vectorization.vectorize_method
+  def _get_corner_world(self) -> FloatArray['*shape 4 3']:
     corners_px = [  # Screen corners
         [0, 0],
         [self.spec.h, 0],
         [0, self.spec.w],
         [self.spec.h, self.spec.w],
     ]
-    # Project the corners in the camera frame
-    corners_cam = self.spec.px_to_cam(corners_px)
-    # Convert cam to world coordinates
-    corners_world = self.cam_to_world @ corners_cam
-
-    return plotly.make_lines_traces(
-        start=np.broadcast_to(self.cam_to_world.t, corners_world.shape),
-        end=corners_world,
-    )
+    return self.px_to_world(self.xnp.array(corners_px))
