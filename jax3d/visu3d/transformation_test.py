@@ -118,8 +118,16 @@ _TR_EXPECTED_VALUES = {
 
 
 @enp.testing.parametrize_xnp()
-@pytest.mark.parametrize('other_shape', [(), (4, 3)])
-@pytest.mark.parametrize('tr_shape', [(), (4, 3), (7, 5)])
+@pytest.mark.parametrize(
+    'tr_shape, other_shape, expected_shape',
+    [
+        ((), (), ()),
+        ((3,), (3,), (3,)),
+        ((3,), (3, 4, 5), (3, 4, 5)),
+        ((3,), (1, 4, 5), (3, 4, 5)),
+        ((1,), (3, 4, 5), (3, 4, 5)),
+    ],
+)
 @pytest.mark.parametrize(
     'test_values',
     _TR_EXPECTED_VALUES.values(),
@@ -129,6 +137,7 @@ def test_transformation(
     xnp: enp.NpModule,
     tr_shape: v3d.typing.Shape,
     other_shape: v3d.typing.Shape,
+    expected_shape: v3d.typing.Shape,
     test_values: TransformExpectedValue,
 ):
   tr = v3d.Transform(R=xnp.array(test_values.R), t=xnp.array(test_values.t))
@@ -141,19 +150,24 @@ def test_transformation(
 
   _assert_ray_transformed(
       tr,
-      tr_shape=tr_shape,
+      expected_shape=expected_shape,
       other_shape=other_shape,
       test_values=test_values,
   )
 
   _assert_point_transformed(
       tr,
-      tr_shape=tr_shape,
+      expected_shape=expected_shape,
       other_shape=other_shape,
       test_values=test_values,
   )
 
-  _assert_tr_transformed(tr, tr_shape=tr_shape, test_values=test_values)
+  _assert_tr_transformed(
+      tr,
+      expected_shape=expected_shape,
+      other_shape=other_shape,
+      test_values=test_values,
+  )
 
 
 def _assert_tr_common(tr: v3d.Transform, tr_shape: v3d.typing.Shape):
@@ -174,15 +188,11 @@ def _assert_tr_common(tr: v3d.Transform, tr_shape: v3d.typing.Shape):
   # Inverting twice the transformation should be a no-op
   v3d.testing.assert_array_equal(tr.inv.inv, tr)
 
-  # Take single elem: tr[*s] @ other_tr[''] -> other_tr[*s]
-  def _single_elem(other_tr: v3d.Transform):
-    return other_tr.flatten()[0]
-
   # Composing the transformation with the inverse should be identity
-  v3d.testing.assert_array_equal(tr.inv @ _single_elem(tr), identity_tr)
-  v3d.testing.assert_array_equal(tr @ _single_elem(tr.inv), identity_tr)
-  v3d.testing.assert_array_equal(tr @ _single_elem(identity_tr), tr)
-  v3d.testing.assert_array_equal(identity_tr @ _single_elem(tr), tr)
+  v3d.testing.assert_array_equal(tr.inv @ tr, identity_tr)
+  v3d.testing.assert_array_equal(tr @ tr.inv, identity_tr)
+  v3d.testing.assert_array_equal(tr @ identity_tr, tr)
+  v3d.testing.assert_array_equal(identity_tr @ tr, tr)
 
   # Exporting/importing matrix from 4x4 should be a no-op
   v3d.testing.assert_array_equal(v3d.Transform.from_matrix(tr.matrix4x4), tr)
@@ -193,8 +203,8 @@ def _assert_tr_common(tr: v3d.Transform, tr_shape: v3d.typing.Shape):
 
 def _assert_ray_transformed(
     tr: v3d.Transform,
-    tr_shape: v3d.typing.Shape,
     other_shape: v3d.typing.Shape,
+    expected_shape: v3d.typing.Shape,
     test_values: TransformExpectedValue,
 ):
   """Test ray transformation."""
@@ -203,20 +213,21 @@ def _assert_ray_transformed(
       pos=xnp.array(_RAY_POS),
       dir=xnp.array(_RAY_DIR),
   )
+  ray = ray.broadcast_to(other_shape)
+  assert ray.shape == other_shape
+
   expected_ray = v3d.Ray(
       pos=xnp.array(test_values.expected_pos),
       dir=xnp.array(test_values.expected_dir),
   )
-  ray = ray.broadcast_to(other_shape)
-  expected_ray = expected_ray.broadcast_to(tr_shape + other_shape)
-  assert ray.shape == other_shape
+  expected_ray = expected_ray.broadcast_to(expected_shape)
   v3d.testing.assert_array_equal(tr @ ray, expected_ray)
 
 
 def _assert_point_transformed(
     tr: v3d.Transform,
-    tr_shape: v3d.typing.Shape,
     other_shape: v3d.typing.Shape,
+    expected_shape: v3d.typing.Shape,
     test_values: TransformExpectedValue,
 ):
   """Test point transformation."""
@@ -226,7 +237,7 @@ def _assert_point_transformed(
   expected_point_pos = xnp.array(test_values.expected_pos)
   expected_point_pos = xnp.broadcast_to(
       expected_point_pos,
-      tr_shape + other_shape + (3,),
+      expected_shape + (3,),
   )
 
   point_pos = xnp.array(_RAY_POS)
@@ -239,7 +250,7 @@ def _assert_point_transformed(
   expected_point_dir = xnp.array(test_values.expected_dir)
   expected_point_dir = xnp.broadcast_to(
       expected_point_dir,
-      tr_shape + other_shape + (3,),
+      expected_shape + (3,),
   )
 
   point_dir = xnp.array(_RAY_DIR)
@@ -250,7 +261,8 @@ def _assert_point_transformed(
 
 def _assert_tr_transformed(
     tr: v3d.Transform,
-    tr_shape: v3d.typing.Shape,
+    other_shape: v3d.typing.Shape,
+    expected_shape: v3d.typing.Shape,
     test_values: TransformExpectedValue,
 ):
   """Test transform transformation."""
@@ -259,14 +271,21 @@ def _assert_tr_transformed(
       R=xnp.array(_TR_R),
       t=xnp.array(_TR_T),
   )
+  other_tr = other_tr.broadcast_to(other_shape)
+
   expected_tr = v3d.Transform(
       R=xnp.array(test_values.expected_r),
       t=xnp.array(test_values.expected_t),
   )
-  expected_tr = expected_tr.broadcast_to(tr_shape)
+  expected_tr = expected_tr.broadcast_to(expected_shape)
+
   v3d.testing.assert_array_equal(tr @ other_tr, expected_tr)
+
   # Composing transformations or matrix is equivalent
-  v3d.testing.assert_array_equal(
-      v3d.Transform.from_matrix(tr.matrix4x4 @ other_tr.matrix4x4),
-      expected_tr,
-  )
+  # Only test for scalar shape as broadcasting & vectorization have different
+  # rules
+  if not tr.shape:
+    v3d.testing.assert_array_equal(
+        v3d.Transform.from_matrix(tr.matrix4x4 @ other_tr.matrix4x4),
+        expected_tr,
+    )
