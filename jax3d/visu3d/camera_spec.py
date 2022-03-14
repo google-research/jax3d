@@ -28,6 +28,7 @@ from jax3d.visu3d import array_dataclass
 from jax3d.visu3d import camera
 from jax3d.visu3d import np_utils
 from jax3d.visu3d import ray as ray_lib
+from jax3d.visu3d import vectorization
 
 del abc  # TODO(epot): Why pytype don't like abc ?
 
@@ -119,7 +120,6 @@ class CameraSpec(array_dataclass.DataclassArray):  # (abc.ABC):
     return camera.Camera.from_ray(spec=self, ray=ray)
 
 
-# TODO(epot): Support batch mode (should have some `@vectorize`)
 @edc.dataclass(kw_only=True)
 @dataclasses.dataclass(frozen=True)
 class PinholeCamera(CameraSpec, array_dataclass.DataclassArray):
@@ -196,6 +196,7 @@ class PinholeCamera(CameraSpec, array_dataclass.DataclassArray):
   def w(self):
     return self.resolution[1]
 
+  @vectorization.vectorize_method
   def cam_to_px(
       self,
       points3d,
@@ -209,6 +210,7 @@ class PinholeCamera(CameraSpec, array_dataclass.DataclassArray):
     points2d = (points2d[..., :2] / points2d[..., 2:3])
     return points2d
 
+  @vectorization.vectorize_method
   def px_to_cam(
       self,
       points2d=None,
@@ -236,7 +238,9 @@ class PinholeCamera(CameraSpec, array_dataclass.DataclassArray):
     points3d = points3d / xnp.expand_dims(points3d[..., 2], axis=-1)
     return points3d
 
+  @vectorization.vectorize_method
   def px_centers(self):
+    # TODO(epot): Move this in `np_utils.mgrid` or similar.
     if self.xnp is enp.lazy.tnp:  # TF Compatibility
       tf = enp.lazy.tf
       points2d = tf.meshgrid(

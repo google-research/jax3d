@@ -25,43 +25,72 @@ set_tnp = enp.testing.set_tnp
 H, W = 640, 480
 
 
-def make_camera_spec(xnp: enp.NpModule) -> v3d.PinholeCamera:
-  return v3d.PinholeCamera.from_focal(
+def make_camera_spec(
+    *,
+    xnp: enp.NpModule,
+    shape: v3d.typing.Shape,
+) -> v3d.PinholeCamera:
+  spec = v3d.PinholeCamera.from_focal(
       resolution=(H, W),
       focal_in_px=35.,
       xnp=xnp,
   )
+  spec = spec.broadcast_to(shape)
+  return spec
 
 
 @enp.testing.parametrize_xnp(with_none=True)
-def test_camera_spec_init(xnp: enp.NpModule):
-  spec = make_camera_spec(xnp)
+@pytest.mark.parametrize('spec_shape', [(), (3,), (2, 3)])
+def test_camera_spec_init(
+    xnp: enp.NpModule,
+    spec_shape: v3d.typing.Shape,
+):
+  if spec_shape and xnp is enp.lazy.tnp:
+    pytest.skip('Vectorization not supported yet with TF')
+
+  spec = make_camera_spec(xnp=xnp, shape=spec_shape)
   assert spec.resolution == (H, W)
   assert spec.h == H
   assert spec.w == W
+  assert spec.shape == spec_shape
+  assert spec.K.shape == spec_shape + (3, 3)
 
   if xnp is None:
     xnp = np
   assert spec.xnp is xnp
-  assert isinstance(spec.cam_to_px([0, 0, 1]), xnp.ndarray)
-  assert isinstance(spec.px_to_cam([0, 0]), xnp.ndarray)
+
+  x = _broadcast_to(xnp, [0, 0, 1], (1,) * len(spec_shape) + (3,))
+  assert isinstance(spec.cam_to_px(x), xnp.ndarray)
+
+  x = _broadcast_to(xnp, [0, 0], (1,) * len(spec_shape) + (2,))
+  assert isinstance(spec.px_to_cam(x), xnp.ndarray)
 
 
 @enp.testing.parametrize_xnp()
-@pytest.mark.parametrize('shape', [(), (5, 7)])
+@pytest.mark.parametrize('spec_shape', [(), (3,), (2, 3)])
+@pytest.mark.parametrize('point_shape', [(), (2, 3)])
 def test_camera_spec_central_point(
     xnp: enp.NpModule,
-    shape: v3d.typing.Shape,
+    spec_shape: v3d.typing.Shape,
+    point_shape: v3d.typing.Shape,
 ):
-  spec = make_camera_spec(xnp)
+  if spec_shape and xnp is enp.lazy.tnp:
+    pytest.skip('Vectorization not supported yet with TF')
+
+  spec = make_camera_spec(xnp=xnp, shape=spec_shape)
+
   # Projecting the central point (batched)
-  central_point_cam = np.broadcast_to([0, 0, 1], shape + (3,))
+  central_point_cam = _broadcast_to(
+      xnp,
+      [0, 0, 1],
+      spec_shape + point_shape + (3,),
+  )
   central_point_px = spec.cam_to_px(central_point_cam)
   assert isinstance(central_point_px, xnp.ndarray)
-  assert central_point_px.shape == shape + (2,)
+  assert central_point_px.shape == spec_shape + point_shape + (2,)
   np.testing.assert_allclose(
       central_point_px,
-      np.broadcast_to([H / 2, W / 2], shape + (2,)),
+      np.broadcast_to([H / 2, W / 2], spec_shape + point_shape + (2,)),
   )
 
   # Round trip conversion
@@ -73,15 +102,23 @@ def test_camera_spec_central_point(
 
 
 @enp.testing.parametrize_xnp()
-def test_camera_px_centers(xnp: enp.NpModule):
-  spec = make_camera_spec(xnp)
+@pytest.mark.parametrize('spec_shape', [(), (2, 3)])
+def test_camera_px_centers(
+    xnp: enp.NpModule,
+    spec_shape: v3d.typing.Shape,
+):
+  if spec_shape and xnp is enp.lazy.tnp:
+    pytest.skip('Vectorization not supported yet with TF')
+
+  spec = make_camera_spec(xnp=xnp, shape=spec_shape)
+
   px_centers = spec.px_centers()
   assert isinstance(px_centers, xnp.ndarray)
-  assert px_centers.shape == (H, W, 2)
+  assert px_centers.shape == spec_shape + (H, W, 2)
 
   cam_centers = spec.px_to_cam(px_centers)
   assert isinstance(cam_centers, xnp.ndarray)
-  assert cam_centers.shape == (H, W, 3)
+  assert cam_centers.shape == spec_shape + (H, W, 3)
 
   np.testing.assert_allclose(
       cam_centers,
@@ -90,7 +127,7 @@ def test_camera_px_centers(xnp: enp.NpModule):
 
   round_trip_px = spec.cam_to_px(cam_centers)
   assert isinstance(round_trip_px, xnp.ndarray)
-  assert round_trip_px.shape == (H, W, 2)
+  assert round_trip_px.shape == spec_shape + (H, W, 2)
 
   np.testing.assert_allclose(round_trip_px, px_centers, atol=1e-4)
   # Scaling/normalizing don't change the projection
@@ -99,3 +136,7 @@ def test_camera_px_centers(xnp: enp.NpModule):
       spec.cam_to_px(cam_centers * 3.),
       atol=1e-4,
   )
+
+
+def _broadcast_to(xnp: enp.NpModule, array, shape):
+  return xnp.broadcast_to(xnp.array(array), shape)
