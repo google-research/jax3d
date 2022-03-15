@@ -16,16 +16,16 @@
 """Unit tests for metrics."""
 import functools
 
+from absl.testing import absltest
 import jax
 from jax import random
-from jax import test_util as jtu
 from jax3d.projects.nesf.nerfstatic.metrics import metrics
 import numpy as np
 import pandas as pd
 import tensorflow as tf
 
 
-class MetricsTest(jtu.JaxTestCase):
+class MetricsTest(absltest.TestCase):
 
   def test_ssim_golden(self):
     """Test our SSIM implementation against the Tensorflow version."""
@@ -67,9 +67,10 @@ class MetricsTest(jtu.JaxTestCase):
                 return_map=return_map))
         ssim = ssim_fn(img0, img1)
         if not return_map:
-          self.assertAllClose(ssim, ssim_gt)
+          np.testing.assert_allclose(ssim, ssim_gt, atol=1E-5, rtol=1E-5)
         else:
-          self.assertAllClose(np.mean(ssim, [1, 2, 3]), ssim_gt)
+          np.testing.assert_allclose(
+              np.mean(ssim, [1, 2, 3]), ssim_gt, atol=1E-5, rtol=1E-5)
         self.assertLessEqual(np.max(ssim), 1.)
         self.assertGreaterEqual(np.min(ssim), -1.)
 
@@ -80,7 +81,7 @@ class MetricsTest(jtu.JaxTestCase):
     eps = 1e-5
     ssim = metrics.compute_ssim(
         img, -img, 1., filter_size=sz, filter_sigma=1.5, k1=eps, k2=eps)
-    self.assertAllClose(ssim, -np.ones_like(ssim))
+    np.testing.assert_allclose(ssim, -np.ones_like(ssim), atol=1E-5, rtol=1E-5)
 
   def test_compute_confusion_matrix(self):
     labels = np.array(
@@ -128,3 +129,7 @@ class MetricsTest(jtu.JaxTestCase):
     expected_mean_iou = np.mean(expected_per_class_iou)
     assert np.allclose(pred_per_class_iou, expected_per_class_iou)
     assert np.isclose(pred_mean_iou, expected_mean_iou)
+
+
+if __name__ == '__main__':
+  absltest.main()

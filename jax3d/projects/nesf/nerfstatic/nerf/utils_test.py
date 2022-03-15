@@ -17,12 +17,11 @@
 import functools
 
 from absl.testing import absltest
-from jax import test_util as jtu
 from jax3d.projects.nesf.nerfstatic.nerf import utils
 import numpy as np
 
 
-class UtilsTest(jtu.JaxTestCase):
+class UtilsTest(absltest.TestCase):
 
   def test_learning_rate_decay(self):
     np.random.seed(0)
@@ -38,16 +37,16 @@ class UtilsTest(jtu.JaxTestCase):
           max_steps=max_steps)
 
       # Test that the rate at the beginning is the initial rate.
-      self.assertAllClose(lr_fn(0), lr_init)
+      np.testing.assert_allclose(lr_fn(0), lr_init)
 
       # Test that the rate at the end is the final rate.
-      self.assertAllClose(lr_fn(max_steps), lr_final)
+      np.testing.assert_allclose(lr_fn(max_steps), lr_final)
 
       # Test that the rate at the middle is the geometric mean of the two rates.
-      self.assertAllClose(lr_fn(max_steps / 2), np.sqrt(lr_init * lr_final))
+      np.testing.assert_allclose(lr_fn(max_steps / 2), np.sqrt(lr_init * lr_final))
 
       # Test that the rate past the end is the final rate
-      self.assertAllClose(lr_fn(max_steps + 100), lr_final)
+      np.testing.assert_allclose(lr_fn(max_steps + 100), lr_final)
 
   def test_delayed_learning_rate_decay(self):
     np.random.seed(0)
@@ -67,22 +66,22 @@ class UtilsTest(jtu.JaxTestCase):
           lr_delay_mult=lr_delay_mult)
 
       # Test that the rate at the beginning is the delayed initial rate.
-      self.assertAllClose(lr_fn(0), lr_delay_mult * lr_init)
+      np.testing.assert_allclose(lr_fn(0), lr_delay_mult * lr_init)
 
       # Test that the rate at the end is the final rate.
-      self.assertAllClose(lr_fn(max_steps), lr_final)
+      np.testing.assert_allclose(lr_fn(max_steps), lr_final)
 
       # Test that the rate at after the delay is over is the usual rate.
-      self.assertAllClose(
+      np.testing.assert_allclose(
           lr_fn(lr_delay_steps),
           utils.learning_rate_decay(lr_delay_steps, lr_init, lr_final,
                                     max_steps))
 
       # Test that the rate at the middle is the geometric mean of the two rates.
-      self.assertAllClose(lr_fn(max_steps / 2), np.sqrt(lr_init * lr_final))
+      np.testing.assert_allclose(lr_fn(max_steps / 2), np.sqrt(lr_init * lr_final))
 
       # Test that the rate past the end is the final rate
-      self.assertAllClose(lr_fn(max_steps + 100), lr_final)
+      np.testing.assert_allclose(lr_fn(max_steps + 100), lr_final)
 
   def test_get_color_coded_semantics_image(self):
     indexes = (np.random.rand(11, 13) * 256).astype(np.int32)
