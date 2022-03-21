@@ -28,12 +28,15 @@ FLAGS = flags.FLAGS
 
 def main(unused_argv):
   params = nerf_config.root_config_from_flags()
+
+  xm_wid = None
+
   if params.train.mode == "TRAIN":
-    train_lib.train(params=params,
-                    xm_wid=FLAGS.xm_wid)
+    train_lib.train(params=params, xm_wid=xm_wid)
   elif params.train.mode == "SEMANTIC":
-    train_semantic_lib.train(params=params,
-                             xm_wid=FLAGS.xm_wid)
+    train_semantic_lib.train(params=params, xm_wid=xm_wid)
+  else:
+    raise ValueError(params.train.mode)
 
 
 if __name__ == "__main__":

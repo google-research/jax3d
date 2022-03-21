@@ -123,7 +123,6 @@ def apply_canvas(foreground: f32['h w 3'], alpha: f32['h w 1']) -> f32:
 def _preload_modules() -> None:
   """Pre-load image libs to avoid race-condition in multi-thread."""
   PIL.Image.preinit()
-  imageio.plugins.tifffile.load_lib()
 
 
 # Automatically execute the pre-loading.

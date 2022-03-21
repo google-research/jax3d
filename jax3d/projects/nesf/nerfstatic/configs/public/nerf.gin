@@ -1,0 +1,53 @@
+# Train a vanilla NeRF model.
+#
+# The following config file trains a vanilla NeRF model on a single scene. In
+# the context of NeSF, the following can be used to pretrain NeRF models for
+# NeSF's consumption. The configuration below trains NeRF on a local machine
+# using all GPUs available.
+#
+# As set, the configuration below will train on a single scene from the KLEVR
+# dataset. We recommend modifying this configuration once per scene when
+# preparing pretrained NeRFs for NeSF.
+
+############################# EDIT THE FOLLOWING ###############################
+# Choose which scene(s) to train NeRF on. We recommend choosing a single scene
+# with the format "{n}:{n+1}".
+DatasetParams.train_scenes = '0:1'
+
+# Set to folder containing downloaded data. Should contain folders named 0/,
+# 1/, 2/, etc corresponding to individual scenes.
+DatasetParams.data_dir = '/path/to/data/like/static_klevr_v0.1/'
+
+# Set to output folder for this experiment. We recommend one folder per scene.
+TrainParams.train_dir = "/tmp/nesf/static_klevr_v0.1/0"
+
+################################################################################
+ConfigParams.models = 'NerfParams'
+
+DatasetParams.batch_size = 4096  # Reduce to 512 if you're seeing OOM errors.
+DatasetParams.dataset = 'klevr'
+DatasetParams.enable_sqrt2_buffer = True
+DatasetParams.factor = 0
+
+EvalParams.chunk = 32768  # Reduce to 4096 if you're seeing OOM errors.
+
+ModelParams.background = 'WHITE'
+ModelParams.enable_sigma_semantic = True
+ModelParams.max_deg_point = 7
+ModelParams.noise_std = 1.5
+ModelParams.num_coarse_samples = 64
+ModelParams.num_fine_samples = 128
+ModelParams.num_semantic_classes = 0
+ModelParams.preserve_sigma_grid = True
+ModelParams.randomized = True
+ModelParams.use_viewdirs = True
+
+TrainParams.gc_every = 5000
+TrainParams.lr_delay_mult = 0.1
+TrainParams.lr_delay_steps = 2500
+TrainParams.lr_final = 5.4e-4
+TrainParams.lr_init = 1e-3
+TrainParams.mode = 'TRAIN'
+TrainParams.save_every = 2500
+TrainParams.train_steps = 25000
+################################################################################

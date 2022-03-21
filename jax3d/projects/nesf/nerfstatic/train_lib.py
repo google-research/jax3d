@@ -281,7 +281,8 @@ def train(
   rng.fold_in(jax.process_index())
   gc.disable()  # Disable automatic garbage collection for efficiency.
 
-  logging.info("starting train loop.")
+  logging.info("Starting train loop. Using the following devices: %s",
+               jax.devices())
   t_loop_start = time.time()
   for step, batch in tqdm.tqdm(
       zip(range(init_step, max_steps + 1), dataset), desc="train step"):
