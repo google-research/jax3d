@@ -9,7 +9,6 @@ mediapy
 numpy
 pandas
 simple_parsing
-sunds
 tensorflow
 tfds-nightly
 typing_extensions
@@ -17,4 +16,5 @@ xmanager
 
 # Install etils from head
 # Note: Each sub-modules deps should be installed individually
-etils[array_types,enp,epath-no-tf,epy,etqdm,etree] @ git+git://github.com/google/etils
+sunds @ git+https://github.com/google-research/sunds
+etils[array_types,enp,epath-no-tf,epy,etqdm,etree] @ git+https://github.com/google/etils
