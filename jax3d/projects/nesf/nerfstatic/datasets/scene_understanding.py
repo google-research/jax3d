@@ -119,6 +119,7 @@ def make_examples(
           # Include category if present in the dataset
           'category_image': has_category,
       },
+      add_name=True,
   )
   ds = builder.as_dataset(
       split=split,
