@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Lint as: python3
 """A model that renders a scene from spatial latent codes."""
 
 from typing import Optional, Tuple
