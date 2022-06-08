@@ -63,7 +63,7 @@ class Camera:
       The camera object
     """
     if use_unreal_axes:
-      rotations = transform.Rotation.from_quat(quaternions).as_dcm()
+      rotations = transform.Rotation.from_quat(quaternions).as_matrix()
     else:
       # Rotation matrix that rotates from world to object coordinates.
       # Warning: Rotations should be given in blender convensions as

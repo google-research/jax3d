@@ -49,7 +49,7 @@ def blender_quat2sfm_rot(blender_quaternions: f32['n 4']) -> f32['n 3 3']:
   blender_quaternions = einops.rearrange(blender_quaternions, 'n d -> n d 1')
   scipy_quaternions = blender2scipy_quats @ blender_quaternions
   scipy_quaternions = einops.rearrange(scipy_quaternions, 'n d 1 -> n d')
-  scipy_rot = transform.Rotation.from_quat(scipy_quaternions).as_dcm()
+  scipy_rot = transform.Rotation.from_quat(scipy_quaternions).as_matrix()
   return scipy_rot
 
 
