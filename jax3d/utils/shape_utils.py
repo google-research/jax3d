@@ -250,7 +250,7 @@ def _maybe_standardize_array(
     dtype = array.dtype
   elif isinstance(array, array_types.ArrayAliasMeta):
     shape = (int(x) for x in array.shape.split())
-    dtype = array.dtype
+    dtype = array.dtype.np_dtype
   elif isinstance(array, type(_get_none_spec())):
     return None
   elif isinstance(array, (tf.TensorSpec, tf.Tensor)):

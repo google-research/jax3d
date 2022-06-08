@@ -174,7 +174,10 @@ def assert_match_array_alias(
     raise TypeError(f'Expected {expected_spec} array. Got {type(array)}')
 
   try:
-    if expected_spec.dtype and expected_spec.dtype != array.dtype:
+    # Should have a way of checking a type is a subset of another:
+    # if dtype1 < dtype2:
+    if (not isinstance(expected_spec.dtype, array_types.dtypes.AnyDType) and
+        expected_spec.dtype.np_dtype != array.dtype):
       raise ValueError('Dtype do not match')
     elif expected_spec.shape != '...':
       _ShapeTracker.current().track_and_validate_shape(

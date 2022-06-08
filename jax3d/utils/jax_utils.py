@@ -22,9 +22,10 @@ class ShapeDtypeStruct(jax.ShapeDtypeStruct):
   """Typing annotation containing the shape."""
 
   def __repr__(self) -> str:
-    shape_str = ' '.join([str(s) for s in self.shape])
-    dtype_str = array_types.typing.DTYPE_NP_TO_COMPACT_STR.get(
-        self.dtype, self.dtype.name)
-    return f'{dtype_str}[{shape_str}]'
+    array_type = array_types.ArrayAliasMeta(
+        dtype=self.dtype,
+        shape=self.shape,
+    )
+    return repr(array_type)
 
   __str__ = __repr__
