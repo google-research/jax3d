@@ -58,4 +58,5 @@ jobs:
       # --durations=X: Log the X longest tests
       run: |
         pytest -vv -n auto \
-          --durations=10
+          --durations=10 \
+          --ignore="jax3d/projects/nesf/nerfstatic/integration_test/import_test.py"
