@@ -305,7 +305,7 @@ def _verify_sigma_grid(model, variables, sigma_grid):
 
 
 def _nested_stack(x):
-  return jax.tree_multimap(lambda *args: jnp.stack(args), *x)
+  return jax.tree_map(lambda *args: jnp.stack(args), *x)
 
 
 def _device_map(x: Tree[jnp.ndarray],

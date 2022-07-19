@@ -282,7 +282,7 @@ def volume_rendering(
     return ray_value + (1.0 - ray_alpha[..., None]) * background_value
 
   if background_values is not None:
-    ray_values = jax.tree_multimap(composite_background, ray_values,
+    ray_values = jax.tree_map(composite_background, ray_values,
                                    background_values)
 
   return VolumeRenderingResult(

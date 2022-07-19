@@ -186,7 +186,7 @@ def render_image(render_fn: Callable[[int, types.Rays], types.RenderResult],
   # Merge each list of ndarrays into one ndarray of shape [num_rays, ...].
   # Signature: `tree_multimap(fn, *arrs: RenderedRays) -> RenderedRays`
   # fn has signature `fn(*arrs: Array) -> Array`
-  results = jax.tree_multimap(
+  results = jax.tree_map(
       lambda *arrs: jnp.concatenate(arrs, axis=0),
       *results,
   )
@@ -307,7 +307,7 @@ def predict_2d_semantic(
   # Merge each list of ndarrays into one ndarray of shape [num_rays, ...].
   # Signature: `tree_multimap(fn, *arrs: RenderedRays) -> RenderedRays`
   # fn has signature `fn(*arrs: Array) -> Array`
-  results = jax.tree_multimap(
+  results = jax.tree_map(
       lambda *arrs: jnp.concatenate(arrs, axis=0),
       *results,
   )
@@ -428,7 +428,7 @@ def predict_3d_semantic(
 
   # Merge each list of ndarray into one ndarray of shape
   # [num_sample_points, ...].
-  results = jax.tree_multimap(lambda *arrs: jnp.concatenate(arrs, axis=0),
+  results = jax.tree_map(lambda *arrs: jnp.concatenate(arrs, axis=0),
                               *results)
 
   return results
@@ -741,7 +741,7 @@ def predict_3d_semanticnerf(
 
   # Merge each list of ndarray into one ndarray of shape
   # [num_sample_points, ...].
-  results = jax.tree_multimap(lambda *arrs: jnp.concatenate(arrs, axis=0),
+  results = jax.tree_map(lambda *arrs: jnp.concatenate(arrs, axis=0),
                               *results)
 
   # TODO(someone): Double check why results has an extra dimension here.

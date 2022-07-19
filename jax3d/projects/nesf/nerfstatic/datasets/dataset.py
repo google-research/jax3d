@@ -667,12 +667,12 @@ class DatasetIterable:
 
 def _concat_examples(examples: List[types.Batch]) -> types.Batch:
   """Merges list of examples by concatenation of all features along axis 0."""
-  return jax.tree_multimap(lambda *arrs: np.concatenate(arrs), *examples)
+  return jax.tree_map(lambda *arrs: np.concatenate(arrs), *examples)
 
 
 def _stack_examples(examples: List[types.Batch]) -> types.Batch:
   """Stacks list of examples on axis 0 for all features."""
-  return jax.tree_multimap(lambda *arrs: np.stack(arrs), *examples)
+  return jax.tree_map(lambda *arrs: np.stack(arrs), *examples)
 
 
 def _make_in_memory_dataset(
@@ -871,7 +871,7 @@ def _next_batch_rays_from_scenes(examples: List[types.Batch],
       result.append(select_rays_in_scene)
 
     # List[Batch] --> Batch
-    result = jax.tree_multimap(lambda *arrs: np.stack(arrs), *result)
+    result = jax.tree_map(lambda *arrs: np.stack(arrs), *result)
 
     return result
 

@@ -162,7 +162,7 @@ def load_all_examples(ds: tf.data.Dataset) -> types.Batch:
   """Load all examples in-memory."""
   # Might take a while. Could use
   all_exs = list(tfds.as_numpy(ds))
-  return jax.tree_multimap(lambda *arrs: np.stack(arrs), *all_exs)
+  return jax.tree_map(lambda *arrs: np.stack(arrs), *all_exs)
 
 
 @sunds.utils.map_fn

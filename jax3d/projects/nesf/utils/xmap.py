@@ -108,7 +108,7 @@ def xmap(
     # TODO(jax3d.projects.nesf):
     # Remove once https://github.com/google/jax/issues/5652 is
     # fixed
-    in_axes_normalized = jax.tree_multimap(
+    in_axes_normalized = jax.tree_map(
         _normalize_dict_shape, arr_args, in_axes
     )
 

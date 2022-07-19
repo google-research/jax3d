@@ -138,7 +138,7 @@ def _nerf_state(rng, placeholder_batch):
 
 def _assert_tree_allclose(tree_a, tree_b):
   """Fails if tree_a != tree_b."""
-  jax.tree_multimap(np.testing.assert_allclose, tree_a, tree_b)
+  jax.tree_map(np.testing.assert_allclose, tree_a, tree_b)
 
 
 def _assert_tree_notclose(tree_a, tree_b):

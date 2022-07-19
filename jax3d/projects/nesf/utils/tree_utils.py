@@ -38,7 +38,7 @@ def parallel_map(
     max_workers: int = 32,
     report_progress: bool = False,
 ) -> Tree[_Tout]:  # pytype: disable=invalid-annotation
-  """Same as `jax.tree_multimap` but apply map_fn in parallel.
+  """Same as `jax.tree_map` but apply map_fn in parallel.
 
   Args:
     map_fn: Worker function
@@ -53,7 +53,7 @@ def parallel_map(
       max_workers=max_workers,
   ) as executor:
     launch_worker = functools.partial(executor.submit, map_fn)
-    futures = jax.tree_multimap(launch_worker, *trees)
+    futures = jax.tree_map(launch_worker, *trees)
 
     leaves, _ = jax.tree_flatten(futures)
 
@@ -71,7 +71,7 @@ def parallel_map(
 def unzip(tree: Tree[Iterable[_T]]) -> Iterator[Tree[_T]]:
   """Unpack a tree of iterable.
 
-  This is the reverse operation of `jax.tree_multimap(zip, *trees)`
+  This is the reverse operation of `jax.tree_map(zip, *trees)`
 
   Example:
 
