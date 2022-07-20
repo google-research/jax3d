@@ -237,7 +237,7 @@ class EnumField(DataclassField[Union[str, _EnumT], _EnumT]):
     self._str2enum = {x.name.lower(): x for x in self._enum_cls}
     super().__init__(default, **kwargs)
 
-  def _validate(self, value: Union[str, None, _EnumT]) -> Optional[_EnumT]:
+  def _validate(self, value: Union[str, None, _EnumT]) -> Optional[_EnumT]:  # pytype: disable=signature-mismatch
     """Validate the value."""
     if isinstance(value, str):
       value = value.lower()  # pytype: disable=attribute-error

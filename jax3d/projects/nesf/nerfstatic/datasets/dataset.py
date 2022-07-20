@@ -93,7 +93,7 @@ class BatchSizeField(j3d.utils.DataclassField[int, BatchSize]):
     self._total = total
     super().__init__()
 
-  def _default(self) -> int:
+  def _default(self) -> int:  # pytype: disable=signature-mismatch
     # Lazy construct the field to avoid `jax` calls at import time, before
     # `absl.main` is called.
     return self._total

@@ -300,7 +300,7 @@ class ConfigField(j3d.utils.DataclassField[_Cls, _Cls]):
     self._required = required
     super().__init__()
 
-  def _default(self) -> str:
+  def _default(self) -> str:  # pytype: disable=signature-mismatch
     # Returns as string so the construction happens in `_validate` (with
     # correct scope and checks).
     if self._required:
