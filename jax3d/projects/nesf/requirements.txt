@@ -1,2 +1,2 @@
-kubric-nightly
+# kubric-nightly  # Create freeze
 scikit-image
