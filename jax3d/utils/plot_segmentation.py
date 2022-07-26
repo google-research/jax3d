@@ -227,7 +227,7 @@ PALETTES = {
 
 def _safe_log2(x: f32['...'], eps: float = 1e-6):
   """Avoid NaNs from log(0) by clipping the input to the range [eps, inf)."""
-  safe_x = np.clip(x, a_min=eps)
+  safe_x = np.clip(x, a_min=eps, a_max=np.inf)
   return np.log2(safe_x)
 
 
