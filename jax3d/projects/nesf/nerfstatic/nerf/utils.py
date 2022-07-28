@@ -18,6 +18,7 @@ from typing import Callable, List, Optional
 
 import chex
 import flax
+import flax.optim
 import jax
 import jax.numpy as jnp
 import jax3d.projects.nesf as j3d
