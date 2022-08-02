@@ -160,8 +160,6 @@ def maybe_convert_to_wide_form(
     if segmentation.dtype.type not in int_types:
       raise ValueError('Segmentation has final dimension 1 so it should be'
                        f'int-typed, but is {segmentation.dtype})')
-    _, b = np.unique(segmentation, return_inverse=True)
-    segmentation = b.reshape(segmentation.shape)
     max_seg = np.max(segmentation) + 1
     nr_segments = nr_segments if nr_segments is not None else max_seg
     segmentation = np.eye(nr_segments, dtype=np.float32)[segmentation[..., 0]]
