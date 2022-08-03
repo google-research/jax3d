@@ -1,0 +1,547 @@
+<div id="container" style="position: fixed; top: 0%; left: 0%"></div>
+
+<div id="info" style="position: absolute; left: 1256px; font-size: 40px">
+  <div id="fpsdisplay"></div>
+  <div id="sizedisplay"></div>
+</div>
+
+<!-- Write to G-Buffer -->
+<script id="gbuffer-vert" type="x-shader/x-vertex">
+  in vec3 position;
+  in vec2 uv;
+
+  out vec2 vUv;
+  out vec3 vPosition;
+  out vec3 rayDirection;
+
+  uniform mat4 modelViewMatrix;
+  uniform mat4 projectionMatrix;
+  uniform mat4 modelMatrix;
+  uniform vec3 cameraPosition;
+
+  void main() {
+      vUv = uv;
+      vPosition = position;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+      rayDirection = (modelMatrix * vec4( position, 1.0 )).rgb - cameraPosition;
+  }
+</script>
+<script id="gbuffer-frag" type="x-shader/x-fragment">
+  precision highp float;
+
+  layout(location = 0) out vec4 gColor0;
+  layout(location = 1) out vec4 gColor1;
+  layout(location = 2) out vec4 gColor2;
+
+  uniform mediump sampler2D tDiffuse0;
+  uniform mediump sampler2D tDiffuse1;
+
+  in vec2 vUv;
+  in vec3 vPosition;
+  in vec3 rayDirection;
+
+  void main() {
+
+      // write color to G-Buffer
+      gColor1 = texture( tDiffuse0, vUv );
+      if (gColor1.r == 0.0) discard;
+      gColor0 = vec4( normalize(rayDirection), 1.0 );
+      gColor2 = texture( tDiffuse1, vUv );
+
+  }
+</script>
+
+<!-- Read G-Buffer and render to screen -->
+<script id="render-vert" type="x-shader/x-vertex">
+  in vec3 position;
+  in vec2 uv;
+
+  out vec2 vUv;
+
+  uniform mat4 modelViewMatrix;
+  uniform mat4 projectionMatrix;
+
+  void main() {
+      vUv = uv;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+  }
+</script>
+
+<script type="module">
+  import * as THREE from "https://unpkg.com/three?module";
+
+  import WebGL from "https://unpkg.com/three/examples/jsm/capabilities/WebGL.js?module";
+
+  import { OBJLoader } from "https://unpkg.com/three/examples/jsm/loaders/OBJLoader.js?module";
+
+  import { OrbitControls } from "https://unpkg.com/three/examples/jsm/controls/OrbitControls.js?module";
+
+  // copied and slightly modified from SNeRG
+
+  //the MLP
+  const viewDependenceNetworkShaderFunctions = `
+    precision mediump float;
+
+    layout(location = 0) out vec4 pc_FragColor;
+
+    in vec2 vUv;
+
+    uniform mediump sampler2D tDiffuse0x;
+    uniform mediump sampler2D tDiffuse1x;
+    uniform mediump sampler2D tDiffuse2x;
+
+    uniform mediump sampler2D weightsZero;
+    uniform mediump sampler2D weightsOne;
+    uniform mediump sampler2D weightsTwo;
+
+    mediump vec3 evaluateNetwork( mediump vec4 f0, mediump vec4 f1, mediump vec4 viewdir) {
+        mediump float intermediate_one[NUM_CHANNELS_ONE] = float[](
+            BIAS_LIST_ZERO
+        );
+        for (int j = 0; j < NUM_CHANNELS_ZERO; ++j) {
+            mediump float input_value = 0.0;
+            if (j < 4) {
+            input_value =
+                (j == 0) ? f0.r : (
+                (j == 1) ? f0.g : (
+                (j == 2) ? f0.b : f0.a));
+            } else if (j < 8) {
+            input_value =
+                (j == 4) ? f1.r : (
+                (j == 5) ? f1.g : (
+                (j == 6) ? f1.b : f1.a));
+            } else {
+            input_value =
+                (j == 8) ? viewdir.r : (
+                (j == 9) ? -viewdir.b : viewdir.g); //switch y-z axes
+            }
+            for (int i = 0; i < NUM_CHANNELS_ONE; ++i) {
+            intermediate_one[i] += input_value *
+                texelFetch(weightsZero, ivec2(j, i), 0).x;
+            }
+        }
+        mediump float intermediate_two[NUM_CHANNELS_TWO] = float[](
+            BIAS_LIST_ONE
+        );
+        for (int j = 0; j < NUM_CHANNELS_ONE; ++j) {
+            if (intermediate_one[j] <= 0.0) {
+                continue;
+            }
+            for (int i = 0; i < NUM_CHANNELS_TWO; ++i) {
+                intermediate_two[i] += intermediate_one[j] *
+                    texelFetch(weightsOne, ivec2(j, i), 0).x;
+            }
+        }
+        mediump float result[NUM_CHANNELS_THREE] = float[](
+            BIAS_LIST_TWO
+        );
+        for (int j = 0; j < NUM_CHANNELS_TWO; ++j) {
+            if (intermediate_two[j] <= 0.0) {
+                continue;
+            }
+            for (int i = 0; i < NUM_CHANNELS_THREE; ++i) {
+                result[i] += intermediate_two[j] *
+                    texelFetch(weightsTwo, ivec2(j, i), 0).x;
+            }
+        }
+        for (int i = 0; i < NUM_CHANNELS_THREE; ++i) {
+            result[i] = 1.0 / (1.0 + exp(-result[i]));
+        }
+        return vec3(result[0]*viewdir.a+(1.0-viewdir.a),
+                    result[1]*viewdir.a+(1.0-viewdir.a),
+                    result[2]*viewdir.a+(1.0-viewdir.a));
+      }
+
+
+    void main() {
+
+        vec4 diffuse0 = texture( tDiffuse0x, vUv );
+        if (diffuse0.a < 0.6) discard;
+        vec4 diffuse1 = texture( tDiffuse1x, vUv );
+        vec4 diffuse2 = texture( tDiffuse2x, vUv );
+
+    //deal with iphone
+    diffuse0.a = diffuse0.a*2.0-1.0;
+    diffuse1.a = diffuse1.a*2.0-1.0;
+    diffuse2.a = diffuse2.a*2.0-1.0;
+
+        //pc_FragColor.rgb  = diffuse1.rgb;
+        pc_FragColor.rgb = evaluateNetwork(diffuse1,diffuse2,diffuse0);
+        pc_FragColor.a = 1.0;
+    }
+`;
+
+  /**
+   * Creates a data texture containing MLP weights.
+   *
+   * @param {!Object} network_weights
+   * @return {!THREE.DataTexture}
+   */
+  function createNetworkWeightTexture(network_weights) {
+    let width = network_weights.length;
+    let height = network_weights[0].length;
+
+    let weightsData = new Float32Array(width * height);
+    for (let co = 0; co < height; co++) {
+      for (let ci = 0; ci < width; ci++) {
+        let index = co * width + ci;
+        let weight = network_weights[ci][co];
+        weightsData[index] = weight;
+      }
+    }
+    let texture = new THREE.DataTexture(
+      weightsData,
+      width,
+      height,
+      THREE.RedFormat,
+      THREE.FloatType
+    );
+    texture.magFilter = THREE.NearestFilter;
+    texture.minFilter = THREE.NearestFilter;
+    texture.needsUpdate = true;
+    return texture;
+  }
+
+  /**
+   * Creates shader code for the view-dependence MLP.
+   *
+   * This populates the shader code in viewDependenceNetworkShaderFunctions with
+   * network weights and sizes as compile-time constants. The result is returned
+   * as a string.
+   *
+   * @param {!Object} scene_params
+   * @return {string}
+   */
+  function createViewDependenceFunctions(network_weights) {
+    let width = network_weights["0_bias"].length;
+    let biasListZero = "";
+    for (let i = 0; i < width; i++) {
+      let bias = network_weights["0_bias"][i];
+      biasListZero += Number(bias).toFixed(7);
+      if (i + 1 < width) {
+        biasListZero += ", ";
+      }
+    }
+
+    width = network_weights["1_bias"].length;
+    let biasListOne = "";
+    for (let i = 0; i < width; i++) {
+      let bias = network_weights["1_bias"][i];
+      biasListOne += Number(bias).toFixed(7);
+      if (i + 1 < width) {
+        biasListOne += ", ";
+      }
+    }
+
+    width = network_weights["2_bias"].length;
+    let biasListTwo = "";
+    for (let i = 0; i < width; i++) {
+      let bias = network_weights["2_bias"][i];
+      biasListTwo += Number(bias).toFixed(7);
+      if (i + 1 < width) {
+        biasListTwo += ", ";
+      }
+    }
+
+    let channelsZero = network_weights["0_weights"].length;
+    let channelsOne = network_weights["0_bias"].length;
+    let channelsTwo = network_weights["1_bias"].length;
+    let channelsThree = network_weights["2_bias"].length;
+
+    let fragmentShaderSource = viewDependenceNetworkShaderFunctions.replace(
+      new RegExp("NUM_CHANNELS_ZERO", "g"),
+      channelsZero
+    );
+    fragmentShaderSource = fragmentShaderSource.replace(
+      new RegExp("NUM_CHANNELS_ONE", "g"),
+      channelsOne
+    );
+    fragmentShaderSource = fragmentShaderSource.replace(
+      new RegExp("NUM_CHANNELS_TWO", "g"),
+      channelsTwo
+    );
+    fragmentShaderSource = fragmentShaderSource.replace(
+      new RegExp("NUM_CHANNELS_THREE", "g"),
+      channelsThree
+    );
+
+    fragmentShaderSource = fragmentShaderSource.replace(
+      new RegExp("BIAS_LIST_ZERO", "g"),
+      biasListZero
+    );
+    fragmentShaderSource = fragmentShaderSource.replace(
+      new RegExp("BIAS_LIST_ONE", "g"),
+      biasListOne
+    );
+    fragmentShaderSource = fragmentShaderSource.replace(
+      new RegExp("BIAS_LIST_TWO", "g"),
+      biasListTwo
+    );
+
+    return fragmentShaderSource;
+  }
+
+  let container;
+
+  let camera, scene, renderer, controls;
+  let renderTarget;
+  let postScene, postCamera;
+
+  let gLastFrame = window.performance.now();
+  let oldMilliseconds = 1000;
+
+  const preset_size_w = 1256;
+  const preset_size_h = 828;
+  const object_rescale = 0.1;
+
+  var object_offset_x = 0.0;
+  var object_offset_y = 0.0;
+  var object_offset_z = 0.0;
+  var cam_offset_h = 0.0;
+  var cam_offset_w = 0.0;
+  var near_plane = 0.5;
+
+  init();
+
+  function init() {
+    const params = new URL(window.location.href).searchParams;
+    const objname = params.get("obj");
+
+    let obj_name = "gardenvase";
+    if (objname) {
+      obj_name = objname;
+    }
+
+    //center the object
+    if (obj_name == "bicycle") {
+      object_offset_x = 0.0;
+      object_offset_y = 0.2;
+      object_offset_z = -0.1;
+      cam_offset_w = 0.8;
+      cam_offset_h = 0.2;
+      near_plane = 0.5;
+    }
+    if (obj_name == "flowerbed") {
+      object_offset_x = 0.0;
+      object_offset_y = 0.12;
+      object_offset_z = 0.0;
+      cam_offset_w = 0.8;
+      cam_offset_h = 0.1;
+      near_plane = 0.1;
+    }
+    if (obj_name == "gardenvase") {
+      object_offset_x = 0.07;
+      object_offset_y = 0.4;
+      object_offset_z = 0.05;
+      cam_offset_w = 1.0;
+      cam_offset_h = 0.4;
+      near_plane = 0.5;
+    }
+    if (obj_name == "stump") {
+      object_offset_x = 0.0;
+      object_offset_y = 0.4;
+      object_offset_z = 0.1;
+      cam_offset_w = 1.0;
+      cam_offset_h = 0.1;
+      near_plane = 0.5;
+    }
+    if (obj_name == "treehill") {
+      object_offset_x = 0.05;
+      object_offset_y = 0.05;
+      object_offset_z = 0.0;
+      cam_offset_w = 0.8;
+      cam_offset_h = 0.05;
+      near_plane = 0.5;
+    }
+
+    var OBJFile = obj_name + "_phone/shape.obj";
+    var PNGFile = obj_name + "_phone/shape.png";
+    var JSONFile = obj_name + "_phone/mlp.json";
+
+    if (WebGL.isWebGL2Available() === false) {
+      document.body.appendChild(WebGL.getWebGL2ErrorMessage());
+      return;
+    }
+
+    container = document.getElementById("container");
+    renderer = new THREE.WebGLRenderer({
+      powerPreference: "high-performance",
+      precision: "highp",
+    });
+    renderer.setPixelRatio(1);
+    renderer.setSize(preset_size_w, preset_size_h);
+    renderer.setClearColor(new THREE.Color("rgb(0, 0, 0)"), 0.5);
+    container.appendChild(renderer.domElement);
+
+    // Create a multi render target with Float buffers
+    renderTarget = new THREE.WebGLMultipleRenderTargets(
+      preset_size_w * 2,
+      preset_size_h * 2,
+      3
+    );
+
+    for (let i = 0, il = renderTarget.texture.length; i < il; i++) {
+      renderTarget.texture[i].minFilter = THREE.LinearFilter;
+      renderTarget.texture[i].magFilter = THREE.LinearFilter;
+      renderTarget.texture[i].type = THREE.FloatType;
+    }
+
+    camera = new THREE.PerspectiveCamera(
+      47,
+      preset_size_w / preset_size_h,
+      near_plane * object_rescale,
+      25 * object_rescale
+    );
+    camera.position.x = cam_offset_w * object_rescale;
+    camera.position.y = cam_offset_h * object_rescale;
+
+    controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.screenSpacePanning = true;
+
+    scene = new THREE.Scene();
+
+    fetch(obj_name + "_phone/mlp.json")
+      .then((response) => {
+        return response.json();
+      })
+      .then((json) => {
+        for (let i = 0, il = json["obj_num"]; i < il; i++) {
+          let tex0 = new THREE.TextureLoader().load(
+            obj_name + "_phone/shape" + i.toFixed(0) + ".png" + "feat0.png",
+            function () {
+              render();
+            }
+          );
+          tex0.magFilter = THREE.NearestFilter;
+          tex0.minFilter = THREE.NearestFilter;
+          let tex1 = new THREE.TextureLoader().load(
+            obj_name + "_phone/shape" + i.toFixed(0) + ".png" + "feat1.png",
+            function () {
+              render();
+            }
+          );
+          tex1.magFilter = THREE.NearestFilter;
+          tex1.minFilter = THREE.NearestFilter;
+          let newmat = new THREE.RawShaderMaterial({
+            side: THREE.DoubleSide,
+            vertexShader: document
+              .querySelector("#gbuffer-vert")
+              .textContent.trim(),
+            fragmentShader: document
+              .querySelector("#gbuffer-frag")
+              .textContent.trim(),
+            uniforms: {
+              tDiffuse0: { value: tex0 },
+              tDiffuse1: { value: tex1 },
+            },
+            glslVersion: THREE.GLSL3,
+          });
+          new OBJLoader().load(
+            obj_name + "_phone/shape" + i.toFixed(0) + ".obj",
+            function (object) {
+              object.traverse(function (child) {
+                if (child.type == "Mesh") {
+                  child.material = newmat;
+                }
+              });
+              object.scale.x = object_rescale;
+              object.scale.y = object_rescale;
+              object.scale.z = object_rescale;
+              object.position.x = object_offset_x * object_rescale;
+              object.position.y = object_offset_y * object_rescale;
+              object.position.z = object_offset_z * object_rescale;
+              scene.add(object);
+            }
+          );
+        }
+
+        let network_weights = json;
+        let fragmentShaderSource =
+          createViewDependenceFunctions(network_weights);
+        let weightsTexZero = createNetworkWeightTexture(
+          network_weights["0_weights"]
+        );
+        let weightsTexOne = createNetworkWeightTexture(
+          network_weights["1_weights"]
+        );
+        let weightsTexTwo = createNetworkWeightTexture(
+          network_weights["2_weights"]
+        );
+
+        // PostProcessing setup
+        postScene = new THREE.Scene();
+        postScene.background = new THREE.Color("rgb(255, 255, 255)");
+        //postScene.background = new THREE.Color("rgb(128, 128, 128)");
+        postCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+        postScene.add(
+          new THREE.Mesh(
+            new THREE.PlaneGeometry(2, 2),
+            new THREE.RawShaderMaterial({
+              vertexShader: document
+                .querySelector("#render-vert")
+                .textContent.trim(),
+              fragmentShader: fragmentShaderSource,
+              uniforms: {
+                tDiffuse0x: { value: renderTarget.texture[0] },
+                tDiffuse1x: { value: renderTarget.texture[1] },
+                tDiffuse2x: { value: renderTarget.texture[2] },
+                weightsZero: { value: weightsTexZero },
+                weightsOne: { value: weightsTexOne },
+                weightsTwo: { value: weightsTexTwo },
+              },
+              glslVersion: THREE.GLSL3,
+            })
+          )
+        );
+
+        window.addEventListener("resize", onWindowResize, false);
+
+        animate();
+      });
+  }
+
+  function onWindowResize() {
+    camera.aspect = preset_size_w / preset_size_h;
+    camera.updateProjectionMatrix();
+
+    renderer.setSize(preset_size_w, preset_size_h);
+
+    renderTarget.setSize(preset_size_w * 2, preset_size_h * 2);
+    document.getElementById("sizedisplay").innerHTML =
+      "Size: " + preset_size_w.toFixed(0) + "x" + preset_size_h.toFixed(0);
+
+    render();
+  }
+
+  function updateFPSCounter() {
+    let currentFrame = window.performance.now();
+    let milliseconds = currentFrame - gLastFrame;
+    let smoothMilliseconds = oldMilliseconds * 0.95 + milliseconds * 0.05;
+    let smoothFps = 1000 / smoothMilliseconds;
+    gLastFrame = currentFrame;
+    oldMilliseconds = smoothMilliseconds;
+    document.getElementById("fpsdisplay").innerHTML =
+      "FPS: " + smoothFps.toFixed(1);
+  }
+
+  function animate() {
+    requestAnimationFrame(animate);
+
+    controls.update();
+
+    render();
+  }
+
+  function render() {
+    // render scene into target
+    renderer.setRenderTarget(renderTarget);
+    renderer.render(scene, camera);
+
+    // render post FX
+    renderer.setRenderTarget(null);
+    renderer.render(postScene, postCamera);
+
+    updateFPSCounter();
+  }
+</script>
