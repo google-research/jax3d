@@ -70,7 +70,7 @@ def sample_1d(
   # Initialize t with leading bin edges
   t = jnp.linspace(0.0, 1.0, sample_count, endpoint=False, dtype=dtype)
   t = t.reshape(*([1] * len(batch_shape)), sample_count)
-  t = t.tile(tuple(batch_shape) + (1,))
+  t = jnp.tile(t, tuple(batch_shape) + (1,))
 
   if strategy == SamplingStrategy.STRATIFIED:
     # Randomly perturb points within depth bins
@@ -106,7 +106,7 @@ def sample_1d_grid(
   t = jnp.linspace(0.0, 1.0, sample_count, endpoint=False, dtype=dtype)
   t += 0.5 / sample_count
   t = t.reshape(*([1] * len(batch_shape)), sample_count)
-  t = t.tile(tuple(batch_shape) + (1,))
+  t = jnp.tile(t, tuple(batch_shape) + (1,))
   return t
 
 
