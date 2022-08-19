@@ -179,10 +179,23 @@ def convert_to_one_hot(
 
 
 def palette_lch(n: int, chroma=0.3, lightness=0.8) -> f32['n 3']:
-  hues = np.linspace(0.51, 0.51 + 2*np.pi, n)
+  starting_hue = np.pi * 1.5  # blue
+  hues = np.linspace(starting_hue, 2*np.pi + starting_hue, n + 1) % (2*np.pi)
   chroma = np.ones_like(hues) * chroma
   lightness = np.ones_like(hues) * lightness
-  return rgb_from_lch(np.stack([lightness, chroma, hues], axis=-1))
+  pal = rgb_from_lch(np.stack([lightness, chroma, hues], axis=-1))
+  # skip last color since it is the same as first
+  return pal[:-1]
+
+
+def palette_hsv(n: int) -> f32['n 3']:
+  starting_hue = 2/3  # blue
+  r = np.linspace(starting_hue, starting_hue + 1.0, n + 1) % 1.0
+  cmap = mpl.cm.get_cmap('hsv')
+  pal = cmap(r)
+  # skip last color since it is the same as first
+  # only use RGB values (drop alpha value)
+  return pal[:-1, :3]
 
 
 def palette_mpl(
@@ -219,7 +232,7 @@ PALETTES = {
     'gray': functools.partial(palette_mpl, 'gray'),
     'turbo': functools.partial(palette_mpl, 'turbo', minv=0, maxv=1),
     'lch': palette_lch,
-    'hsv': functools.partial(palette_mpl, 'hsv', minv=0, maxv=1),
+    'hsv': palette_hsv,
 }
 
 
