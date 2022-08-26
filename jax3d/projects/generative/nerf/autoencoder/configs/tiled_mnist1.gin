@@ -1,0 +1,13 @@
+import jax3d.projects.generative.nerf.configs
+import jax3d.projects.generative.nerf.autoencoder.data
+import jax3d.projects.generative.nerf.autoencoder.trainer
+
+nerf.configs.ExperimentConfig.trainer = @trainer.TransformerTrainer
+trainer.TransformerTrainer.dataset_reader_class = @data.TiledMNISTDatasetReader
+trainer.TransformerTrainer.max_steps = 500000
+
+TiledMNISTDatasetReader.resolution = 256
+TiledMNISTDatasetReader.batch_size = 128
+TiledMNISTDatasetReader.tile_factor = 4
+
+attention/PositionalEncoding.max_frequency_degree = 7

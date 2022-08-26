@@ -1,0 +1,4 @@
+TransformerNeRFTrainer.num_latent_tokens = 4
+
+MLPDecoder.skips = (0, 4)
+HyperNetworkDecoder.split_latent_to_skips = False

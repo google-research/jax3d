@@ -1,0 +1,4 @@
+CNNEncoder.num_tokens = 4
+
+MLPDecoder.skips = (0, 4)
+
