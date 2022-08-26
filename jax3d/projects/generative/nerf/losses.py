@@ -121,7 +121,7 @@ def reconstruction(ground_truth: FloatArray[..., "C"],
 def normal_consistency(analytic_normals: FloatArray[..., 3],
                        predicted_normals: FloatArray[..., 3],
                        mask: Optional[FloatArray[...]] = None,
-                       weight: float = 1.0,
+                       weight: float = 0.0,
                        hold_analytic_normals_constant: bool = True,
                        mode: str = "error") -> Tuple[FloatArray, float]:
   """Loss for enforcing consistency between predicted and analytic normals.
@@ -159,7 +159,7 @@ def normal_consistency(analytic_normals: FloatArray[..., 3],
 
 @gin.configurable("color_correction_regularization", allowlist=["weight"])
 def color_correction_regularization(error: FloatArray[...],
-                                    weight: float = 1.0
+                                    weight: float = 0.0
                                    ) -> Tuple[FloatArray, float]:
   """Color correction regularization.
 
@@ -176,7 +176,7 @@ def color_correction_regularization(error: FloatArray[...],
 
 @gin.configurable("hard_surface_loss", allowlist=["weight"])
 def hard_surface(sample_weights: FloatArray[...],
-                 weight: float = 1e-1) -> Tuple[FloatArray, float]:
+                 weight: float = 0.0) -> Tuple[FloatArray, float]:
   """Hard surface density regularizer loss.
 
   Args:

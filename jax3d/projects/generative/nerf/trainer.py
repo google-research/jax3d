@@ -195,6 +195,7 @@ class Trainer:
     checkpoint_state = self.load_checkpoint(self.init_state())
     state = checkpoint_state
 
+    gpu_monitor = None
     if jax.process_index() == 0:
       summary_writer = self.create_summary_writer()
       summary_writer.text("Config", gin.config_str(), 0)
@@ -205,9 +206,6 @@ class Trainer:
                                                   ]).decode("UTF-8").strip()
         gpu_monitor = gpu_utilization.GPUMonitor(
             nvidia_smi_path=nvidia_smi_path)
-      else:
-        # TODO(drebain) look into querying TPU utilization.
-        gpu_monitor = None
 
       log_state = LogState(state.step, time.perf_counter(), gpu_monitor)
 

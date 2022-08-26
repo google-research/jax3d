@@ -1,0 +1,2 @@
+Model.model_type = "transformer"
+TransformerDecoder.use_single_head = True

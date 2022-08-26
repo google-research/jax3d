@@ -1,0 +1,3 @@
+TransformerNeRFTrainer.num_latent_tokens = 64
+
+MLPDecoder.skips = (0, 1, 2, 3, 4, 5, 6, 7)

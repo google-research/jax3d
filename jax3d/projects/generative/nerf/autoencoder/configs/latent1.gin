@@ -1,0 +1,4 @@
+CNNEncoder.num_tokens = 1
+
+MLPDecoder.skips = (0, 4)
+MLPDecoder.split_latent_to_skips = False

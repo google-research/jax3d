@@ -1,0 +1,21 @@
+import jax3d.projects.generative.nerf.configs
+import jax3d.projects.generative.nerf.lightfield.trainer
+
+nerf.configs.ExperimentConfig.trainer = @trainer.TransformerNeRFTrainer
+trainer.TransformerNeRFTrainer.dataset_reader_class = @data.PixelBatchDatasetReader
+trainer.TransformerNeRFTrainer.max_steps = 500000
+
+# TODO(drebain) set up external data loading.
+PixelBatchDatasetReader.identity_count = 3652
+PixelBatchDatasetReader.max_views_per_identity = 300
+PixelBatchDatasetReader.use_pixel_batches = True
+PixelBatchDatasetReader.view_test_fraction = 0.1
+
+lightfield_loss_fn.mask_mode = "none"
+
+PixelBatchDatasetReader.identity_batch_size = 64
+PixelBatchDatasetReader.view_batch_size = 2
+PixelBatchDatasetReader.pixel_batch_size = 64
+
+origins/PositionalEncoding.max_frequency_degree = 15
+directions/PositionalEncoding.max_frequency_degree = 15

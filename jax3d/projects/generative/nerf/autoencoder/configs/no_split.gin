@@ -1,0 +1,4 @@
+CNNEncoder.num_tokens = 64
+
+MLPDecoder.skips = (0,)
+HyperNetworkDecoder.split_latent_to_skips = False
