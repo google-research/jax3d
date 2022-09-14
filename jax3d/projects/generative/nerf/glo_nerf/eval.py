@@ -19,6 +19,8 @@ from typing import Any, Iterator
 from absl import logging
 import einops
 from flax import jax_utils
+import gin
+
 import jax
 import jax.numpy as jnp
 from jax3d.projects.generative.nerf import camera as jax_camera
@@ -139,8 +141,12 @@ def render_id_view_grid(image_renderer, summary_data, model_parameters, step):
   return image_grids
 
 
+@gin.configurable(allowlist=["apply_mask"])
 def compute_batch_psnr(model_parameters: models.ModelParameters,
-                       latents: np.ndarray, data: ..., step: int) -> float:
+                       latents: np.ndarray,
+                       data: ...,
+                       step: int,
+                       apply_mask: bool = False) -> float:
   """Computes the reconstruction PSNR for a batch of data.
 
   Args:
@@ -148,6 +154,7 @@ def compute_batch_psnr(model_parameters: models.ModelParameters,
     latents: ConditionVariables object of all latents required for model.
     data: A batch of data to evaluate.
     step: Training step (needed to set scheduled values correctly).
+    apply_mask: Use masked data for PSNR.
 
   Returns:
     The computed scalar PSNR value.
@@ -170,7 +177,12 @@ def compute_batch_psnr(model_parameters: models.ModelParameters,
   render = models.Model().apply(
       model_parameters, inputs, rays, rng=rng, step=step)
 
-  psnr = metrics.psnr(render["gamma_rgb"], data_flat["gamma_rgb"])
+  pred = render["gamma_rgb"]
+  gt = data_flat["gamma_rgb"]
+  if apply_mask:
+    pred *= data_flat["weight"]
+    gt *= data_flat["weight"]
+  psnr = metrics.psnr(pred, gt)
 
   return psnr
 

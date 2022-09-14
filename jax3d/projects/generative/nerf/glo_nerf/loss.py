@@ -101,6 +101,9 @@ def transformer_nerf_loss_fn(
     gt_rgb = image_utility.srgb_gamma_to_linear(data["gamma_rgb"])
     predicted_rgb = render["linear_rgb"]
 
+  if mask_mode == "multiply":
+    gt_rgb *= foreground_mask
+
   with gin.config_scope("volumetric_rgb"):
     reconstruction_loss, reconstruction_loss_weight = losses.reconstruction(
         gt_rgb, predicted_rgb, photometric_reconstruction_mask)
@@ -109,7 +112,10 @@ def transformer_nerf_loss_fn(
     total_loss += reconstruction_loss * reconstruction_loss_weight
 
   # Always compute PSNR on gamma values for consistency
-  psnr = metrics.psnr(render["gamma_rgb"], data["gamma_rgb"])
+  gt_rgb = data["gamma_rgb"]
+  if mask_mode == "multiply":
+    gt_rgb *= foreground_mask
+  psnr = metrics.psnr(render["gamma_rgb"], gt_rgb)
   loss_terms["Training PSNR"] = psnr
 
   if mask_mode == "alpha_supervision":
