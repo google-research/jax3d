@@ -152,7 +152,7 @@ ui8 = ArrayAliasMeta(shape=None, dtype=jnp.uint8)
 ui32 = ArrayAliasMeta(shape=None, dtype=jnp.uint32)
 i32 = ArrayAliasMeta(shape=None, dtype=jnp.int32)
 bool_ = ArrayAliasMeta(shape=None, dtype=jnp.bool_)
-StrArray = ArrayAliasMeta(shape=None, dtype=np.dtype('O'))
+StrArray = ArrayAliasMeta(shape=None, dtype=np.dtype('O'))  # pytype: disable=wrong-arg-types  # typed-numpy
 
 # Random number generator jax key
 PRNGKey = ui32[2]
