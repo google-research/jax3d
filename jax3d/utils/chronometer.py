@@ -232,18 +232,21 @@ class Chrono:
       for k in per_labels:
         denom_value = dv if not subtract_warmup else dv - self.warmup.get(k, 0)
         t = self._accumulated_times[k] / normalize_by
-        times[f"{time_unit}_{k}_per_{dk}"] = t / denom_value
-
+        if denom_value > 0:
+          times[f"{time_unit}_{k}_per_{dk}"] = t / denom_value
     return times
 
   def steps_per(self,
                 step: int,
                 label: str,
                 time_unit: str = "seconds",
-                subtract_warmup: bool = True):
+                subtract_warmup: bool = True) -> Dict[str, float]:
+    """Compute steps per sec for a given label, taking warmup into account."""
     step = step if not subtract_warmup else step - self.warmup.get(label, 0)
     normalize_by = normalize_by = get_normalizer_from_time_unit_str(time_unit)
     total_time = self._accumulated_times[label] / normalize_by
+    if total_time == 0 or step < 0:
+      return {}
     return {f"{label}_steps_per_{time_unit}": step / total_time}
 
   def summary(
