@@ -28,8 +28,8 @@ from absl import logging
 import jax
 from jax import numpy as jnp
 import jax3d.projects.nesf as j3d
+from jax3d.projects.nesf.nerfstatic.utils import kubric_utils
 from jax3d.projects.nesf.utils.typing import f32, i32  # pylint: disable=g-multiple-import
-import kubric.file_io as kb_file_io
 import numpy as np
 
 
@@ -149,19 +149,19 @@ class PredictionImageLog:
     """
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    kb_file_io.write_rgb_batch(
+    kubric_utils.write_rgb_batch(
         self.rgb,
         output_dir,
         file_template="rgb_{:05d}.png")
-    kb_file_io.write_rgb_batch(
+    kubric_utils.write_rgb_batch(
         self.rgb_ground_truth,
         output_dir,
         file_template="rgb_ground_truth_{:05d}.png")
-    kb_file_io.write_segmentation_batch(
+    kubric_utils.write_segmentation_batch(
         self.semantic.astype(np.uint32),
         output_dir,
         file_template="segmentation_{:05d}.png")
-    kb_file_io.write_segmentation_batch(
+    kubric_utils.write_segmentation_batch(
         self.semantic_ground_truth.astype(np.uint32),
         output_dir,
         file_template="segmentation_ground_truth_{:05d}.png")

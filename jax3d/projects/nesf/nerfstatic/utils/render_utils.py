@@ -26,11 +26,11 @@ from jax3d.projects.nesf.nerfstatic.models import volumetric_semantic_model as v
 from jax3d.projects.nesf.nerfstatic.nerf import utils
 from jax3d.projects.nesf.nerfstatic.utils import camera_utils
 from jax3d.projects.nesf.nerfstatic.utils import geometry_utils
+from jax3d.projects.nesf.nerfstatic.utils import kubric_utils
 from jax3d.projects.nesf.nerfstatic.utils import semantic_utils
 from jax3d.projects.nesf.nerfstatic.utils import stopwatch_utils
 from jax3d.projects.nesf.nerfstatic.utils import types
 from jax3d.projects.nesf.utils.typing import PRNGKey, Tree, f32  # pylint: disable=g-multiple-import
-import kubric.plotting as kb_plotting
 from matplotlib import cm
 import mediapy
 import numpy as np
@@ -58,7 +58,7 @@ def colorize_semantics(logits: jnp.ndarray,
     raise ValueError(logits.shape)
 
   # Assign color to each pixel
-  colormap = kb_plotting.hls_palette(num_categories) / 255.
+  colormap = kubric_utils.hls_palette(num_categories) / 255.
   semantic_flat = jnp.reshape(semantic, -1)
   result = colormap[semantic_flat]
   result = jnp.reshape(result, semantic.shape + (3,))
