@@ -35,7 +35,7 @@ def _mono_to_srgb_gamma(rgb):
 def _depth_to_rgb(depth):
   depth -= np.min(depth)
   depth /= np.max(depth)
-  return colormap.turbo(depth[..., 0])[..., :3]
+  return colormap.turbo(depth[..., 0])[..., :3]  # pytype: disable=module-attr
 
 
 def _normal_to_rgb(normal):
