@@ -116,11 +116,14 @@ def restore_ds_checkpoint_for_process(
     Dataset iterator state.
 
   """
-  ds_state_ckpt = checkpoints.restore_checkpoint(
-      os.fspath(save_dir),
-      target=None,
-      prefix=_CKPT_PREFIX_DS.format(process_id=jax.process_index()),
-  )
+  try:
+    ds_state_ckpt = checkpoints.restore_checkpoint(
+        os.fspath(save_dir),
+        target=None,
+        prefix=_CKPT_PREFIX_DS.format(process_id=jax.process_index()),
+    )
+  except ValueError:
+    ds_state_ckpt = None
 
   # Handle case where a ckpt was found.
   if ds_state_ckpt:
@@ -150,8 +153,11 @@ def restore_opt_checkpoint(*,
     Restored model state.
 
   """
-  state = checkpoints.restore_checkpoint(
-      os.fspath(save_dir), state, prefix=_CKPT_PREFIX_OPT)
+  try:
+    state = checkpoints.restore_checkpoint(
+        os.fspath(save_dir), state, prefix=_CKPT_PREFIX_OPT)
+  except ValueError:
+    pass
   return state
 
 

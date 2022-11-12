@@ -181,7 +181,10 @@ class Trainer:
       logging.info("Using pre-trained checkpoint %s",
                    self.pre_trained_checkpoint)
       checkpoint_dir = self.pre_trained_checkpoint
-    new_state = checkpoints.restore_checkpoint(checkpoint_dir, init_state)
+    try:
+      new_state = checkpoints.restore_checkpoint(checkpoint_dir, init_state)
+    except ValueError:
+      new_state = init_state
 
     if new_state.step != init_state.step:
       logging.info("Restored from checkpoint at step %i", new_state.step)
