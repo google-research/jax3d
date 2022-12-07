@@ -19,6 +19,10 @@ from absl import app
 from jax3d.projects.nesf.nerfstatic import eval_lib
 from jax3d.projects.nesf.nerfstatic import eval_semantic_lib
 from jax3d.projects.nesf.nerfstatic.utils import config as nerf_config
+import tensorflow as tf
+
+tf.config.set_visible_devices([], "GPU")
+tf.config.set_visible_devices([], "TPU")
 
 
 def main(unused_argv):

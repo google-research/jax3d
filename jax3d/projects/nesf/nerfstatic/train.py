@@ -20,7 +20,10 @@ from absl import flags
 from jax3d.projects.nesf.nerfstatic import train_lib
 from jax3d.projects.nesf.nerfstatic import train_semantic_lib
 from jax3d.projects.nesf.nerfstatic.utils import config as nerf_config
+import tensorflow as tf
 
+tf.config.set_visible_devices([], "GPU")
+tf.config.set_visible_devices([], "TPU")
 
 FLAGS = flags.FLAGS
 
