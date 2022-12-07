@@ -1,0 +1,75 @@
+# Config for train & eval of NeSF semantic module.
+
+# The following config file trains the semantic module of NeSF on a defined
+# set of train scenes. Please note, local paths to the dataset and pre-trained NeRF
+# checkpoints must be supplied. Datasets and pre-trained checkpoints can be
+# downloaded from:
+# https://console.cloud.google.com/storage/browser/kubric-public/data/NeSFDatasets
+
+# The configuration below trains NeRF on a local machine using all GPUs available.
+
+
+############################# EDIT THE FOLLOWING ###############################
+
+# Choose which scene(s) to train NeRF on with the format "{n}:{k}".
+# Novel scenes describe the range of scenes on which to evaluate NeSF.
+DatasetParams.train_scenes = '0:1'
+DatasetParams.eval_scenes = '0:1'
+DatasetParams.novel_scenes = '1:2'
+
+# Set to folder containing downloaded data. Should contain folders named 0/,
+# 1/, 2/, etc corresponding to individual scenes.
+DatasetParams.data_dir = '/path/to/data/like/static_klevr_v0.1/'
+
+# Set the number of semantic classes. This will be 6 for KLEVR and ToyBox-5.
+# Change to 14 for ToyBox-13.
+ModelParams.num_semantic_classes = 6
+
+# Set to output folder for this experiment (different from NeRF train_dir).
+TrainParams.train_dir = "/tmp/nesf_semantic/"
+
+# Set to folder containing downloaded checkpoints. Should contain files
+# scene_#.density_grid, scene_#.params, and directory scene_#.variables/
+# for each scene in range of train and novel scenes.
+TrainParams.nerf_model_ckpt = '/tmp/nesf_semantic/sigma_grids/'
+
+################################################################################
+
+ConfigParams.models = "NerfParams"
+
+DatasetParams.batch_size = 4096
+DatasetParams.dataset = 'klevr'
+DatasetParams.factor = 0
+DatasetParams.num_scenes_per_batch = 1
+DatasetParams.enable_sqrt2_buffer = True
+
+ModelParams.unet_depth = 3
+ModelParams.unet_feature_size = (32, 64, 128, 256)
+ModelParams.num_fine_samples = 192
+ModelParams.apply_random_scene_rotations = True
+
+TrainParams.mode = "SEMANTIC"
+TrainParams.train_steps = 25000
+TrainParams.lr_delay_steps = 500
+TrainParams.lr_init = 1e-3
+TrainParams.lr_final = 1e-5
+TrainParams.print_every = 100
+TrainParams.save_every = 500
+TrainParams.semantic_smoothness_regularization_num_points_per_device = 8192
+TrainParams.semantic_smoothness_regularization_weight = 0.01
+TrainParams.semantic_smoothness_regularization_stddev = 0.05
+TrainParams.nerf_model_recompute_sigma_grid = True
+TrainParams.nerf_model_recompute_sigma_grid_shape = (64, 64, 64)
+TrainParams.nerf_model_recompute_sigma_grid_convert_sigma_to_density = True
+
+EvalParams.chunk = 32768
+EvalParams.eval_num_log_images = 16
+EvalParams.eval_num_images = 32
+EvalParams.eval_once = True
+
+RenderParams.max_rays_per_render_call = 32768
+RenderParams.dataset_split = "eval_train"
+RenderParams.min_depth = 2.0
+RenderParams.max_depth = 7.0
+
+################################################################################
