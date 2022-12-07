@@ -23,7 +23,7 @@ jobs:
     # Install deps
     - uses: actions/setup-python@v4
       with:
-        python-version: 3.7
+        python-version: 3.8
 
     # Publish the package
     - run: pip install build twine
