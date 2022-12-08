@@ -129,3 +129,14 @@ python3 -m jax3d.projects.nesf.nerfstatic.train \
   --gin_bindings="TrainParams.nerf_model_ckpt = '${NERF_MODEL_CKPT}'" \
   --alsologtostderr
 ```
+
+To evaluate the semantic module.
+
+```shell
+python3 -m jax3d.projects.nesf.nerfstatic.eval \
+  --gin_file="jax3d/projects/nesf/nerfstatic/configs/public/nesf.gin" \
+  --gin_bindings="DatasetParams.data_dir = '${DATA_DIR}'" \
+  --gin_bindings="TrainParams.train_dir = '${OUTPUT_DIR_SEMANTIC}'" \
+  --gin_bindings="TrainParams.nerf_model_ckpt = '${NERF_MODEL_CKPT}'" \
+  --alsologtostderr
+```

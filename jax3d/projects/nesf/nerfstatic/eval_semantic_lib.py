@@ -145,15 +145,21 @@ def evaluate(
   last_step = 0
 
   # If evaluating a single checkpoint, we will not write TensorBoard metrics.
-  assert not params.evaluate.eval_once
-  train_summary_writer = jax_process_zero.SummaryWriter(
-      params.train.train_dir / "eval_train")
-  test_summary_writer = jax_process_zero.SummaryWriter(
-      params.train.train_dir / "eval_test")
-  novel_train_summary_writer = jax_process_zero.SummaryWriter(
-      params.train.train_dir / "eval_novel_train")
-  novel_test_summary_writer = jax_process_zero.SummaryWriter(
-      params.train.train_dir / "eval_novel_test")
+  # assert not params.evaluate.eval_once
+  if not params.evaluate.eval_once:
+    train_summary_writer = jax_process_zero.SummaryWriter(
+        params.train.train_dir / "eval_train")
+    test_summary_writer = jax_process_zero.SummaryWriter(
+        params.train.train_dir / "eval_test")
+    novel_train_summary_writer = jax_process_zero.SummaryWriter(
+        params.train.train_dir / "eval_novel_train")
+    novel_test_summary_writer = jax_process_zero.SummaryWriter(
+        params.train.train_dir / "eval_novel_test")
+  else:
+    train_summary_writer = None
+    test_summary_writer = None
+    novel_train_summary_writer = None
+    novel_test_summary_writer = None
 
   while True:
     # Load latest checkpoint. Ignore unused dataset state.
@@ -208,6 +214,7 @@ def evaluate(
     shared_params = {
         "checkpoint_render_fn_2d": checkpoint_render_fn_2d,
         "checkpoint_render_fn_3d": checkpoint_render_fn_3d,
+        "eval_once": params.evaluate.eval_once,
         "step": step,
         "rng": rng,
         "num_semantic_classes": params.models.num_semantic_classes,
@@ -276,6 +283,7 @@ def _evaluate_dataset(
     summary_writer: jax_process_zero.SummaryWriter,
     checkpoint_render_fn_2d: CheckpointRenderFn2d,
     checkpoint_render_fn_3d: CheckpointRenderFn3d,
+    eval_once: bool,
     step: int,
     rng: jax3d.RandomState,
     all_nerf_variables: NerfVariables,
@@ -359,44 +367,45 @@ def _evaluate_dataset(
   iou_3d = utils.compute_iou_from_con_mat(confusion_matrix_3d)
 
   # Write scalar and text metrics to TensorBoard
-  logging.info("Publishing metrics to TensorBoard")
-  if num_semantic_classes:
-    summary_writer.scalar("metrics/mean_iou_2d", iou_2d.mean_iou, step)
-    summary_writer.scalar("metrics/mean_iou_3d", iou_3d.mean_iou, step)
-    summary_writer.text(
-        f"[{name}] metrics/conf_mat_2d",
-        eval_utils.markdown(utils.fmt_confmat(
-            confusion_matrix_2d, dataset.semantic_labels)),
-        step=step)
-    summary_writer.text(
-        f"[{name}] metrics/conf_mat_3d",
-        eval_utils.markdown(utils.fmt_confmat(
-            confusion_matrix_3d, dataset.semantic_labels)),
-        step=step)
+  if not eval_once:
+    logging.info("Publishing metrics to TensorBoard")
+    if num_semantic_classes:
+      summary_writer.scalar("metrics/mean_iou_2d", iou_2d.mean_iou, step)
+      summary_writer.scalar("metrics/mean_iou_3d", iou_3d.mean_iou, step)
+      summary_writer.text(
+          f"[{name}] metrics/conf_mat_2d",
+          eval_utils.markdown(utils.fmt_confmat(
+              confusion_matrix_2d, dataset.semantic_labels)),
+          step=step)
+      summary_writer.text(
+          f"[{name}] metrics/conf_mat_3d",
+          eval_utils.markdown(utils.fmt_confmat(
+              confusion_matrix_3d, dataset.semantic_labels)),
+          step=step)
 
-  # Write image logs to TensorBoard. Only up to 'num_log_images' entries will
-  # appear in TensorBoard; the rest are written to disk.
-  summary_writer.image(f"[{name}] rgb",
-                       image_log.rgb[0:num_log_images],
-                       max_outputs=num_log_images,
-                       step=step)
-  summary_writer.image(f"[{name}] rgb_ground_truth",
-                       image_log.rgb_ground_truth[0:num_log_images],
-                       max_outputs=num_log_images,
-                       step=step)
-  if num_semantic_classes:
-    summary_writer.image(
-        f"[{name}] semantic",
-        utils.get_color_coded_semantics_image(
-            image_log.semantic[0:num_log_images, ..., 0]),
-        max_outputs=num_log_images,
-        step=step)
-    summary_writer.image(
-        f"[{name}] semantic_ground_truth",
-        utils.get_color_coded_semantics_image(
-            image_log.semantic_ground_truth[0:num_log_images, ..., 0]),
-        max_outputs=num_log_images,
-        step=step)
+    # Write image logs to TensorBoard. Only up to 'num_log_images' entries will
+    # appear in TensorBoard; the rest are written to disk.
+    summary_writer.image(f"[{name}] rgb",
+                         image_log.rgb[0:num_log_images],
+                         max_outputs=num_log_images,
+                         step=step)
+    summary_writer.image(f"[{name}] rgb_ground_truth",
+                         image_log.rgb_ground_truth[0:num_log_images],
+                         max_outputs=num_log_images,
+                         step=step)
+    if num_semantic_classes:
+      summary_writer.image(
+          f"[{name}] semantic",
+          utils.get_color_coded_semantics_image(
+              image_log.semantic[0:num_log_images, ..., 0]),
+          max_outputs=num_log_images,
+          step=step)
+      summary_writer.image(
+          f"[{name}] semantic_ground_truth",
+          utils.get_color_coded_semantics_image(
+              image_log.semantic_ground_truth[0:num_log_images, ..., 0]),
+          max_outputs=num_log_images,
+          step=step)
 
   # Write images to disk.
   if write_predictions_to_disk:
