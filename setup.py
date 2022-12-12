@@ -68,6 +68,6 @@ setuptools.setup(
         'dev': requirements_dev,
         'nesf': requirements_nesf,
     },
-    python_requires='>=3.7',
+    python_requires='>=3.8',
     entry_points={},
 )
