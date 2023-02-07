@@ -45,6 +45,7 @@ _CKPT_PREFIX_DS = "checkpoint_ds{process_id:03d}_"
 _KEEP = 10
 _KEEP_EVERY_N_STEPS = 100000
 
+flax.config.update('flax_use_orbax_checkpointing', False)
 
 @chex.dataclass
 class TrainStepOutput:
