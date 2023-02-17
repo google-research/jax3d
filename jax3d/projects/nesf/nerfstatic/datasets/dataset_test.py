@@ -29,7 +29,7 @@ import numpy as np
 import pytest
 
 
-def _get_devices(num_devices: int) -> List[jax.xla.Device]:
+def _get_devices(num_devices: int) -> List[jax.Device]:
   return num_devices * [jax.local_devices()[0]]
 
 

@@ -45,7 +45,6 @@ _CKPT_PREFIX_DS = "checkpoint_ds{process_id:03d}_"
 _KEEP = 10
 _KEEP_EVERY_N_STEPS = 100000
 
-flax.config.update('flax_use_orbax_checkpointing', False)
 
 @chex.dataclass
 class TrainStepOutput:
@@ -85,23 +84,25 @@ def save_checkpoints_for_process(*,
 
   """
 
-  if jax.process_index() == 0:  # Can't use jax_process_zero (circular import).
+  # Can't use jax_process_zero (circular import).
+  if jax.process_index() == 0 and model_state:
     checkpoints.save_checkpoint(
         save_dir, model_state, int(step),
         keep=_KEEP, keep_every_n_steps=_KEEP_EVERY_N_STEPS,
         prefix=_CKPT_PREFIX_OPT, overwrite=overwrite)
 
-  checkpoints.save_checkpoint(
-      save_dir,
-      # Original ds state is 128-bits which is not supported by serialization
-      # so we normalize to `bytes` it here.
-      # Note: If DsState was already normalized previously, this is a no-op.
-      target=dataset.to_ds_state_bytes(ds_state),
-      step=int(step),
-      keep=_KEEP, keep_every_n_steps=_KEEP_EVERY_N_STEPS,
-      prefix=_CKPT_PREFIX_DS.format(process_id=jax.process_index()),
-      overwrite=overwrite,
-  )
+  if ds_state:
+    checkpoints.save_checkpoint(
+        save_dir,
+        # Original ds state is 128-bits which is not supported by serialization
+        # so we normalize to `bytes` it here.
+        # Note: If DsState was already normalized previously, this is a no-op.
+        target=dataset.to_ds_state_bytes(ds_state),
+        step=int(step),
+        keep=_KEEP, keep_every_n_steps=_KEEP_EVERY_N_STEPS,
+        prefix=_CKPT_PREFIX_DS.format(process_id=jax.process_index()),
+        overwrite=overwrite,
+    )
 
 
 def restore_ds_checkpoint_for_process(
