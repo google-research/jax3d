@@ -29,7 +29,7 @@ def shapeguard_scope():
 
 
 def check(spec, array):
-  shape_validation.assert_match_array_alias(array=array, expected_spec=spec)
+  shape_validation.assert_match_array_alias(array=array, expected_spec=spec)  # pytype: disable=wrong-arg-types  # jax-ndarray
 
 
 @pytest.mark.usefixtures('shapeguard_scope')

@@ -144,7 +144,7 @@ def _radial_and_tangential_undistort(
   return x, y
 
 
-def make_camera(
+def make_camera(  # pytype: disable=annotation-type-mismatch  # jax-ndarray
     orientation: jnp.ndarray,
     position: jnp.ndarray,
     focal_length: Union[jnp.ndarray, float],

@@ -33,7 +33,7 @@ def l1_regularization(variables: flax.core.scope.FrozenVariableDict,
     Average absolute value of all elements in all variables.
   """
   def tree_sum_fn(fn) -> jnp.ndarray:
-    return jax.tree_util.tree_reduce(
+    return jax.tree_util.tree_reduce(  # pytype: disable=bad-return-type  # jax-ndarray
         lambda x, y: x + fn(y), variables, initializer=0)
 
   return (
@@ -52,7 +52,7 @@ def l2_regularization(variables: flax.core.scope.FrozenVariableDict,
     Average squared value of all elements in all variables.
   """
   def tree_sum_fn(fn) -> jnp.ndarray:
-    return jax.tree_util.tree_reduce(
+    return jax.tree_util.tree_reduce(  # pytype: disable=bad-return-type  # jax-ndarray
         lambda x, y: x + fn(y), variables, initializer=0)
 
   return (

@@ -184,7 +184,7 @@ def compute_batch_psnr(model_parameters: models.ModelParameters,
     gt *= data_flat["weight"]
   psnr = metrics.psnr(pred, gt)
 
-  return psnr
+  return psnr  # pytype: disable=bad-return-type  # jax-ndarray
 
 
 def compute_eval_psnr(model_parameters: models.ModelParameters,
