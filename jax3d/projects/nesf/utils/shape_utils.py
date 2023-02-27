@@ -15,7 +15,7 @@
 """Shape conversion utils."""
 
 import functools
-from typing import Any, Callable, TypeVar, Union
+from typing import Any, Callable, Type, TypeVar, Union
 
 import jax
 import jax.numpy as jnp
@@ -184,7 +184,7 @@ def _tensor_spec_like(array: jax.ShapedArray) -> tf.TensorSpec:
   return tf.TensorSpec(shape=array.shape, dtype=dtype)
 
 
-def tensor_spec_like(array: jax.ShapedArray) -> tf.TensorSpec:
+def tensor_spec_like(array: Any) -> tf.TensorSpec:
   """Converts the nested tree input to `tf.TensorSpec`.
 
   Can be used to initialize `tf.data.Dataset` generators:
@@ -241,7 +241,7 @@ def types_like(array: jax.ShapedArray) -> tf.TensorSpec:
 
 def _maybe_standardize_array(
     array: _ArrayInput,
-) -> Union[None, jax.ShapedArray, _UNKNOWN_TYPE]:
+) -> Union[None, jax.ShapedArray, Type[_UNKNOWN_TYPE]]:
   """Normalize `tf.Tensor`, `jnp.ndarray`,... as `jax.ShapedArray`."""
   if isinstance(array, (jax.ShapeDtypeStruct, jnp.ndarray, np.ndarray,
                         np.generic)):

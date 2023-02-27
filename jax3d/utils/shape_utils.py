@@ -185,7 +185,7 @@ def _tensor_spec_like(array: jax.ShapedArray) -> tf.TensorSpec:
   return tf.TensorSpec(shape=array.shape, dtype=dtype)
 
 
-def tensor_spec_like(array: jax.ShapedArray) -> tf.TensorSpec:
+def tensor_spec_like(array: Any) -> tf.TensorSpec:
   """Converts the nested tree input to `tf.TensorSpec`.
 
   Can be used to initialize `tf.data.Dataset` generators:
