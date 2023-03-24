@@ -103,7 +103,7 @@ class ArrayAliasMeta(type):
     super().__init__(cls, cls.__name__, (cls,), {})  # pytype: disable=wrong-arg-count
 
   def __getitem__(cls, shape: _ShapeSpecInput) -> 'ArrayAliasMeta':
-    return ArrayAliasMeta(shape=shape, dtype=cls.dtype)
+    return ArrayAliasMeta(shape=shape, dtype=cls.dtype)  # pytype: disable=wrong-arg-types  # numpy-scalars
 
   def __eq__(cls, other: 'ArrayAliasMeta') -> bool:
     return (
