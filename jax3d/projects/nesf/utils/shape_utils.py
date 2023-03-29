@@ -18,6 +18,7 @@ import functools
 from typing import Any, Callable, Type, TypeVar, Union
 
 import jax
+from jax import core
 import jax.numpy as jnp
 from jax3d.projects.nesf import typing as jtyping
 from jax3d.projects.nesf.utils import jax_utils
@@ -81,13 +82,13 @@ def _tree_map(
 
 
 def _standardize_array(
-    fn: Callable[[jax.ShapedArray], _T2],
+    fn: Callable[[core.ShapedArray], _T2],
 ) -> Callable[[_ArrayInput], _T2]:
   """Decorator which standardize input array.
 
   Args:
     fn: Function which only normalized array (with signature
-      `fn(arr: jax.ShapedArray) -> Any`)
+      `fn(arr: core.ShapedArray) -> Any`)
 
   Returns:
     fn: Function now accept any array-like (jnp, np, tf.Tensor,...).
@@ -113,7 +114,7 @@ def _standardize_array(
 
 @_tree_map
 @_standardize_array
-def shape_dtype_like(array: jax.ShapedArray) -> jax_utils.ShapeDtypeStruct:
+def shape_dtype_like(array: core.ShapedArray) -> jax_utils.ShapeDtypeStruct:
   """Converts the nested tree input into ShapeDtype.
 
   This can be used to visualize a items of a jax tree in a compact way.
@@ -137,7 +138,7 @@ def shape_dtype_like(array: jax.ShapedArray) -> jax_utils.ShapeDtypeStruct:
 
 @_tree_map
 @_standardize_array
-def zeros_like(array: jax.ShapedArray) -> jnp.ndarray:
+def zeros_like(array: core.ShapedArray) -> jnp.ndarray:
   """Converts the nested tree input to `jnp.zeros`.
 
   Can be used to initialize `jax`/`flax` models:
@@ -169,7 +170,7 @@ def _get_none_spec() -> tf.TypeSpec:
 
 @_tree_map
 @_standardize_array
-def _tensor_spec_like(array: jax.ShapedArray) -> tf.TensorSpec:
+def _tensor_spec_like(array: core.ShapedArray) -> tf.TensorSpec:
   """Converts the nested tree input to `tf.TensorSpec`.
 
   This function does not convert None values to valid tensorspecs.
@@ -221,7 +222,7 @@ def _normalize_tensor_spec_str(x: Any) -> Any:
 
 @_tree_map
 @_standardize_array
-def types_like(array: jax.ShapedArray) -> tf.TensorSpec:
+def types_like(array: core.ShapedArray) -> tf.TensorSpec:
   """Converts the nested tree input to `ArrayAlias` types.
 
   Can be used to check expected spec:
@@ -241,8 +242,8 @@ def types_like(array: jax.ShapedArray) -> tf.TensorSpec:
 
 def _maybe_standardize_array(
     array: _ArrayInput,
-) -> Union[None, jax.ShapedArray, Type[_UNKNOWN_TYPE]]:
-  """Normalize `tf.Tensor`, `jnp.ndarray`,... as `jax.ShapedArray`."""
+) -> Union[None, core.ShapedArray, Type[_UNKNOWN_TYPE]]:
+  """Normalize `tf.Tensor`, `jnp.ndarray`,... as `core.ShapedArray`."""
   if isinstance(array, (jax.ShapeDtypeStruct, jnp.ndarray, np.ndarray,
                         np.generic)):
     shape = array.shape
@@ -263,4 +264,4 @@ def _maybe_standardize_array(
 
   if np_utils.is_dtype_str(dtype):  # Normalize `str` dtype
     dtype = np.dtype('O')
-  return jax.ShapedArray(shape=shape, dtype=dtype)
+  return core.ShapedArray(shape=shape, dtype=dtype)
