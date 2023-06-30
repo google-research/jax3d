@@ -202,7 +202,7 @@ def get_num_scenes(params: nerf_config.ConfigParams):
 
 def params_to_str(params: flax.core.FrozenDict, filter_fn=None) -> str:
   """Match params with filter_fn and return them as loggable string."""
-  params = params.unfreeze()
+  params = flax.core.unfreeze(params)
   flat_dict = traverse_util.flatten_dict(params)
   result = []
   for key, value in flat_dict.items():
