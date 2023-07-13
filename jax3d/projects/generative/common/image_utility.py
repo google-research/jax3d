@@ -118,9 +118,11 @@ def byte_array_to_image(byte_array: bytes) -> np.ndarray:
   return np.array(Image.open(io.BytesIO(byte_array)))
 
 
-def resize(image_array: np.ndarray,
-           size: Tuple[int, int],
-           resample: int = Image.BICUBIC) -> np.ndarray:
+def resize(
+    image_array: np.ndarray,
+    size: Tuple[int, int],
+    resample: int = Image.Resampling.BICUBIC,
+) -> np.ndarray:
   """Resizes the image to the specified size.
 
   Args:
