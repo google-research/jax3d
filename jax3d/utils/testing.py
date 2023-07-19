@@ -44,8 +44,6 @@ def assert_tree_all(
       fn,
       lambda x, y: f'Got: {fn}({x}, {y})',
       *trees,
-      # By default chex raise error if Tree contain None. Unclear why.
-      ignore_nones=True,
   )
 
 
@@ -57,8 +55,6 @@ def assert_tree_all_equal_spec(
       lambda x, y: x.shape == y.shape and x.dtype == y.dtype,
       lambda x, y: f'{_repr_spec(x)} != {_repr_spec(y)}',
       *trees,
-      # By default chex raise error if Tree contain None. Unclear why.
-      ignore_nones=True,
   )
 
 
@@ -93,8 +89,6 @@ def assert_trees_all_close(
       functools.partial(_compare_array, return_err=False, **kwargs),
       functools.partial(_compare_array, return_err=True, **kwargs),
       *trees,
-      # By default chex raise error if Tree contain None. Unclear why.
-      ignore_nones=True,
   )
 
 

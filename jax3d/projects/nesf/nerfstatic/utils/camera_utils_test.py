@@ -52,4 +52,4 @@ def test_camera(np_array):
            [-0.27474675, -0.25160123, -0.92801457]],
       ]),
   )
-  chex.assert_tree_all_close(rays, expected_rays, ignore_nones=True)
+  chex.assert_tree_all_close(rays, expected_rays)
