@@ -27,7 +27,7 @@ def assert_tree_all(
     fn: Callable[..., Any],
     *trees: Tree[Any],
 ) -> None:
-  """`chex.assert_tree_all_equal_comparator` with automatic error message.
+  """`chex.assert_trees_all_equal_comparator` with automatic error message.
 
   ```
   jax3d.projects.nesf.testing.assert_tree_all(
@@ -41,7 +41,7 @@ def assert_tree_all(
   Returns:
     None
   """
-  return chex.assert_tree_all_equal_comparator(
+  return chex.assert_trees_all_equal_comparator(
       fn,
       lambda x, y: f'Got: {fn}({x}, {y})',
       *trees,
@@ -52,7 +52,7 @@ def assert_tree_all_equal_spec(
     *trees: Tree[Any],
 ) -> None:
   """Check that arrays in the given trees have the same `dtype`/`shape`."""
-  return chex.assert_tree_all_equal_comparator(
+  return chex.assert_trees_all_equal_comparator(
       lambda x, y: x.shape == y.shape and x.dtype == y.dtype,
       lambda x, y: f'{_repr_spec(x)} != {_repr_spec(y)}',
       *trees,
@@ -86,7 +86,7 @@ def assert_trees_all_close(
     **kwargs
 ) -> None:
   """Assert that 2 trees are close, but also works for `str` arrays."""
-  chex.assert_tree_all_equal_comparator(
+  chex.assert_trees_all_equal_comparator(
       functools.partial(_compare_array, return_err=False, **kwargs),
       functools.partial(_compare_array, return_err=True, **kwargs),
       *trees,

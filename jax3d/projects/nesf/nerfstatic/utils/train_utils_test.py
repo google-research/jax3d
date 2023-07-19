@@ -55,5 +55,5 @@ def test_checkpoint_save_restore(tmp_path: pathlib.Path):
       save_dir=save_dir,
       state=model_state,
   )
-  chex.assert_tree_all_close(model_state_ckpt.optimizer.target,
+  chex.assert_trees_all_close(model_state_ckpt.optimizer.target,
                              model_state_restored.optimizer.target)

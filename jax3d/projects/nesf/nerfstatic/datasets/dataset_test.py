@@ -219,7 +219,7 @@ def test_ds_iterator_deterministic():
   states2, exs2 = zip(*sequence_exs2)
   assert states1 == states2
   assert states1[0] != states1[1]
-  chex.assert_tree_all_close(exs1, exs2)
+  chex.assert_trees_all_close(exs1, exs2)
 
   # to_ds_state_int is a no-op if value are already int
   assert (dataset.to_ds_state_int(ds_state) == dataset.to_ds_state_int(
