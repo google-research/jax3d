@@ -21,6 +21,7 @@ import inspect
 from typing import Any, Callable, ClassVar, Dict, Iterator, List, Optional, Tuple, TypeVar
 
 from etils import array_types
+from etils import enp
 import jax.numpy as jnp
 from jax3d.utils import jax_utils
 from jax3d.utils import py_utils
@@ -96,7 +97,7 @@ class _ShapeTracker:
     try:
       curr_tracker = cls._shape_tracker_stack[-1]
     except IndexError:
-      raise AssertionError(
+      raise AssertionError(  # pylint: disable=raise-missing-from
           'Calling `check` from outside a variable tracking '
           'scope. Make sure to decorate your function with `@assert_typing`'
       )
@@ -105,7 +106,7 @@ class _ShapeTracker:
   def track_and_validate_shape(
       self,
       shape: Tuple[int, ...],
-      expected_shape: array_types.typing.ShapeSpec,
+      expected_shape,
   ) -> None:
     """Register new named axis and validate the shape.
 
@@ -121,7 +122,7 @@ class _ShapeTracker:
       if expected_value != value:
         raise ValueError(f'Expected {name}={expected_value}, got {value}')
 
-  def resolve_spec(self, shape_spec: array_types.typing.ShapeSpec) -> str:
+  def resolve_spec(self, shape_spec) -> str:
     """Returns the shape_spec with each named axis replaced by value."""
     shape_names = shape_spec.split()
     shape_values = [str(self._shapes.get(name, name)) for name in shape_names]
@@ -176,8 +177,10 @@ def assert_match_array_alias(
   try:
     # Should have a way of checking a type is a subset of another:
     # if dtype1 < dtype2:
-    if (not isinstance(expected_spec.dtype, array_types.dtypes.AnyDType) and
-        expected_spec.dtype.np_dtype != array.dtype):
+    if (
+        not isinstance(expected_spec.dtype, enp.dtypes.AnyDType)
+        and expected_spec.dtype.np_dtype != array.dtype
+    ):
       raise ValueError('Dtype do not match')
     elif expected_spec.shape != '...':
       _ShapeTracker.current().track_and_validate_shape(
