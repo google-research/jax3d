@@ -118,7 +118,7 @@ class ArrayAliasMeta(type):
   def __repr__(cls) -> str:
     return f'{cls.__name__}[{cls.shape}]'
 
-  def __instancecheck__(cls, instance: jnp.array) -> bool:
+  def __instancecheck__(cls, instance: jnp.ndarray) -> bool:
     """`isinstance(array, f32['h w c'])`."""
     from jax3d.projects.nesf.utils import shape_validation  # pylint: disable=g-import-not-at-top
     try:
@@ -129,7 +129,7 @@ class ArrayAliasMeta(type):
       return True
 
   @classmethod
-  def check(cls, array: jnp.array) -> None:
+  def check(cls, array: jnp.ndarray) -> None:
     """Check that the given array match the specs."""
     from jax3d.projects.nesf.utils import shape_validation  # pylint: disable=g-import-not-at-top
     shape_validation.assert_match_array_alias(array, cls)
@@ -162,6 +162,6 @@ ActivationFn = Callable[[f32['...']], f32['...']]
 
 _ArrayT = TypeVar('_ArrayT', bound=ArrayAliasMeta)
 
-# ArrayLike indicates that any `jnp.array` input is also supported.
+# ArrayLike indicates that any `jnp.ndarray` input is also supported.
 # For example: `ArrayLike[i32[2]]` accept `(28, 28)`, `[x, y]`, `np.ones((2,))`
 ArrayLike = Union[_ArrayT, Tuple[Any, ...], List[Any]]
