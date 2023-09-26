@@ -237,7 +237,7 @@ def piecewise_constant_pdf(key: PRNGKey,
   bins_g0, bins_g1 = find_interval(bins)
   cdf_g0, cdf_g1 = find_interval(cdf)
 
-  t = jnp.clip(jnp.nan_to_num((u - cdf_g0) / (cdf_g1 - cdf_g0), 0), 0, 1)
+  t = jnp.clip(jnp.nan_to_num((u - cdf_g0) / (cdf_g1 - cdf_g0), 0), 0, 1)  # pytype: disable=wrong-arg-types  # jnp-type
   samples = bins_g0 + t * (bins_g1 - bins_g0)
 
   # Prevent gradient from backprop-ing through `samples`.

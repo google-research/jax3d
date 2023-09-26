@@ -311,7 +311,7 @@ class LossTerm:
   def value(self) -> float:
     result = jnp.mean(self.weight * self.loss)
     assert not result.shape, result.shape
-    return result
+    return result  # pytype: disable=bad-return-type  # jnp-type
 
 
 @chex.dataclass
@@ -344,7 +344,7 @@ class SemanticModelStats():
     value1 = jnp.array(self.semantic_loss.value)
     value2 = jnp.array(self.smoothness_regularization_loss.value)
     assert (not value1.shape) and (not value2.shape)
-    return value1 + value2
+    return value1 + value2  # pytype: disable=bad-return-type  # jnp-type
 
 
 @chex.dataclass

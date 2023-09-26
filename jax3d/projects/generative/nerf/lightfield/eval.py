@@ -216,4 +216,4 @@ def compute_eval_psnr(model_parameters: models.ModelParameters,
                                batch, step_replicated)
     mean_psnr += jnp.mean(batch_psnr)
 
-  return mean_psnr / _EVAL_BATCHES_PER_CHECKPOINT
+  return mean_psnr / _EVAL_BATCHES_PER_CHECKPOINT  # pytype: disable=bad-return-type  # jnp-type

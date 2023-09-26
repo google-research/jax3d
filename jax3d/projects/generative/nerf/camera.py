@@ -267,7 +267,7 @@ def pixels_to_points(camera, pixels: jnp.ndarray, depth: jnp.ndarray):
     [A1, ..., An, 3] tensor containing 3d world space points.
   """
   rays_through_pixels = pixels_to_rays(camera, pixels)
-  cosa = jnp.matmul(rays_through_pixels, camera["orientation"][2, :])
+  cosa = jnp.matmul(rays_through_pixels, camera["orientation"][2, :])  # pytype: disable=wrong-arg-types  # jnp-type
   points = (
       rays_through_pixels * depth[..., jnp.newaxis] / cosa[..., jnp.newaxis] +
       camera["position"])
@@ -439,4 +439,4 @@ def generate_pixel_grid(height: int, width: int) -> np.ndarray:
 
   # Offset coordinates by 0.5 to center sample points within each pixel.
   pixel_coordinates = pixel_indices.astype(jnp.float32) + 0.5
-  return pixel_coordinates
+  return pixel_coordinates  # pytype: disable=bad-return-type  # jnp-type
