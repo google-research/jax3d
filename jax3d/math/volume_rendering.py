@@ -41,7 +41,7 @@ def sample_1d(
     sample_count: int,
     batch_shape: Sequence[int],
     strategy: SamplingStrategy,
-    rng: jax.random.KeyArray,
+    rng: jax.Array,
     dtype: jnp.dtype = jnp.float32,
 ) -> FloatArray["*batch_shape S"]:
   """Samples points from the 1D domain [0, 1) using the specified strategy.
@@ -118,7 +118,7 @@ def sample_along_rays(
     far: Union[float, FloatArray[...]],
     sample_count: int,
     deterministic: bool,
-    rng: Optional[jax.random.KeyArray] = None,
+    rng: Optional[jax.Array] = None,
     use_linear_disparity: bool = False,
 ) -> Tuple[FloatArray[..., "S"], FloatArray[..., "S", 3]]:
   """Randomly or uniformly samples positions along rays for volume rendering.
@@ -299,7 +299,7 @@ def sample_piecewise_constant_pdf(
     weights: FloatArray[..., "B"],
     sample_count: int,
     deterministic: bool,
-    rng: Optional[jax.random.KeyArray] = None,
+    rng: Optional[jax.Array] = None,
     epsilon: float = 1e-5,
 ) -> FloatArray[..., "sample_count"]:
   """Draws samples from an empircal 1D PDF using inverse transform sampling.
