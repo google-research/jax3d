@@ -49,7 +49,7 @@ def test_xmap_real_examples():
   # Example 1
   @jax3d.xmap(['b n k', 'k m'], 'b n m')
   def batch_matrix_single_matrix(x, y):
-    return jnp.einsum('{n,b,k},{k,m}->{n,b,m}', x, y)
+    return jax.lax.xeinsum('{n,b,k},{k,m}->{n,b,m}', x, y)
 
   x = jnp.ones((20, 5, 7))
   y = jnp.ones((7, 11))
