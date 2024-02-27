@@ -1,4 +1,4 @@
-# Copyright 2023 The jax3d Authors.
+# Copyright 2024 The jax3d Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -32,4 +32,3 @@ from jax3d.utils.shape_utils import tensor_spec_like
 from jax3d.utils.shape_utils import types_like
 from jax3d.utils.shape_utils import zeros_like
 from jax3d.utils.shape_validation import assert_typing
-from jax3d.utils.xmap import xmap
