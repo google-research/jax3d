@@ -80,4 +80,4 @@ def decorator_with_option(
 
 reraise = epy.reraise
 try_reraise = epy.maybe_reraise
-cached_property = epy.cached_property
+cached_property = functools.cached_property  # pylint: disable=invalid-name
