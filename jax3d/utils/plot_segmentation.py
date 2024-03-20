@@ -12,7 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Functions for visualizing instance segmentation."""
+"""Functions for visualizing instance segmentation.
+
+DEPRECATED: Use `kauldron.utils.plot_segmentation` instead.
+"""
+
 import functools
 from typing import Optional, Union
 
@@ -23,6 +27,11 @@ import matplotlib as mpl
 import numpy as np
 import scipy.ndimage
 import skimage.color
+
+print(
+    'jax3d.utils.plot_segmentation is deprecated. Please use'
+    ' `kauldron.utils.plot_segmentation` instead'
+)
 
 # Oklab colorspace conversion matrices
 # see https://bottosson.github.io/posts/oklab/
