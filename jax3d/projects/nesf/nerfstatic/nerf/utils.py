@@ -123,7 +123,7 @@ def render_image(render_fn: Callable[[int, types.Rays], types.RenderResult],
   # Transform 'rays' into a bag-of-rays representation.
   height, width = rays.batch_shape
   num_rays = height * width
-  rays = jax.tree_map(lambda r: r.reshape((num_rays, -1)), rays)
+  rays = jax.tree.map(lambda r: r.reshape((num_rays, -1)), rays)
 
   process_index = jax.process_index()
   results = []
@@ -134,7 +134,7 @@ def render_image(render_fn: Callable[[int, types.Rays], types.RenderResult],
     # Result is of shape,
     #   [chunk, ...]
     # Requires Assumption (3): no cross-batch communication.
-    chunk_rays = jax.tree_map(lambda r: r[i:i + chunk], rays)
+    chunk_rays = jax.tree.map(lambda r: r[i:i + chunk], rays)
     chunk_size = chunk_rays.origin.shape[0]
 
     # Pad pseudo-examples at the end of this 'chunk_rays' to ensure that each
@@ -144,7 +144,7 @@ def render_image(render_fn: Callable[[int, types.Rays], types.RenderResult],
     rays_remaining = chunk_size % jax.device_count()
     if rays_remaining != 0:
       padding = jax.device_count() - rays_remaining
-      chunk_rays = jax.tree_map(
+      chunk_rays = jax.tree.map(
           lambda r: jnp.pad(r, ((0, padding), (0, 0)), mode="edge"), chunk_rays)
     else:
       padding = 0
@@ -161,7 +161,7 @@ def render_image(render_fn: Callable[[int, types.Rays], types.RenderResult],
     # Reshape chunk_rays to shape,
     #   [num_local_devices, batch_size_per_device, ...]
     # Requires Assumption (1): Each host has same input 'rays'.
-    chunk_rays = jax.tree_map(lambda r: shard(r[start:stop]), chunk_rays)
+    chunk_rays = jax.tree.map(lambda r: shard(r[start:stop]), chunk_rays)
 
     # Apply inference function. Result is of shape,
     #   [num_local_devices, num_total_devices, batch_size_per_device, ...]
@@ -180,20 +180,20 @@ def render_image(render_fn: Callable[[int, types.Rays], types.RenderResult],
     #   [chunk, ...]
     # Requires Assumption (4): Each device returns the same value.
     # Requires Assumption (5): Output fits in RAM.
-    fine = jax.tree_map(lambda x: unshard(x[0], padding=padding), fine)
+    fine = jax.tree.map(lambda x: unshard(x[0], padding=padding), fine)
     results.append(fine)
     # pylint: enable=cell-var-from-loop
 
   # Merge each list of ndarrays into one ndarray of shape [num_rays, ...].
   # Signature: `tree_multimap(fn, *arrs: RenderedRays) -> RenderedRays`
   # fn has signature `fn(*arrs: Array) -> Array`
-  results = jax.tree_map(
+  results = jax.tree.map(
       lambda *arrs: jnp.concatenate(arrs, axis=0),
       *results,
   )
 
   # Reshape each ndarray to [height, width, num_channels].
-  results = jax.tree_map(lambda x: x.reshape(height, width, -1), results)
+  results = jax.tree.map(lambda x: x.reshape(height, width, -1), results)
 
   # Normalize disp for visualization for scenes that aren't scaled in [0, 1].
   if normalize_disp:
@@ -249,7 +249,7 @@ def predict_2d_semantic(
   # Transform 'rays' into a bag-of-rays representation.
   height, width = rays.batch_shape
   num_rays = height * width
-  rays = jax.tree_map(lambda r: r.reshape((num_rays, -1)), rays)
+  rays = jax.tree.map(lambda r: r.reshape((num_rays, -1)), rays)
 
   process_index = jax.process_index()
   results = []
@@ -260,7 +260,7 @@ def predict_2d_semantic(
     # Result is of shape,
     #   [chunk, ...]
     # Requires Assumption (3): no cross-batch communication.
-    chunk_rays = jax.tree_map(lambda r: r[i:i + chunk], rays)
+    chunk_rays = jax.tree.map(lambda r: r[i:i + chunk], rays)
     chunk_size = chunk_rays.origin.shape[0]
 
     # Pad pseudo-examples at the end of this 'chunk_rays' to ensure that each
@@ -270,7 +270,7 @@ def predict_2d_semantic(
     rays_remaining = chunk_size % jax.device_count()
     if rays_remaining != 0:
       padding = jax.device_count() - rays_remaining
-      chunk_rays = jax.tree_map(
+      chunk_rays = jax.tree.map(
           lambda r: jnp.pad(r, ((0, padding), (0, 0)), mode="edge"), chunk_rays)
     else:
       padding = 0
@@ -287,7 +287,7 @@ def predict_2d_semantic(
     # Reshape chunk_rays to shape,
     #   [num_local_devices, batch_size_per_device, ...]
     # Requires Assumption (1): Each host has same input 'rays'.
-    chunk_rays = jax.tree_map(lambda r: shard(r[start:stop]), chunk_rays)
+    chunk_rays = jax.tree.map(lambda r: shard(r[start:stop]), chunk_rays)
 
     # Apply inference function. Result is of shape,
     #   [num_local_devices, num_total_devices, batch_size_per_device, ...]
@@ -301,20 +301,20 @@ def predict_2d_semantic(
     #   [chunk, ...]
     # Requires Assumption (4): Each device returns the same value.
     # Requires Assumption (5): Output fits in RAM.
-    fine = jax.tree_map(lambda x: unshard(x[0], padding=padding), fine)
+    fine = jax.tree.map(lambda x: unshard(x[0], padding=padding), fine)
     results.append(fine)
     # pylint: enable=cell-var-from-loop
 
   # Merge each list of ndarrays into one ndarray of shape [num_rays, ...].
   # Signature: `tree_multimap(fn, *arrs: RenderedRays) -> RenderedRays`
   # fn has signature `fn(*arrs: Array) -> Array`
-  results = jax.tree_map(
+  results = jax.tree.map(
       lambda *arrs: jnp.concatenate(arrs, axis=0),
       *results,
   )
 
   # Reshape each ndarray to [height, width, num_channels].
-  results = jax.tree_map(lambda x: x.reshape(height, width, -1), results)
+  results = jax.tree.map(lambda x: x.reshape(height, width, -1), results)
 
   return results
 
@@ -378,7 +378,7 @@ def predict_3d_semantic(
     # memory. Result is of shape,
     #   [chunk, ...]
     chunk_sample_points: types.SamplePoints = (
-        jax.tree_map(lambda r: r[i:i+chunk], sample_points))
+        jax.tree.map(lambda r: r[i:i+chunk], sample_points))
     chunk_size = chunk_sample_points.batch_shape[0]
 
     # Pad pseudo-examples at the end of this 'chunk_sample_points' to ensure
@@ -386,7 +386,7 @@ def predict_3d_semantic(
     sample_points_remaining = chunk_size % jax.device_count()
     if sample_points_remaining != 0:
       padding = jax.device_count() - sample_points_remaining
-      chunk_sample_points = jax.tree_map(
+      chunk_sample_points = jax.tree.map(
           lambda r: pad_first_dimension(r, padding),
           chunk_sample_points)
     else:
@@ -405,7 +405,7 @@ def predict_3d_semantic(
 
     # Reshape chunk_sample_points to shape,
     #   [num_local_devices, batch_size_per_device, ...]
-    chunk_sample_points = jax.tree_map(lambda r: shard(r[start:stop]),
+    chunk_sample_points = jax.tree.map(lambda r: shard(r[start:stop]),
                                        chunk_sample_points)
 
     # Apply inference function. Result is of shape,
@@ -417,7 +417,7 @@ def predict_3d_semantic(
     #   $OUTPUT[0] == ... == $OUTPUT[num_local_devices-1].
     # After unshard(), result is of shape,
     #   [chunk, ...]
-    predictions = jax.tree_map(lambda x: unshard(x[0], padding=padding),
+    predictions = jax.tree.map(lambda x: unshard(x[0], padding=padding),
                                predictions)
     results.append(predictions)
     # pylint: enable=cell-var-from-loop
@@ -429,7 +429,7 @@ def predict_3d_semantic(
 
   # Merge each list of ndarray into one ndarray of shape
   # [num_sample_points, ...].
-  results = jax.tree_map(lambda *arrs: jnp.concatenate(arrs, axis=0),
+  results = jax.tree.map(lambda *arrs: jnp.concatenate(arrs, axis=0),
                               *results)
 
   return results
@@ -494,13 +494,13 @@ def learning_rate_decay(step,
 
 def shard(xs):
   """Split data into shards for multiple devices along the first dimension."""
-  return jax.tree_map(
+  return jax.tree.map(
       lambda x: x.reshape((jax.local_device_count(), -1) + x.shape[1:]), xs)
 
 
 def to_device(xs):
   """Transfer data to devices (GPU/TPU)."""
-  return jax.tree_map(jnp.array, xs)
+  return jax.tree.map(jnp.array, xs)
 
 
 def unshard(x, padding=0):
@@ -692,7 +692,7 @@ def predict_3d_semanticnerf(
     # memory. Result is of shape,
     #   [chunk, ...]
     chunk_sample_points: types.SamplePoints = (
-        jax.tree_map(lambda r: r[i:i+chunk], sample_points))
+        jax.tree.map(lambda r: r[i:i+chunk], sample_points))
     chunk_size = chunk_sample_points.batch_shape[0]
 
     # Pad pseudo-examples at the end of this 'chunk_sample_points' to ensure
@@ -700,7 +700,7 @@ def predict_3d_semanticnerf(
     sample_points_remaining = chunk_size % jax.device_count()
     if sample_points_remaining != 0:
       padding = jax.device_count() - sample_points_remaining
-      chunk_sample_points = jax.tree_map(
+      chunk_sample_points = jax.tree.map(
           lambda r: pad_first_dimension(r, padding),
           chunk_sample_points)
     else:
@@ -719,7 +719,7 @@ def predict_3d_semanticnerf(
 
     # Reshape chunk_sample_points to shape,
     #   [num_local_devices, batch_size_per_device, ...]
-    chunk_sample_points = jax.tree_map(lambda r: shard(r[start:stop]),
+    chunk_sample_points = jax.tree.map(lambda r: shard(r[start:stop]),
                                        chunk_sample_points)
 
     # Apply inference function. Result is of shape,
@@ -730,7 +730,7 @@ def predict_3d_semanticnerf(
     #   $OUTPUT[0] == ... == $OUTPUT[num_local_devices-1].
     # After unshard(), result is of shape,
     #   [chunk, ...]
-    predictions = jax.tree_map(lambda x: unshard(x[0], padding=padding),
+    predictions = jax.tree.map(lambda x: unshard(x[0], padding=padding),
                                predictions)
     results.append(predictions)
     # pylint: enable=cell-var-from-loop
@@ -742,7 +742,7 @@ def predict_3d_semanticnerf(
 
   # Merge each list of ndarray into one ndarray of shape
   # [num_sample_points, ...].
-  results = jax.tree_map(lambda *arrs: jnp.concatenate(arrs, axis=0),
+  results = jax.tree.map(lambda *arrs: jnp.concatenate(arrs, axis=0),
                               *results)
 
   # TODO(someone): Double check why results has an extra dimension here.

@@ -82,7 +82,7 @@ class SemanticModel(nn.Module):
       # 'embeddings'. We guarantee this by ensuring that embeddings describes
       # only one scene and that the lookup key 'scene_id' is set to zero.
       assert embeddings.shape[0] == 1
-      scene_id = jax.tree_map(lambda x: x * 0, scene_id)
+      scene_id = jax.tree.map(lambda x: x * 0, scene_id)
 
       latent = self.interpolator(embeddings, scene_id, points.position)
     else:

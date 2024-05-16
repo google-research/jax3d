@@ -271,16 +271,16 @@ def test_volume_rendering(value_type: str, use_background: bool,
               jax.random.normal(bg_rngs[2], batch_shape + (17,)),
           )
       }
-      sample_values = jax.tree_map(sample_values_from_ray, ray_values,
+      sample_values = jax.tree.map(sample_values_from_ray, ray_values,
                                    background_values)
     else:
       background_values = None
-      sample_values = jax.tree_map(sample_values_from_ray, ray_values)
+      sample_values = jax.tree.map(sample_values_from_ray, ray_values)
 
   cast = lambda x: x.astype(dtype)
-  sample_values = jax.tree_map(cast, sample_values)
+  sample_values = jax.tree.map(cast, sample_values)
   if use_background:
-    background_values = jax.tree_map(cast, background_values)
+    background_values = jax.tree.map(cast, background_values)
 
   render_result = volume_rendering.volume_rendering(
       sample_values=sample_values,
@@ -292,23 +292,23 @@ def test_volume_rendering(value_type: str, use_background: bool,
   # Accumulated values should be consistent with the generated inputs
   allclose = lambda x, y: jnp.allclose(x, y, atol=200 * jnp.finfo(dtype).eps)
   assert jax.tree_util.tree_all(
-      jax.tree_map(allclose, render_result.ray_values, ray_values))
+      jax.tree.map(allclose, render_result.ray_values, ray_values))
 
   # Ray alpha values should be consistent with the generated inputs
   assert jax.tree_util.tree_all(
-      jax.tree_map(allclose, render_result.ray_alpha, ray_alpha))
+      jax.tree.map(allclose, render_result.ray_alpha, ray_alpha))
 
   # Ray depth values should be consistent with the generated inputs
   assert jax.tree_util.tree_all(
-      jax.tree_map(allclose, render_result.ray_depth, ray_depth))
+      jax.tree.map(allclose, render_result.ray_depth, ray_depth))
 
   # Sample weights should be consistent with the generated inputs
   assert jax.tree_util.tree_all(
-      jax.tree_map(allclose, render_result.sample_weights, sample_weights))
+      jax.tree.map(allclose, render_result.sample_weights, sample_weights))
 
   # Sample intervals should be consistent with the generated inputs
   assert jax.tree_util.tree_all(
-      jax.tree_map(allclose, render_result.sample_intervals, sample_intervals))
+      jax.tree.map(allclose, render_result.sample_intervals, sample_intervals))
 
 
 @pytest.mark.parametrize("deterministic", [True, False])

@@ -56,7 +56,7 @@ _UNKNOWN_TYPE: Final = _UnknownType
 def _tree_map(
     fn: Callable[[_T1], _T2],
 ) -> Callable[[Tree[_T1]], Tree[_T2]]:  # pytype: disable=invalid-annotation
-  """Decorator which wraps the function inside `jax.tree_map`.
+  """Decorator which wraps the function inside `jax.tree.map`.
 
   Additionally, it also recurses into `tf.data.Dataset` (into the inner
   `ds.element_spec`).
@@ -70,13 +70,13 @@ def _tree_map(
   def _recurse_or_apply(array, **kwargs):
     """Apply `fn` or recurse into `tf.data.Dataset`."""
     if isinstance(array, tf.data.Dataset):
-      return jax.tree_map(functools.partial(fn, **kwargs), array.element_spec)
+      return jax.tree.map(functools.partial(fn, **kwargs), array.element_spec)
     else:
       return fn(array, **kwargs)
 
   @functools.wraps(fn)
   def fn_with_tree_map(arrays, **kwargs):
-    return jax.tree_map(functools.partial(_recurse_or_apply, **kwargs), arrays)
+    return jax.tree.map(functools.partial(_recurse_or_apply, **kwargs), arrays)
 
   return fn_with_tree_map
 
@@ -206,7 +206,7 @@ def tensor_spec_like(array: Any) -> tf.TensorSpec:
   # Normalize `str` -> `tf.string`
   array = tf.nest.map_structure(_normalize_tensor_spec_str, array)
   array = _tensor_spec_like(array)
-  # jax.tree_map skips None elements, so we need a separate tf.nest to replace
+  # jax.tree.map skips None elements, so we need a separate tf.nest to replace
   # None values by NoneSpec().
   return tf.nest.map_structure(lambda x: _get_none_spec() if x is None else x,
                                array)

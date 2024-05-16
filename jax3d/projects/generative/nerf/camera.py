@@ -406,7 +406,7 @@ def make_neutral_camera(image_size: int = 256) -> CameraType:
 def make_neutral_cameras(batch_size: int, image_size: int = 256) -> CameraType:
   """Generate neutral cameras."""
   camera = make_neutral_camera(image_size=image_size)
-  cameras = jax.tree_map(
+  cameras = jax.tree.map(
       lambda x: einops.repeat(x, "... -> N ...", N=batch_size), camera)
   return cameras
 

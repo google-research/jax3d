@@ -275,14 +275,14 @@ def volume_rendering(
   def accumulate_values(sample_value):
     return jnp.sum(sample_value * sample_weights[..., None], axis=-2)
 
-  ray_values = jax.tree_map(accumulate_values, sample_values)
+  ray_values = jax.tree.map(accumulate_values, sample_values)
 
   # Combine background values
   def composite_background(ray_value, background_value):
     return ray_value + (1.0 - ray_alpha[..., None]) * background_value
 
   if background_values is not None:
-    ray_values = jax.tree_map(composite_background, ray_values,
+    ray_values = jax.tree.map(composite_background, ray_values,
                                    background_values)
 
   return VolumeRenderingResult(
