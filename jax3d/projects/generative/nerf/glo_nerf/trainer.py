@@ -185,12 +185,12 @@ class TransformerNeRFTrainer(trainer.Trainer):
          train_state.model_parameters, latents, train_state.optimizer_state,
          inputs, current_rngs, jax_utils.replicate(train_state.step))  # pytype: disable=wrong-arg-count  # trace-all-classes
 
-    loss_terms = jax.tree_map(np.array, loss_terms)
+    loss_terms = jax.tree.map(np.array, loss_terms)
 
     # Updates are gathered from all devices across all hosts, so the return
     # value from pmap will contain duplicates for each local device. As such,
     # we take only the first.
-    latent_updates = jax.tree_map((lambda x: np.array(x[0])), latent_updates)
+    latent_updates = jax.tree.map((lambda x: np.array(x[0])), latent_updates)
     latent_ids, latent_grad = latent_updates
     latent_learning_rate = (
         self.learning_rate_start *

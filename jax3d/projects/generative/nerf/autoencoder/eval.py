@@ -49,7 +49,7 @@ def psnr(model_parameters: models.ModelParameters, data: ..., step: int):
   def flatten_views(t):
     return einops.rearrange(t, "V I ... -> (V I) ...")
 
-  data_flat = jax.tree_map(flatten_views, data)
+  data_flat = jax.tree.map(flatten_views, data)
 
   gt_rgb = data_flat["image_data"]["image"]
 

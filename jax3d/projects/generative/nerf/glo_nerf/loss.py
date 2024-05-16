@@ -62,9 +62,9 @@ def transformer_nerf_loss_fn(
   def flatten_views(t):
     return t.reshape(t.shape[0] * t.shape[1], *t.shape[2:])
 
-  data = jax.tree_map(flatten_views, data)
+  data = jax.tree.map(flatten_views, data)
   latent_tokens = inputs.latent_tokens
-  latent_tokens = jax.tree_map(flatten_views, latent_tokens)
+  latent_tokens = jax.tree.map(flatten_views, latent_tokens)
   inputs = inputs.replace(latent_tokens=latent_tokens)
 
   origins, directions = jax.vmap(jax_camera.pixels_to_rays)(

@@ -256,7 +256,7 @@ def _make_examples_impl(
       (images, semantics, depths),
       report_progress=True,
   )
-  semantics, depths = jax.tree_map(
+  semantics, depths = jax.tree.map(
       lambda i: i[..., :1],
       (semantics, depths),
   )

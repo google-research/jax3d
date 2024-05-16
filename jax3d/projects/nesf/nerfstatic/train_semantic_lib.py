@@ -138,7 +138,7 @@ def train(
       range(start_step, params.train.train_steps+1), iter(dataset)):
     # Given a device (axis=0) and scene (axis=1), all values for
     # property "scene_id" are identical. Choose the first one.
-    batch_scene_ids = jax.tree_map(lambda x: x[:, :, 0, 0],
+    batch_scene_ids = jax.tree.map(lambda x: x[:, :, 0, 0],
                                    batch.target_view.rays.scene_id)
     batch_scene_ids = batch_scene_ids.flatten()
 
@@ -249,7 +249,7 @@ def _construct_dataset(
   # Select device 0, scene 0 from the placeholder batch. Later code will
   # use pmap and vmap, respectively, across these two axes.
   _, placeholder_batch = dataset.peek()
-  placeholder_batch = jax.tree_map(lambda t: t[0, 0, ...], placeholder_batch)
+  placeholder_batch = jax.tree.map(lambda t: t[0, 0, ...], placeholder_batch)
 
   return dataset, placeholder_batch
 

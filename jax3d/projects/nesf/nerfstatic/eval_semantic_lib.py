@@ -110,7 +110,7 @@ def evaluate(
       is_novel_scenes=True)
 
   placeholder_batch = test_dataset.peek()[1]
-  placeholder_batch = jax.tree_map(lambda t: t[0, 0, ...], placeholder_batch)
+  placeholder_batch = jax.tree.map(lambda t: t[0, 0, ...], placeholder_batch)
 
   # Initialize & load per-scene NeRF models.
   logging.info("Initializing pretrained NeRF models.")
@@ -324,8 +324,8 @@ def _evaluate_dataset(
     rendered_rays = checkpoint_render_fn_2d(
         rng=rng,
         rays=batch.target_view.rays,
-        nerf_variables=jax.tree_map(lambda x: x[0, 0], nerf_variables),
-        nerf_sigma_grid=jax.tree_map(lambda x: x[0, 0], nerf_sigma_grid),
+        nerf_variables=jax.tree.map(lambda x: x[0, 0], nerf_variables),
+        nerf_sigma_grid=jax.tree.map(lambda x: x[0, 0], nerf_sigma_grid),
     )
 
     # Make 3D predictions.
@@ -336,8 +336,8 @@ def _evaluate_dataset(
           sample_points=(
               eval_utils.create_sample_points_for_3d_semantics(
                   batch.target_view)),
-          nerf_variables=jax.tree_map(lambda x: x[0, 0], nerf_variables),
-          nerf_sigma_grid=jax.tree_map(lambda x: x[0, 0], nerf_sigma_grid),
+          nerf_variables=jax.tree.map(lambda x: x[0, 0], nerf_variables),
+          nerf_sigma_grid=jax.tree.map(lambda x: x[0, 0], nerf_sigma_grid),
       )
 
     # Keep images for later.

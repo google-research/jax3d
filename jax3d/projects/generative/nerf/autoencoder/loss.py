@@ -52,7 +52,7 @@ def transformer_loss_fn(
   def flatten_views(t):
     return t.reshape(t.shape[0] * t.shape[1], *t.shape[2:])
 
-  data = jax.tree_map(flatten_views, data)
+  data = jax.tree.map(flatten_views, data)
 
   gt_rgb = data["image_data"]["image"]
 

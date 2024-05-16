@@ -80,7 +80,7 @@ def test_ds_iterator_imgs():
   )
   assert ds.semantic_labels == ['class0', 'class1']
   all_exs = [ex for _, ex in ds]
-  shuffled_examples = jax.tree_map(
+  shuffled_examples = jax.tree.map(
       dataset._shuffle_deterministically,
       examples,
   )
@@ -100,7 +100,7 @@ def test_ds_iterator_imgs_num_scenes_per_batch():
       num_scenes_per_batch=2,
   )
   assert ds.semantic_labels == ['class0', 'class1']
-  shuffled_examples = jax.tree_map(
+  shuffled_examples = jax.tree.map(
       dataset._shuffle_deterministically,
       examples,
   )
@@ -272,7 +272,7 @@ def test_example_loader():
     assert isinstance(data_dir, j3d.Path)
     ids = np.array([2, 1, 4, 0] if split == 'train' else [3])
     metadata = dataset_utils.DatasetMetadata(labels=['class0', 'class1'],)
-    return jax.tree_map(lambda t: t[ids], examples), metadata
+    return jax.tree.map(lambda t: t[ids], examples), metadata
 
   ds_type = 'test_dataset'
   registered_ds = dataset_utils.RegisteredDataset(
@@ -330,7 +330,7 @@ def test_example_loader():
       is_novel_scenes=False,
   )
   exs = dataset._concat_examples(exs)
-  exs = jax.tree_map(dataset._shuffle_deterministically, exs)
+  exs = jax.tree.map(dataset._shuffle_deterministically, exs)
   # 5 scenes of 4 examples
   assert exs.target_view.rgb.shape == (4 * 5, 28, 28, 3)
 

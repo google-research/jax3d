@@ -667,12 +667,12 @@ class DatasetIterable:
 
 def _concat_examples(examples: List[types.Batch]) -> types.Batch:
   """Merges list of examples by concatenation of all features along axis 0."""
-  return jax.tree_map(lambda *arrs: np.concatenate(arrs), *examples)
+  return jax.tree.map(lambda *arrs: np.concatenate(arrs), *examples)
 
 
 def _stack_examples(examples: List[types.Batch]) -> types.Batch:
   """Stacks list of examples on axis 0 for all features."""
-  return jax.tree_map(lambda *arrs: np.stack(arrs), *examples)
+  return jax.tree.map(lambda *arrs: np.stack(arrs), *examples)
 
 
 def _make_in_memory_dataset(
@@ -784,11 +784,11 @@ def _gen_batch_unconditional(
     # Concatenate all scenes together
     examples = _concat_examples(examples)
     # Shuffle images across scenes
-    examples = jax.tree_map(_shuffle_deterministically, examples)
+    examples = jax.tree.map(_shuffle_deterministically, examples)
 
   elif example_type == ExampleType.RAY:
     # Merge (num_images, h, w) dimensions together.
-    examples = jax.tree_map(
+    examples = jax.tree.map(
         lambda t: einops.rearrange(t, 'b h w ... -> (b h w) ...'),
         examples
     )
@@ -826,7 +826,7 @@ def _next_batch_rays_from_scenes(examples: List[types.Batch],
   # Outputs are of shape [num_scenes_per_batch, num_rays_per_scene, ...]
 
   # Shuffle rays within each scene.
-  examples = [jax.tree_map(_shuffle_deterministically, ex) for ex in examples]
+  examples = [jax.tree.map(_shuffle_deterministically, ex) for ex in examples]
 
   num_scenes_in_dataset = len(examples)
   num_rays_per_batch = batch_size.per_process
@@ -866,12 +866,12 @@ def _next_batch_rays_from_scenes(examples: List[types.Batch],
       num_rays_in_scene = all_rays_in_scene.batch_shape[0]
       ray_idxs_in_scene = rng.integers(num_rays_in_scene,
                                        size=(num_rays_per_scene,))
-      select_rays_in_scene = jax.tree_map(_select_idxs(ray_idxs_in_scene),
+      select_rays_in_scene = jax.tree.map(_select_idxs(ray_idxs_in_scene),
                                           all_rays_in_scene)
       result.append(select_rays_in_scene)
 
     # List[Batch] --> Batch
-    result = jax.tree_map(lambda *arrs: np.stack(arrs), *result)
+    result = jax.tree.map(lambda *arrs: np.stack(arrs), *result)
 
     return result
 
@@ -888,12 +888,12 @@ def _next_batch_rays_all_scenes(examples: List[types.Batch],
   examples = _concat_examples(examples)
 
   # Shuffle rays across scenes.
-  examples = jax.tree_map(_shuffle_deterministically, examples)
+  examples = jax.tree.map(_shuffle_deterministically, examples)
 
   def next_batch_fn(rng):
     idx = rng.integers(examples.batch_shape[0],
                        size=(batch_size.per_process,))  # pytype: disable=attribute-error
-    return jax.tree_map(lambda t: t[idx], examples)
+    return jax.tree.map(lambda t: t[idx], examples)
 
   return next_batch_fn
 
@@ -908,12 +908,12 @@ def _to_devices_sharded(ex: types.Batch) -> types.Batch:
     ex: The `jax.ShardedDeviceArray` (same shape).
   """
   devices = jax.local_devices()
-  return jax.tree_map(lambda x: jax.device_put_sharded(list(x), devices), ex)
+  return jax.tree.map(lambda x: jax.device_put_sharded(list(x), devices), ex)
 
 
 def _shard(ex: types.Batch) -> types.Batch:
   """Reshape batch dimension to (num_local_device, batch_size_per_device)."""
-  return jax.tree_map(_shard_single, ex)
+  return jax.tree.map(_shard_single, ex)
 
 
 def _shard_single(ex: tf.Tensor) -> tf.Tensor:
@@ -932,7 +932,7 @@ def to_ds_state_bytes(state: DsState) -> DsState:
     return str(x).encode()
 
   # tf/np does not support 128-bits integers, so convert to tf.string instead
-  return jax.tree_map(_to_bytes, state)
+  return jax.tree.map(_to_bytes, state)
 
 
 def to_ds_state_int(state: DsState) -> DsState:
@@ -948,7 +948,7 @@ def to_ds_state_int(state: DsState) -> DsState:
     assert isinstance(x, bytes), type(x)
     return int(x.decode())
 
-  return jax.tree_map(_to_int, state)
+  return jax.tree.map(_to_int, state)
 
 
 def _valid_ray_dir(ray_dir: tf.Tensor) -> tf.Tensor:
@@ -1034,7 +1034,7 @@ def _crop_views(ex: types.Batch,
              crop[0]: h - crop[1],
              crop[2]: w - crop[3], :]
 
-  ex.target_view = jax.tree_map(crop_image, ex.target_view)
+  ex.target_view = jax.tree.map(crop_image, ex.target_view)
   return ex
 
 
@@ -1061,4 +1061,4 @@ def _to_jnp_array(x: np.ndarray):
 
 def _to_device(xs):
   """Transfer data to devices (GPU/TPU)."""
-  return jax.tree_map(_to_jnp_array, xs)
+  return jax.tree.map(_to_jnp_array, xs)

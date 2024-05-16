@@ -533,7 +533,7 @@ class Model(nn.Module):
         combined_nerf_result_list.append(result.reshape(*shape))
 
       # Finally, we can restore the original result tree structure.
-      combined_nerf_result = jax.tree_unflatten(result_treedef,
+      combined_nerf_result = jax.tree.unflatten(result_treedef,
                                                 combined_nerf_result_list)
 
     if return_additional_sample_data and "jacobian" in combined_nerf_result:

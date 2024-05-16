@@ -112,7 +112,7 @@ def render_id_view_grid(image_renderer, summary_data, model_parameters, step):
       single_view_latents = summary_data["latents"][id_idx, view_idx]
       logging.info("Rendering identity:%d view_subindex:%d", id_idx, view_idx)
       # pylint: disable=cell-var-from-loop
-      camera = jax.tree_map(lambda t: t[id_idx, view_idx],
+      camera = jax.tree.map(lambda t: t[id_idx, view_idx],
                             summary_data["camera"])
 
       inputs = models.ModelInputs(latent_tokens=single_view_latents)
@@ -164,8 +164,8 @@ def compute_batch_psnr(model_parameters: models.ModelParameters,
   def flatten_views(t):
     return einops.rearrange(t, "V I ... -> (V I) ...")
 
-  data_flat = jax.tree_map(flatten_views, data)
-  latents = jax.tree_map(flatten_views, latents)
+  data_flat = jax.tree.map(flatten_views, data)
+  latents = jax.tree.map(flatten_views, latents)
   origins, directions = jax.vmap(jax_camera.pixels_to_rays)(
       data_flat["camera"], data_flat["pixel_coordinates"])
   rays = jnp.concatenate([origins, directions], axis=-1)
