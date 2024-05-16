@@ -171,7 +171,7 @@ def de_replicate(state):
     assert x.shape[0], x.shape
     return x[0]
 
-  return jax.device_get(jax.tree_map(first, state))
+  return jax.device_get(jax.tree.map(first, state))
 
 
 class TrainMode(enum.Enum):
@@ -214,7 +214,7 @@ def params_to_str(params: flax.core.FrozenDict, filter_fn=None) -> str:
 
 def _l2_norm(tree):
   """Compute the l2 norm of a pytree of arrays. Useful for weight decay."""
-  leaves, _ = jax.tree_flatten(tree)
+  leaves, _ = jax.tree.flatten(tree)
   return jnp.sqrt(sum(jnp.vdot(x, x) for x in leaves))
 
 
@@ -224,7 +224,7 @@ def clip_values_by_global_norm(pytree, max_norm: Optional[f32]):
     return pytree
   norm = _l2_norm(pytree)
   normalize = lambda g: jnp.where(norm < max_norm, g, g * (max_norm / norm))
-  return jax.tree_map(normalize, pytree)
+  return jax.tree.map(normalize, pytree)
 
 
 def should_execute_now(step: int, step_every: Optional[int]) -> bool:

@@ -268,12 +268,12 @@ class Renderer:
                                                       all_nerf_sigma_grids,
                                                       num_devices=1)
     rendered_rays = self._checkpoint_render_fn(
-        nerf_variables=jax.tree_map(lambda x: x[0, 0], nerf_variables),
-        nerf_sigma_grid=jax.tree_map(lambda x: x[0, 0], nerf_sigma_grid),
+        nerf_variables=jax.tree.map(lambda x: x[0, 0], nerf_variables),
+        nerf_sigma_grid=jax.tree.map(lambda x: x[0, 0], nerf_sigma_grid),
         rays=image_rays)
 
     # Copy results to host. This prevents device memory from getting cluttered.
-    rendered_rays = jax.tree_map(jax.device_get, rendered_rays)
+    rendered_rays = jax.tree.map(jax.device_get, rendered_rays)
 
     return rendered_rays
 
@@ -287,7 +287,7 @@ class Renderer:
     for i in range(num_frames):
       logging.info("[%8.3f] Rendering frame %04d/%04d",
                    stopwatch.delta(), i+1, num_frames)
-      rays = jax.tree_map(lambda x: x[i], video_rays)  # pylint: disable=cell-var-from-loop
+      rays = jax.tree.map(lambda x: x[i], video_rays)  # pylint: disable=cell-var-from-loop
       rendered_rays = self.render_image(rays)
       results.append(rendered_rays)
     results = _nested_stack(results)
@@ -305,16 +305,16 @@ class Renderer:
     video_rays = truck(image_rays, num_rows)
 
     # [num_frames, width]
-    center_rays = jax.tree_map(lambda x: x[:, row_idx], video_rays)
+    center_rays = jax.tree.map(lambda x: x[:, row_idx], video_rays)
 
     # [1, num_frames, width]
-    center_rays = jax.tree_map(lambda x: x[None, ...], center_rays)
+    center_rays = jax.tree.map(lambda x: x[None, ...], center_rays)
 
     # [1, num_frames, width]
     rendered_video_rays = self.render_video(center_rays)
 
     # [num_frames, width]
-    result = jax.tree_map(lambda x: x[0], rendered_video_rays)
+    result = jax.tree.map(lambda x: x[0], rendered_video_rays)
 
     return result
 
@@ -439,7 +439,7 @@ def write_semantic_images_video(
 
 
 def _nested_stack(x):
-  return jax.tree_map(lambda *args: np.stack(args), *x)
+  return jax.tree.map(lambda *args: np.stack(args), *x)
 
 
 def _draw_red_line(x: f32["h w c"], idx: int) -> f32["h w c"]:

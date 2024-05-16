@@ -35,7 +35,7 @@ def test_scale():
   rays2 = transform.forward(rays)
   rays3 = transform.backward(rays2)
 
-  jax.tree_map(np.testing.assert_allclose, rays, rays3)
+  jax.tree.map(np.testing.assert_allclose, rays, rays3)
   np.testing.assert_allclose(rays2.origin[0, 1], 2)  # pytype: disable=attribute-error
 
 
@@ -46,7 +46,7 @@ def test_rotate():
   rays2 = transform.forward(rays)
   rays3 = transform.backward(rays2)
 
-  jax.tree_map(np.testing.assert_allclose, rays, rays3)
+  jax.tree.map(np.testing.assert_allclose, rays, rays3)
   np.testing.assert_allclose(rays2.origin[0], np.array([-1, 1, 0]))  # pytype: disable=attribute-error
   np.testing.assert_allclose(rays2.direction[0],
                              np.array([1/np.sqrt(2), 1/np.sqrt(2), 0]))
@@ -59,7 +59,7 @@ def test_translate():
   rays2 = transform.forward(rays)
   rays3 = transform.backward(rays2)
 
-  jax.tree_map(np.testing.assert_allclose, rays, rays3)
+  jax.tree.map(np.testing.assert_allclose, rays, rays3)
   np.testing.assert_allclose(rays2.origin[0], np.array([2, 3, 3]))  # pytype: disable=attribute-error
   np.testing.assert_allclose(rays2.direction[0],
                              np.array([1/np.sqrt(2), -1/np.sqrt(2), 0]))
@@ -76,7 +76,7 @@ def test_compose():
   rays2 = transform.forward(rays)
   rays3 = transform.backward(rays2)
 
-  jax.tree_map(np.testing.assert_allclose, rays, rays3)
+  jax.tree.map(np.testing.assert_allclose, rays, rays3)
   np.testing.assert_allclose(rays2.origin[0], np.zeros(3))  # pytype: disable=attribute-error
   np.testing.assert_allclose(rays2.direction[0],
                              np.array([2/np.sqrt(2), 1/np.sqrt(2), 0]))
@@ -93,7 +93,7 @@ def test_inverse():
   rays2 = transform.forward(rays)
   rays3 = transform.backward(rays2)
 
-  jax.tree_map(np.testing.assert_allclose, rays, rays3)
+  jax.tree.map(np.testing.assert_allclose, rays, rays3)
   np.testing.assert_allclose(rays2.origin[0], np.array([1, 0.5, -3]))  # pytype: disable=attribute-error
   np.testing.assert_allclose(rays2.direction[0],
                              np.array([1/np.sqrt(2), -1/np.sqrt(2), 0]))
@@ -106,8 +106,8 @@ def test_identity():
   rays2 = transform.forward(rays)
   rays3 = transform.backward(rays2)
 
-  jax.tree_map(np.testing.assert_allclose, rays, rays2)
-  jax.tree_map(np.testing.assert_allclose, rays, rays3)
+  jax.tree.map(np.testing.assert_allclose, rays, rays2)
+  jax.tree.map(np.testing.assert_allclose, rays, rays3)
 
 
 def test_sample_points():
@@ -119,4 +119,4 @@ def test_sample_points():
       direction=np.random.randn(n, 3))
   rays = geom._sample_points_to_rays(sample_points)
   sample_points2 = geom._rays_to_sample_points(rays, sample_points.batch_shape)
-  jax.tree_map(np.testing.assert_allclose, sample_points, sample_points2)
+  jax.tree.map(np.testing.assert_allclose, sample_points, sample_points2)

@@ -263,7 +263,7 @@ def _load_nerf_state_for_scene(scene_metadata,
   # _verify_sigma_grid(model, variables, sigma_grid)
 
   # Ensure all variables are in host memory.
-  variables = jax.tree_map(jax.device_get, variables)
+  variables = jax.tree.map(jax.device_get, variables)
   sigma_grid = jax.device_get(sigma_grid)
 
   return model, variables, sigma_grid, scene_name
@@ -305,7 +305,7 @@ def _verify_sigma_grid(model, variables, sigma_grid):
 
 
 def _nested_stack(x):
-  return jax.tree_map(lambda *args: jnp.stack(args), *x)
+  return jax.tree.map(lambda *args: jnp.stack(args), *x)
 
 
 def _device_map(x: Tree[jnp.ndarray],
@@ -325,7 +325,7 @@ def _device_map(x: Tree[jnp.ndarray],
           f' of {num_devices} and try again.')
     batch_size_per_device = batch_size // num_devices
     return jnp.reshape(y, (num_devices, batch_size_per_device, *remaining_dims))
-  return jax.tree_map(_device_map_internal, x)
+  return jax.tree.map(_device_map_internal, x)
 
 
 def select_and_stack(select_scene_ids, elements, num_devices=None):
