@@ -35,6 +35,12 @@ from jax3d.projects.nesf.utils.typing import PRNGKey, f32, i32  # pylint: disabl
 import numpy as np
 
 
+# Orbax disabled because the ds_state has variable-length byte strings, which
+# is not supported by Tensorstore. Generally, it is not appropriate to use
+# the Flax/Orbax checkpointing API for dealing with datasets.
+flax.config.update("flax_use_orbax_checkpointing", False)
+
+
 # Prefixes for checkpoints written to disk. CKPT_PREFIX_OPT is for optimizer
 # state, which is the same across all hosts. CKPT_PREFIX_DS is for dataset
 # state, which is different per device.
