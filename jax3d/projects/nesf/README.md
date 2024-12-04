@@ -41,7 +41,7 @@ git clone https://github.com/google-research/jax3d.git
 
 From within the jax3d direct, directly run these installation commands. Note, it
 may be necessary to modify the Jax installation per the version of CUDA and
-CuDNN. See: https://github.com/google/jax#pip-installation-gpu-cuda
+CuDNN. See: https://github.com/jax-ml/jax#pip-installation-gpu-cuda
 
 ```shell
 pip install .
