@@ -19,7 +19,7 @@ conda install pip; pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-Please make sure that your jax supports GPU. You might need to re-install jax by following the [jax installation guide](https://github.com/google/jax#installation).
+Please make sure that your jax supports GPU. You might need to re-install jax by following the [jax installation guide](https://github.com/jax-ml/jax#installation).
 
 
 
