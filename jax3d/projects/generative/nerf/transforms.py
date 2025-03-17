@@ -79,13 +79,19 @@ def normalize_safe(array: jnp.ndarray,
   return array / optax.safe_norm(array, min_norm=eps, axis=axis, keepdims=True)
 
 
-def rotation_six_dim_to_rotation_matrix(rotation_six_dim: jnp.ndarray,
-                                        eps: float = 1e-7) -> jnp.ndarray:
+def rotation_six_dim_to_rotation_matrix(
+    rotation_six_dim: jnp.ndarray,
+    eps: float = 1e-7,
+    use_row_representation: bool = True,
+) -> jnp.ndarray:
   """Converts [..., 6] rotation representation to [..., 3, 3] rotation matrix.
 
   Args:
     rotation_six_dim: [..., 6] 6D continuous rotation representation.
     eps: a small positive float for controlling numerical stability in division.
+    use_row_representation: Whether the 6D input represents the first two row
+      vectors (True) or column vectors (False). The default is True. Pass False
+      to obtain the behavior described in the paper.
 
   Returns:
     [..., 3, 3] rotation matrix.
@@ -100,14 +106,20 @@ def rotation_six_dim_to_rotation_matrix(rotation_six_dim: jnp.ndarray,
   b2 = a2 - jnp.sum(b1 * a2, axis=-1, keepdims=True) * b1
   b2 = normalize_safe(b2, eps=eps)
   b3 = jnp.cross(b1, b2)
-  return jnp.stack((b1, b2, b3), axis=-2)
+  stack_axis = -2 if use_row_representation else -1
+  return jnp.stack((b1, b2, b3), axis=stack_axis)
 
 
-def rotation_matrix_to_rotation_six_dim(matrix: jnp.ndarray) -> jnp.ndarray:
+def rotation_matrix_to_rotation_six_dim(
+    matrix: jnp.ndarray, use_row_representation: bool = True
+) -> jnp.ndarray:
   """Converts [..., 3, 3] rotation matrices [..., 6] rotation representation.
 
   Args:
-    matrix : [..., 3, 3] rotation matrix.
+    matrix: [..., 3, 3] rotation matrix.
+    use_row_representation: Whether the 6D output should represent the first two
+      row vectors (True) or column vectors (False). The default is True. Pass
+      False to obtain the behavior described in the paper.
 
   Returns:
     [..., 6] 6-dimensional continuous rotation representation.
@@ -118,5 +130,8 @@ def rotation_matrix_to_rotation_six_dim(matrix: jnp.ndarray) -> jnp.ndarray:
   IEEE Conference on Computer Vision and Pattern Recognition, 2019.
   Retrieved from http://arxiv.org/abs/1812.07035
   """
-  batch_dim = matrix.shape[:-2]
-  return matrix[..., :2, :].reshape((*batch_dim, 6))
+  if use_row_representation:
+    batch_dim = matrix.shape[:-2]
+    return matrix[..., :2, :].reshape((*batch_dim, 6))
+  else:
+    return jnp.concatenate((matrix[..., 0], matrix[..., 1]), axis=-1)
