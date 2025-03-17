@@ -15,6 +15,7 @@
 """JAX utilities for working with geometric transformations."""
 
 import jax.numpy as jnp
+import optax
 
 
 def euler_to_rotation_matrix(euler):
@@ -59,20 +60,23 @@ def rotation_matrix_to_euler(matrix):
   return jnp.stack([x_angle, y_angle, z_angle], axis=-1)
 
 
-def divide_safe(numerator: jnp.ndarray,
-                denominator: jnp.ndarray,
-                eps: float = 1e-7) -> jnp.ndarray:
-  """Division of jnp.ndarray's with zero denominator safety."""
-  denominator_ = jnp.where(denominator < eps, 1.0, denominator)
-  return jnp.divide(numerator, denominator_)
-
-
 def normalize_safe(array: jnp.ndarray,
                    axis: int = -1,
                    eps: float = 1e-7) -> jnp.ndarray:
-  """Normalizes an jnp.ndarray with zero denominator safety."""
-  return divide_safe(array, jnp.linalg.norm(array, axis=axis, keepdims=True),
-                     eps=eps)
+  """Normalizes an jnp.ndarray using optax.safe_norm.
+
+  Args:
+    array: The array to normalize.
+    axis: The axis along which to compute the norm.
+    eps: A small positive float to avoid division by zero.
+
+  Returns:
+    The normalized array.
+
+  Note: optax.safe_norm avoids division by zero by clipping small norms to eps,
+  and produces correct gradients at 0.
+  """
+  return array / optax.safe_norm(array, min_norm=eps, axis=axis, keepdims=True)
 
 
 def rotation_six_dim_to_rotation_matrix(rotation_six_dim: jnp.ndarray,
