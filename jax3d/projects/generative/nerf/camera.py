@@ -1,4 +1,4 @@
-# Copyright 2024 The jax3d Authors.
+# Copyright 2025 The jax3d Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -269,7 +269,7 @@ def pixels_to_points(camera, pixels: jnp.ndarray, depth: jnp.ndarray):
   rays_through_pixels = pixels_to_rays(camera, pixels)
   cosa = jnp.matmul(rays_through_pixels, camera["orientation"][2, :])  # pytype: disable=wrong-arg-types  # jnp-type
   points = (
-      rays_through_pixels * depth[..., jnp.newaxis] / cosa[..., jnp.newaxis] +
+      rays_through_pixels * depth[..., jnp.newaxis] / cosa[..., jnp.newaxis] +  # pytype: disable=unsupported-operands  # jax-operator-types
       camera["position"])
   return points
 
