@@ -142,11 +142,13 @@ def render_id_view_grid(image_renderer, summary_data, model_parameters, step):
 
 
 @gin.configurable(allowlist=["apply_mask"])
-def compute_batch_psnr(model_parameters: models.ModelParameters,
-                       latents: np.ndarray,
-                       data: ...,
-                       step: int,
-                       apply_mask: bool = False) -> float:
+def compute_batch_psnr(
+    model_parameters: models.ModelParameters,
+    latents: np.ndarray,
+    data,
+    step: int,
+    apply_mask: bool = False,
+) -> float:
   """Computes the reconstruction PSNR for a batch of data.
 
   Args:
@@ -187,9 +189,13 @@ def compute_batch_psnr(model_parameters: models.ModelParameters,
   return psnr  # pytype: disable=bad-return-type  # jax-ndarray
 
 
-def compute_eval_psnr(model_parameters: models.ModelParameters,
-                      latent_table: np.ndarray, data_iterator: Iterator[Any],
-                      psnr_function: ..., step: int) -> float:
+def compute_eval_psnr(
+    model_parameters: models.ModelParameters,
+    latent_table: np.ndarray,
+    data_iterator: Iterator[Any],
+    psnr_function,
+    step: int,
+) -> float:
   """Computes eval PSNR for one loaded checkpoint.
 
   Args:

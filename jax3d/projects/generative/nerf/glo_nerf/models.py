@@ -324,9 +324,9 @@ class Model(nn.Module):
     results = {"sample_density": density, "sample_values": {"rgb": rgb,}}
     return results
 
-  def surface_normal_from_density(self, points: FloatArray["N", ...,
-                                                           3], inputs: ...,
-                                  step: int) -> FloatArray["N", ..., 3]:
+  def surface_normal_from_density(
+      self, points: FloatArray["N", ..., 3], inputs, step: int
+  ) -> FloatArray["N", ..., 3]:
     """Compute the normals of the density field at the given points."""
 
     # Input points are of the form [ N, ..., 3]. Compute the product of the

@@ -25,8 +25,7 @@ EVAL_BATCHES_PER_CHECKPOINT = 256
 EVAL_IDS_PER_BATCH = 8
 
 
-def render_frames(model_parameters: models.ModelParameters, data: ...,
-                  step: int):
+def render_frames(model_parameters: models.ModelParameters, data, step: int):
   """Render summary images for TensorBoard."""
   # Combine identity and view dimensions as the model does not use them.
 
@@ -43,7 +42,7 @@ def render_frames(model_parameters: models.ModelParameters, data: ...,
   return jnp.concatenate(frames, axis=1)
 
 
-def psnr(model_parameters: models.ModelParameters, data: ..., step: int):
+def psnr(model_parameters: models.ModelParameters, data, step: int):
   """Compute PSNR for test images."""
   # Combine identity and view dimensions as the model does not use them.
   def flatten_views(t):
