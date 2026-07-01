@@ -150,8 +150,8 @@ def make_camera(  # pytype: disable=annotation-type-mismatch  # jax-ndarray
     focal_length: Union[jnp.ndarray, float],
     principal_point: jnp.ndarray,
     image_size: jnp.ndarray,
-    skew: Union[jnp.ndarray, float] = None,
-    pixel_aspect_ratio: Union[jnp.ndarray, float] = None,
+    skew: Union[jnp.ndarray, float] = None,  # pyrefly: ignore[bad-function-definition]
+    pixel_aspect_ratio: Union[jnp.ndarray, float] = None,  # pyrefly: ignore[bad-function-definition]
     radial_distortion: Optional[jnp.ndarray] = None,
     tangential_distortion: Optional[jnp.ndarray] = None) -> CameraType:
   """Create a dictionary containing standard values for representing a camera.
@@ -222,7 +222,7 @@ def look_at(eye_position: jnp.ndarray,
   # +Z = forward
   camera_forward = target - eye_position
   camera_forward /= jnp.linalg.norm(camera_forward)
-  camera_right = jnp.cross(camera_forward, global_up)
+  camera_right = jnp.cross(camera_forward, global_up)  # pyrefly: ignore[bad-argument-type]
   camera_right /= jnp.linalg.norm(camera_right)
   camera_up = jnp.cross(camera_right, camera_forward)
   orientation = jnp.stack([-camera_right, camera_up, camera_forward], axis=0)

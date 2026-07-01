@@ -246,7 +246,7 @@ class Model(nn.Module):
 
     return rgb
 
-  def initialize_parameters(self, rng_key: PRNGKey,
+  def initialize_parameters(self, rng_key: PRNGKey,  # pyrefly: ignore[not-a-type]
                             image_size) -> ModelParameters:
     batch_size = 7
     pixel_batch_size = 11

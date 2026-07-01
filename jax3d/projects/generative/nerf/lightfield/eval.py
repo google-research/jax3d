@@ -179,7 +179,7 @@ def compute_batch_psnr(
   render = models.Model().apply(
       model_parameters, inputs, rays, rng=rng, step=step)
 
-  pred = render["gamma_rgb"]
+  pred = render["gamma_rgb"]  # pyrefly: ignore[bad-index]
   gt = data_flat["gamma_rgb"]
   if apply_mask:
     pred *= data_flat["weight"]

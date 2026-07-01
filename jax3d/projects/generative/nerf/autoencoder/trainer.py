@@ -39,11 +39,11 @@ class TransformerTrainState(trainer.TrainState):
   """Training state for the NeRF Transformer Model."""
   model_parameters: models.ModelParameters
   optimizer_state: optax.OptState
-  rng: PRNGKey
+  rng: PRNGKey  # pyrefly: ignore[not-a-type]
 
   def to_serializable(self) -> "TransformerTrainState":
     """Transforms the state values into a form suitable for serialization."""
-    return self.replace(
+    return self.replace(  # pyrefly: ignore[missing-attribute]
         model_parameters=jax_utils.unreplicate(self.model_parameters),
         optimizer_state=jax_utils.unreplicate(self.optimizer_state),
     )
@@ -51,7 +51,7 @@ class TransformerTrainState(trainer.TrainState):
   def from_serializable(self) -> "TransformerTrainState":
     """Transforms deserialized values into a form suitable for training."""
     state = self
-    state = state.replace(
+    state = state.replace(  # pyrefly: ignore[missing-attribute]
         model_parameters=jax_utils.replicate(state.model_parameters),
         optimizer_state=jax_utils.replicate(state.optimizer_state),
     )
@@ -89,7 +89,7 @@ class TransformerTrainer(trainer.Trainer):
 
   def init_state(self) -> TransformerTrainState:
     """Initializes training state."""
-    rng = jax.random.PRNGKey(self.random_seed)
+    rng = jax.random.PRNGKey(self.random_seed)  # pyrefly: ignore[bad-argument-type]
     train_rng, model_init_rng = jax.random.split(rng)
     res = self.data_reader.resolution
     model_parameters = self.model.initialize_parameters(model_init_rng,
@@ -135,7 +135,7 @@ class TransformerTrainer(trainer.Trainer):
 
     return jax.pmap(per_device_train_step, "replicas")
 
-  def train_step(
+  def train_step(  # pyrefly: ignore[bad-override]
       self, train_state: TransformerTrainState, inputs: Dict[str, Any],
       scratch: Optional[Dict[str, Any]]
   ) -> Tuple[TransformerTrainState, Dict[str, Any], Dict[str, Any]]:
@@ -173,7 +173,7 @@ class TransformerTrainer(trainer.Trainer):
     loss_terms = jax.tree.map(np.array, loss_terms)
     loss_terms["param_count"] = scratch["param_count"]
 
-    new_train_state = train_state.replace(
+    new_train_state = train_state.replace(  # pyrefly: ignore[missing-attribute]
         model_parameters=new_model_parameters,
         optimizer_state=new_optimizer_state,
         rng=next_rng,
@@ -181,7 +181,7 @@ class TransformerTrainer(trainer.Trainer):
 
     return new_train_state, loss_terms, scratch
 
-  def eval_step(self, train_state: TransformerTrainState,
+  def eval_step(self, train_state: TransformerTrainState,  # pyrefly: ignore[bad-override]
                 summary_writer: tensorboard.SummaryWriter,
                 scratch: Optional[Any]) -> Any:
     """Performs evaluation on a model checkpoint.

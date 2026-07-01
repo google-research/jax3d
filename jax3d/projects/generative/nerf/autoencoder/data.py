@@ -26,9 +26,9 @@ import tensorflow_datasets as tfds
 @dataclasses.dataclass(frozen=True)
 class TFDSImageDatasetReader():
   """Dataset reader wrapping TFDS image datasets."""
-  dataset_name: str = gin.REQUIRED
-  resolution: int = gin.REQUIRED
-  batch_size: int = gin.REQUIRED
+  dataset_name: str = gin.REQUIRED  # pyrefly: ignore[bad-assignment]
+  resolution: int = gin.REQUIRED  # pyrefly: ignore[bad-assignment]
+  batch_size: int = gin.REQUIRED  # pyrefly: ignore[bad-assignment]
 
   split: str = "train"
   eval_fraction: float = 0.05
@@ -82,9 +82,9 @@ class TFDSImageDatasetReader():
 @dataclasses.dataclass(frozen=True)
 class TiledMNISTDatasetReader():
   """Dataset reader wrapping TFDS image datasets."""
-  resolution: int = gin.REQUIRED
-  batch_size: int = gin.REQUIRED
-  tile_factor: int = gin.REQUIRED
+  resolution: int = gin.REQUIRED  # pyrefly: ignore[bad-assignment]
+  batch_size: int = gin.REQUIRED  # pyrefly: ignore[bad-assignment]
+  tile_factor: int = gin.REQUIRED  # pyrefly: ignore[bad-assignment]
 
   split: str = "train"
   eval_fraction: float = 0.05
