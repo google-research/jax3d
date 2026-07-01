@@ -105,11 +105,11 @@ def compute_ssim(img0,
   return ssim_map if return_map else ssim
 
 
-def compute_confusion_matrix(y_true: i32["..."],
-                             y_pred: i32["..."],
+def compute_confusion_matrix(y_true: i32["..."],  # pyrefly: ignore[not-a-type]
+                             y_pred: i32["..."],  # pyrefly: ignore[not-a-type]
                              num_classes: int,
-                             weights: f32["..."] = None
-                             ) -> f32["num_classes num_classes"]:
+                             weights: f32["..."] = None  # pyrefly: ignore[not-a-type]
+                             ) -> f32["num_classes num_classes"]:  # pyrefly: ignore[not-a-type]
   """Computes the confusion matrix between y_true and y_pred.
 
   Args:
@@ -144,8 +144,8 @@ def compute_confusion_matrix(y_true: i32["..."],
   return cm
 
 
-def compute_iou(confusion_matrix: f32["num_classes num_classes"]
-                ) -> Tuple[f32, f32["num_classes"]]:
+def compute_iou(confusion_matrix: f32["num_classes num_classes"]  # pyrefly: ignore[not-a-type]
+                ) -> Tuple[f32, f32["num_classes"]]:  # pyrefly: ignore[not-a-type, unknown-name]
   """Computes the mean intersection-over-union, given a confusion matrix.
 
   Args:
