@@ -159,7 +159,7 @@ class RenderParams:
 @dataclasses.dataclass
 class ConfigParams:
   """Config Params."""
-  models: model_utils.ModelParams = gin_utils.ConfigField(
+  models: model_utils.ModelParams = gin_utils.ConfigField(  # pyrefly: ignore[bad-assignment]
       model_utils.ModelParams, required=True
   )
   datasets: datasets_lib.DatasetParams = dataclasses.field(
@@ -228,5 +228,5 @@ def import_params_from_gin_config(path: PathLike) -> ConfigParams:
     params: The restored params
   """
   # Restore the bindings from the saved config
-  gin.parse_config_files_and_bindings(config_files=[path], bindings=[])
+  gin.parse_config_files_and_bindings(config_files=[path], bindings=[])  # pyrefly: ignore[bad-argument-type]
   return ConfigParams()

@@ -27,14 +27,14 @@ from jax3d.projects.nesf.utils.typing import PRNGKey, Tree, f32  # pylint: disab
 
 
 def predict_fn_3d(
-    rng: PRNGKey,
+    rng: PRNGKey,  # pyrefly: ignore[not-a-type]
     points: types.SamplePoints,
     nerf_variables: Tree[jnp.ndarray],
-    nerf_sigma_grid: f32["1 x y z c"],
+    nerf_sigma_grid: f32["1 x y z c"],  # pyrefly: ignore[not-a-type]
     *,
     semantic_variables: Tree[jnp.ndarray],
     semantic_model: volumetric_semantic_model.VolumetricSemanticModel,
-) -> f32["D n k"]:
+) -> f32["D n k"]:  # pyrefly: ignore[not-a-type]
   """Predict semantic logits for a set of 3D points.
 
   Args:
@@ -68,7 +68,7 @@ def predict_fn_3d(
                           direction=normalize_fn(jnp.ones((n, 3))))
 
   _, predictions = semantic_model.apply(
-      semantic_variables,
+      semantic_variables,  # pyrefly: ignore[bad-argument-type]
       rngs=dict(zip(rng_names, rng_keys)),
       rays=dummy_rays,
       sigma_grid=nerf_sigma_grid,
@@ -78,7 +78,7 @@ def predict_fn_3d(
       points=points)
 
   assert predictions.shape[1] == 1
-  return jax.lax.all_gather(predictions[:, 0, :], axis_name="batch")
+  return jax.lax.all_gather(predictions[:, 0, :], axis_name="batch")  # pyrefly: ignore[bad-index]
 
 
 def create_sample_points_for_3d_semantics(

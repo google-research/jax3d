@@ -104,7 +104,7 @@ def dataclass_configurable(cls: _ClsT) -> _ClsT:
     raise TypeError(f'{cls} is not a dataclass')
 
   # Inspect the class to register the valid scopes
-  _register_valid_scopes(cls)
+  _register_valid_scopes(cls)  # pyrefly: ignore[bad-argument-type]
 
   # Track child subclass for inheritance support
   # Called upon definition of a child class. See PEP 487.
@@ -119,8 +119,8 @@ def dataclass_configurable(cls: _ClsT) -> _ClsT:
   # This allow `ConfigField(DatasetParams)` to initialize any child (e.g
   # `KlevrParams`)
   # Params(dataset='KlevrParams')  # params.dataset is a KlevrParams() instance
-  cls._CONFIG_SUBCLASS = {cls.__name__: cls}  # pylint: disable=protected-access
-  cls.__init_subclass__ = classmethod(__init_subclass__)
+  cls._CONFIG_SUBCLASS = {cls.__name__: cls}  # pylint: disable=protected-access  # pyrefly: ignore[bad-argument-count, bad-argument-type, missing-attribute]
+  cls.__init_subclass__ = classmethod(__init_subclass__)  # pyrefly: ignore[bad-assignment]
 
   # Apply gin.configurable first before wrapping the __init__ (as gin also
   # wrap the `__init__`)
@@ -298,7 +298,7 @@ class ConfigField(j3d.utils.DataclassField[_Cls, _Cls]):
     self._default_cls = cls
     self._cls = _get_topmost_parent_class(cls)
     self._required = required
-    super().__init__()
+    super().__init__()  # pyrefly: ignore[bad-argument-type]
 
   def _default(self) -> str:  # pytype: disable=signature-mismatch
     # Returns as string so the construction happens in `_validate` (with
@@ -313,7 +313,7 @@ class ConfigField(j3d.utils.DataclassField[_Cls, _Cls]):
     # decorated with `@gin_utils.dataclass_configurable`.
     # We cannot check in `__set_name__` as the decorator isn't yet applied
     # when the class is created.
-    _assert_gin_dataclass_configurable(self._objtype)
+    _assert_gin_dataclass_configurable(self._objtype)  # pyrefly: ignore[bad-argument-type]
 
     if isinstance(value, (type(None), self._cls)):
       return value
@@ -339,7 +339,7 @@ class ConfigField(j3d.utils.DataclassField[_Cls, _Cls]):
       # Note: When inheritance the scope name has to be the dataclass on which
       # the field is defined `ParentCls_field` (an error is raised if trying
       # to use `ChildCls_field` as scope).
-      scope_name = _scope_name(self._objtype, self._attribute_name)
+      scope_name = _scope_name(self._objtype, self._attribute_name)  # pyrefly: ignore[bad-argument-type]
       with gin.config_scope(scope_name):
         with j3d.utils.try_reraise(f'{scope_name}/ '):
           return cls()
@@ -382,7 +382,7 @@ def _add_parent_kwargs(init_fn: Callable[..., None]) -> Callable[..., None]:
               "@MlpParams() -> 'MlpParams').")
         common_kwargs[k].append(cls)
 
-      cls_to_kwargs[cls] = gin_kwargs
+      cls_to_kwargs[cls] = gin_kwargs  # pyrefly: ignore[unsupported-operation]
       init_kwargs.update(gin_kwargs)
 
     # Make sure there is no `ParentCls.x`, `ChildCls.x` conflicts

@@ -19,9 +19,9 @@ import numpy as np
 
 
 def make_transform_matrix(
-    positions: f32['... 3'],
-    rotations: f32['... 3 3'],
-) -> f32['... 4 4']:
+    positions: f32['... 3'],  # pyrefly: ignore[not-a-type]
+    rotations: f32['... 3 3'],  # pyrefly: ignore[not-a-type]
+) -> f32['... 4 4']:  # pyrefly: ignore[not-a-type]
   """Create the 4x4 transformation matrix.
 
   Note: This function uses numpy.

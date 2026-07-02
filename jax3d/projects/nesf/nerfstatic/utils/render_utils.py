@@ -65,7 +65,7 @@ def colorize_semantics(logits: jnp.ndarray,
 
   # Average colors weighted according to probability
   if len(logits.shape) >= 3 and logits.shape[-1] > 1 and blend_logits:
-    result = jnp.einsum("...xy,...x->...y", result, weights)
+    result = jnp.einsum("...xy,...x->...y", result, weights)  # pyrefly: ignore[unbound-name]
 
   return result
 
@@ -91,10 +91,10 @@ def colorize_depth(depth):
   return cm.get_cmap("turbo")(depth)[..., 0:3]
 
 
-def disparity_to_depth(disparity: f32["... 1"],
-                       opacity: f32["... 1"],
+def disparity_to_depth(disparity: f32["... 1"],  # pyrefly: ignore[not-a-type]
+                       opacity: f32["... 1"],  # pyrefly: ignore[not-a-type]
                        max_depth: float,
-                       ) -> f32["... 1"]:
+                       ) -> f32["... 1"]:  # pyrefly: ignore[not-a-type]
   """Converts disparity and opacity to a depth map."""
   depth = opacity / disparity
   # depth = 1.0 / disparity
@@ -103,10 +103,10 @@ def disparity_to_depth(disparity: f32["... 1"],
   return depth
 
 
-def normalize_depth(depth: f32["... 1"],
+def normalize_depth(depth: f32["... 1"],  # pyrefly: ignore[not-a-type]
                     min_depth: float,
                     max_depth: float,
-                    ) -> f32["... 3"]:
+                    ) -> f32["... 3"]:  # pyrefly: ignore[not-a-type]
   """Normalizes a depth map between [0, 1]."""
   # Reduce to a (H, W) from (H, W, 1)
   depth = depth[..., 0]
@@ -193,10 +193,10 @@ def truck(rays: types.Rays,
 
 
 def predict_fn_2d(
-    rng: PRNGKey,
+    rng: PRNGKey,  # pyrefly: ignore[not-a-type]
     rays: types.Rays,
     nerf_variables: Tree[jnp.ndarray],
-    nerf_sigma_grid: f32["n x y z c"],
+    nerf_sigma_grid: f32["n x y z c"],  # pyrefly: ignore[not-a-type]
     *,
     semantic_variables: Tree[jnp.ndarray],
     semantic_model: vsm.VolumetricSemanticModel,
@@ -220,7 +220,7 @@ def predict_fn_2d(
   rng, *rng_keys = jax.random.split(rng, len(rng_names) + 1)
   return jax.lax.all_gather(  # gathers over all devices
       semantic_model.apply(
-          semantic_variables,
+          semantic_variables,  # pyrefly: ignore[bad-argument-type]
           rngs=dict(zip(rng_names, rng_keys)),
           rays=rays,
           sigma_grid=nerf_sigma_grid,
@@ -257,7 +257,7 @@ class Renderer:
 
     # scene_id associated with pixel (0,0). It is assumed that all pixels in
     # this frame share the same scene_id.
-    scene_id = image_rays.scene_id[0, 0, 0]
+    scene_id = image_rays.scene_id[0, 0, 0]  # pyrefly: ignore[unsupported-operation]
 
     # nerf_variables and nerf_sigma_grid's Tensors have shape [1, 1, ...].
     # TODO(svora): Clean up select and stack for non vmap case.
@@ -388,7 +388,7 @@ def write_depth_video(filepath: j3d.Path,
   return write_video(filepath, video, **kwargs)
 
 
-def write_video(filepath: j3d.Path, video: f32["n h w 3"], **kwargs):
+def write_video(filepath: j3d.Path, video: f32["n h w 3"], **kwargs):  # pyrefly: ignore[not-a-type]
   """Writes video frames to disk."""
   filepath.parent.mkdir(parents=True, exist_ok=True)
   mediapy.write_video(filepath, video, **kwargs)
@@ -405,7 +405,7 @@ def write_epipolar_plane_image(directory: j3d.Path,
                                blend_logits: bool = False):
   """Writes images related to epipolar plane visualizations."""
   rgb_reference = _draw_red_line(reference_views.rgb, row_idx)
-  semantic_reference = colorize_semantics(reference_views.semantics,
+  semantic_reference = colorize_semantics(reference_views.semantics,  # pyrefly: ignore[bad-argument-type]
                                           blend_logits=blend_logits)
   semantic_reference = _draw_red_line(semantic_reference, row_idx)
   epi_rgb = rendered_rays.rgb
@@ -427,7 +427,7 @@ def write_epipolar_plane_image(directory: j3d.Path,
 
 def write_semantic_images_video(
     filepath: j3d.Path,
-    rendered_images: f32["..."],
+    rendered_images: f32["..."],  # pyrefly: ignore[not-a-type]
     **kwargs):
   """Writes a semantic map video."""
   video = colorize_semantics(rendered_images[..., None], blend_logits=False)
@@ -442,7 +442,7 @@ def _nested_stack(x):
   return jax.tree.map(lambda *args: np.stack(args), *x)
 
 
-def _draw_red_line(x: f32["h w c"], idx: int) -> f32["h w c"]:
+def _draw_red_line(x: f32["h w c"], idx: int) -> f32["h w c"]:  # pyrefly: ignore[not-a-type]
   x = np.array(x)
   x[idx] = np.array([1, 0, 0])
   return x

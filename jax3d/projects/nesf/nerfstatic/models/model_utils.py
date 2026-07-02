@@ -52,7 +52,7 @@ class ModelParams:
   net_activation: str = "relu"  # activation function used within the MLP.
   rgb_activation: str = "sigmoid"  # activation function used to produce RGB.
   sigma_activation: str = "relu"  # activation function used to produce density.
-  background: types.BackgroundType = jax3d.utils.EnumField(
+  background: types.BackgroundType = jax3d.utils.EnumField(  # pyrefly: ignore[bad-assignment]
       types.BackgroundType.WHITE    # pytype: disable=annotation-type-mismatch
   )
   noise_std: float = 0.0  # Noise to add to sigma during training.
@@ -63,7 +63,7 @@ class ModelParams:
   # or not.
   num_semantic_classes: int = 0  # number of semantic classes.
 
-  interpolation_type: types.InterpolationType = jax3d.utils.EnumField(
+  interpolation_type: types.InterpolationType = jax3d.utils.EnumField(  # pyrefly: ignore[bad-assignment]
       types.InterpolationType.TRILINEAR)  # pytype: disable=annotation-type-mismatch
 
   grid_features: int = 32  # Number of features stored in the latent grid.
@@ -148,7 +148,7 @@ def get_net_activation(args: ModelParams) -> ActivationFn:
 def generate_grid(
     num_scenes: int,
     grid_size: Tuple[int, int, int],
-) -> f32["num_scenes *grid_size 3"]:
+) -> f32["num_scenes *grid_size 3"]:  # pyrefly: ignore[not-a-type]
   """Generates 3D positional grid akin to np.meshgrid().
 
   Constructs a flattened version of an array of shape (num_scenes, X, Y, Z, 3)
@@ -213,10 +213,10 @@ def generate_grid(
 def generate_sigma_grid(
     num_scenes: int,
     grid_size: Tuple[int, int, int],
-    embeddings: Optional[f32["num_grid, d, h, w, num_features"]],
+    embeddings: Optional[f32["num_grid, d, h, w, num_features"]],  # pyrefly: ignore[not-a-type, unknown-name]
     grid: Optional[grid_interpolator.GridInterpolator],
     num_posencs: int,
-    sigma_decoder: mlp.MLP) -> f32["num_scenes *grid_size 1"]:
+    sigma_decoder: mlp.MLP) -> f32["num_scenes *grid_size 1"]:  # pyrefly: ignore[not-a-type]
   """Generate sigma grid.
 
   Args:

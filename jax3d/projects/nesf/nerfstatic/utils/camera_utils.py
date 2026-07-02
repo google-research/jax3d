@@ -36,7 +36,7 @@ class Camera:
     focal_px_length: Focal length in pixels
     use_unreal_axes: Whether or not to use Unreals axes specifications.
   """
-  px2world_transform: f32['... 4, 4']
+  px2world_transform: f32['... 4, 4']  # pyrefly: ignore[not-a-type]
   resolution: Tuple[int, int]
   focal_px_length: float
   use_unreal_axes: bool = False
@@ -44,8 +44,8 @@ class Camera:
   @classmethod
   def from_position_and_quaternion(
       cls,
-      positions: f32['... 3'],
-      quaternions: f32['... 4'],
+      positions: f32['... 3'],  # pyrefly: ignore[not-a-type]
+      quaternions: f32['... 4'],  # pyrefly: ignore[not-a-type]
       resolution: Tuple[int, int],
       focal_px_length: float,
       use_unreal_axes: bool = False,
@@ -150,7 +150,7 @@ class Camera:
     if scene_boundaries:
       rays = scale_rays(rays, scene_boundaries)
 
-    return rays.replace(
+    return rays.replace(  # pyrefly: ignore[missing-attribute]
         origin=rays.origin.astype(np.float32),
         direction=rays.direction.astype(np.float32),
     )
@@ -179,7 +179,7 @@ def scale_rays(
   directions = directions * 2 / scene_boundaries.size
   # (re)-normalize the rays
   directions = directions / np.linalg.norm(directions, axis=-1, keepdims=True)
-  return rays.replace(
+  return rays.replace(  # pyrefly: ignore[missing-attribute]
       origin=origins,
       direction=directions,
   )

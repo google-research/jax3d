@@ -20,7 +20,7 @@ import numpy as np
 from scipy.spatial import transform
 
 
-def blender_quat2sfm_rot(blender_quaternions: f32['n 4']) -> f32['n 3 3']:
+def blender_quat2sfm_rot(blender_quaternions: f32['n 4']) -> f32['n 3 3']:  # pyrefly: ignore[not-a-type]
   """Convert blender quaternions to SFM rotation matrix.
 
   Blender and SFM uses different axis convensions.
@@ -53,7 +53,7 @@ def blender_quat2sfm_rot(blender_quaternions: f32['n 4']) -> f32['n 3 3']:
   return scipy_rot
 
 
-def blender_quat2rot(quaternion: f32['... 4']) -> f32['... 3 3']:
+def blender_quat2rot(quaternion: f32['... 4']) -> f32['... 3 3']:  # pyrefly: ignore[not-a-type]
   """Convert quaternion to rotation matrix.
 
 

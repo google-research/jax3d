@@ -42,13 +42,13 @@ class RecoveredNeRFModel:
 
   # Variables and sigma grids for training scenes.
   train_variables: List[Tree[jnp.ndarray]]
-  train_sigma_grids: List[f32['1 d h w c']]
-  train_scene_ids: Optional[List[f32]]
+  train_sigma_grids: List[f32['1 d h w c']]  # pyrefly: ignore[not-a-type]
+  train_scene_ids: Optional[List[f32]]  # pyrefly: ignore[not-a-type]
 
   # Variables and sigma grids for novel scenes.
   novel_variables: Optional[List[Tree[jnp.ndarray]]]
-  novel_sigma_grids: Optional[List[f32['1 d h w c']]]
-  novel_scene_ids: Optional[List[f32]]
+  novel_sigma_grids: Optional[List[f32['1 d h w c']]]  # pyrefly: ignore[not-a-type]
+  novel_scene_ids: Optional[List[f32]]  # pyrefly: ignore[not-a-type]
 
 
 @chex.dataclass
@@ -351,7 +351,7 @@ def recompute_sigma_grid(model: vanilla_nerf_mlp.VanillaNerfMLP,
                          spatial_shape: Tuple[int, int, int],
                          convert_sigma_to_density: bool,
                          include_rgb: bool,
-                         ) -> f32['1 x y z c']:
+                         ) -> f32['1 x y z c']:  # pyrefly: ignore[not-a-type]
   """Recomputes sigma grid using a pretrained model.
 
   Args:
@@ -378,8 +378,8 @@ def recompute_sigma_grid(model: vanilla_nerf_mlp.VanillaNerfMLP,
       direction=jnp.zeros((1, 3)))  # arbitrary value
 
   # shape=[1, n, 1]
-  sample_results: types.SampleResults = model.apply(
-      variables, sigma_grid_sample_points)
+  sample_results: types.SampleResults = model.apply(  # pyrefly: ignore[bad-assignment]
+      variables, sigma_grid_sample_points)  # pyrefly: ignore[bad-argument-type]
   sigma_grid = sample_results.sigma
   num_feature_dims = 1
 

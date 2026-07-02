@@ -28,4 +28,4 @@ def test_simple():
   m = unet3d.UNet3D(params=params)
   init_variables = m.init(init_key, p)
   output = m.apply(init_variables, p)
-  assert output.shape == p.shape
+  assert output.shape == p.shape  # pyrefly: ignore[missing-attribute]

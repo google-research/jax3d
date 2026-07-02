@@ -51,9 +51,9 @@ class SemanticModel(nn.Module):
   @nn.compact
   def __call__(
       self, points: types.SamplePoints,
-      sigma_grid: Optional[f32['1 x y z c']],
-      sigma_penultimate_features: Optional[f32['...']],
-  ) -> f32['... num_semantic_classes']:
+      sigma_grid: Optional[f32['1 x y z c']],  # pyrefly: ignore[not-a-type]
+      sigma_penultimate_features: Optional[f32['...']],  # pyrefly: ignore[not-a-type]
+  ) -> f32['... num_semantic_classes']:  # pyrefly: ignore[not-a-type]
     """Evaluate the semantic model.
 
     Args:

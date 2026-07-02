@@ -24,22 +24,22 @@ from jax3d.projects.nesf.nerfstatic.utils import types
 from jax3d.projects.nesf.utils.typing import PRNGKey, f32  # pylint: disable=g-multiple-import
 
 
-def cast_rays(z_vals: f32['... 1'],
-              origins: f32['... d'],
-              directions: f32['... d']) -> f32['... d']:
+def cast_rays(z_vals: f32['... 1'],  # pyrefly: ignore[not-a-type]
+              origins: f32['... d'],  # pyrefly: ignore[not-a-type]
+              directions: f32['... d']) -> f32['... d']:  # pyrefly: ignore[not-a-type]
   return origins[..., None, :] + z_vals[..., None] * directions[..., None, :]
 
 
 def sample_along_rays(*,
-                      key: PRNGKey,
-                      origins: f32['...  3'],
-                      directions: f32['...  3'],
+                      key: PRNGKey,  # pyrefly: ignore[not-a-type]
+                      origins: f32['...  3'],  # pyrefly: ignore[not-a-type]
+                      directions: f32['...  3'],  # pyrefly: ignore[not-a-type]
                       num_samples: int,
-                      near: f32['...  1'],
-                      far: f32['...  1'],
+                      near: f32['...  1'],  # pyrefly: ignore[not-a-type]
+                      far: f32['...  1'],  # pyrefly: ignore[not-a-type]
                       randomized: bool,
                       lindisp: bool) -> Tuple[
-                          f32['... num_samples'], f32['... num_samples 3']]:
+                          f32['... num_samples'], f32['... num_samples 3']]:  # pyrefly: ignore[not-a-type]
   """Stratified sampling along the rays.
 
   Args:
@@ -83,7 +83,7 @@ def sample_along_rays(*,
   return z_vals, coords
 
 
-def posenc(x: f32['... d'], num_octaves: int) -> f32['... d*2*num_octaves']:
+def posenc(x: f32['... d'], num_octaves: int) -> f32['... d*2*num_octaves']:  # pyrefly: ignore[not-a-type]
   """Compute positional encodings of x with scales 2^num_octaves.
 
   Instead of computing [sin(x), cos(x)], we use the trig identity
@@ -110,11 +110,11 @@ def posenc(x: f32['... d'], num_octaves: int) -> f32['... d*2*num_octaves']:
 
 def volumetric_rendering(
     *,
-    rgb: Optional[f32['... num_samples 3']],
-    sigma: f32['... num_samples 1'],
-    z_vals: f32['... num_samples'],
-    dirs: Optional[f32['... 3']],
-    semantic: Optional[f32['... num_samples num_classes']],
+    rgb: Optional[f32['... num_samples 3']],  # pyrefly: ignore[not-a-type]
+    sigma: f32['... num_samples 1'],  # pyrefly: ignore[not-a-type]
+    z_vals: f32['... num_samples'],  # pyrefly: ignore[not-a-type]
+    dirs: Optional[f32['... 3']],  # pyrefly: ignore[not-a-type]
+    semantic: Optional[f32['... num_samples num_classes']],  # pyrefly: ignore[not-a-type]
 ) -> types.RenderedRays:
   """Volumetric Rendering Function.
 
@@ -178,11 +178,11 @@ def volumetric_rendering(
   )
 
 
-def piecewise_constant_pdf(key: PRNGKey,
-                           bins: f32['... bins+1'],
-                           weights: f32['... bins'],
+def piecewise_constant_pdf(key: PRNGKey,  # pyrefly: ignore[not-a-type]
+                           bins: f32['... bins+1'],  # pyrefly: ignore[not-a-type]
+                           weights: f32['... bins'],  # pyrefly: ignore[not-a-type]
                            num_samples: int,
-                           randomized: bool) -> f32['... num_samples']:
+                           randomized: bool) -> f32['... num_samples']:  # pyrefly: ignore[not-a-type]
   """Piecewise-Constant PDF sampling.
 
   Args:
@@ -246,16 +246,16 @@ def piecewise_constant_pdf(key: PRNGKey,
 
 def sample_pdf(*,
                key,
-               bins: f32['... num_bins+1'],
-               weights: f32['... num_bins'],
-               origins: f32['... 3'],
-               directions: f32['... 3'],
-               z_vals: f32['... num_coarse_samples'],
+               bins: f32['... num_bins+1'],  # pyrefly: ignore[not-a-type]
+               weights: f32['... num_bins'],  # pyrefly: ignore[not-a-type]
+               origins: f32['... 3'],  # pyrefly: ignore[not-a-type]
+               directions: f32['... 3'],  # pyrefly: ignore[not-a-type]
+               z_vals: f32['... num_coarse_samples'],  # pyrefly: ignore[not-a-type]
                num_samples: int,
                randomized: bool,
                include_original_z_vals: bool = True,) -> Tuple[
-                   f32['... num_coarse_samples+num_samples'],
-                   f32['... num_coarse_samples+num_samples, 3']]:
+                   f32['... num_coarse_samples+num_samples'],  # pyrefly: ignore[not-a-type]
+                   f32['... num_coarse_samples+num_samples, 3']]:  # pyrefly: ignore[not-a-type]
   """Hierarchical sampling.
 
   Args:
@@ -286,9 +286,9 @@ def sample_pdf(*,
 
 def add_gaussian_noise(*,
                        key,
-                       raw: f32[...],
+                       raw: f32[...],  # pyrefly: ignore[not-a-type]
                        noise_std: float,
-                       randomized: bool) -> f32[...]:
+                       randomized: bool) -> f32[...]:  # pyrefly: ignore[not-a-type]
   """Adds gaussian noise to `raw`, which can used to regularize it.
 
   Args:
@@ -307,13 +307,13 @@ def add_gaussian_noise(*,
     return raw
 
 
-def valid_rays(rays: types.Rays) -> f32['... 1']:
+def valid_rays(rays: types.Rays) -> f32['... 1']:  # pyrefly: ignore[not-a-type]
   """Return a mask which encodes which is 1 if the ray is valid, 0 otherwise."""
   return jnp.sum(jnp.abs(rays.direction), axis=-1, keepdims=True) > 0
 
 
-def alpha_composite(foreground: f32['... d'], background: f32,
-                    alpha: f32['...']) -> f32['... d']:
+def alpha_composite(foreground: f32['... d'], background: f32,  # pyrefly: ignore[not-a-type]
+                    alpha: f32['...']) -> f32['... d']:  # pyrefly: ignore[not-a-type]
   # Note that the volume rendered foreground has a max value of alpha.
   return foreground + background * (1.0 - alpha[..., None])
 
@@ -329,7 +329,7 @@ def calculate_near_and_far(rays: types.Rays):
   placeholder_direction = jnp.ones_like(empty_rays, jnp.float32) / 3
   direction = jnp.where(
       empty_rays[..., None], placeholder_direction[..., None], rays.direction)
-  rays = rays.replace(direction=direction)
+  rays = rays.replace(direction=direction)  # pyrefly: ignore[missing-attribute]
 
   near, far = nerf_box.intersect_rays(rays)
 

@@ -40,7 +40,7 @@ def test_compute_corner_indices_1d_full():
       [[[0], [1]], [[1], [2]], [[2], [3]], [[3], [4]], [[4], [5]]])
 
 
-def _compute_base_index(grid_size: List[int], pos: f32['dim']):
+def _compute_base_index(grid_size: List[int], pos: f32['dim']):  # pyrefly: ignore[not-a-type, unknown-name]
   """This function computes the index of corner upper/top/left next to pos."""
   pos = pos * (np.asarray(grid_size) - 1)
   return pos.astype(np.int32)
@@ -109,7 +109,7 @@ def test_grid_interpolator_1d_simple():
                      grid_indexes=scenes[:1], points=p)
 
   px = p[0][0] / 2 + 0.5
-  expected = corner_latents[0] * (1 - px) + corner_latents[1] * px
+  expected = corner_latents[0] * (1 - px) + corner_latents[1] * px  # pyrefly: ignore[unsupported-operation]
   np.testing.assert_allclose(p_latent[0], expected, rtol=1e-05)
 
 
@@ -129,7 +129,7 @@ def test_grid_interpolator_2d_simple():
 
   px = p[0][0] / 2 + 0.5
   py = p[0][1] / 2 + 0.5
-  exp = corner_latents[0] * (1 - px) + corner_latents[1] * px
+  exp = corner_latents[0] * (1 - px) + corner_latents[1] * px  # pyrefly: ignore[unsupported-operation]
   exp = exp[0] * (1 - py) + exp[1] * py
   np.testing.assert_allclose(p_latent[0], exp, rtol=1e-03)
 

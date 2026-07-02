@@ -80,12 +80,12 @@ class VolumetricSemanticModel(nn.Module):
       rays: types.Rays,
       randomized_sampling: bool,
       is_train: bool,
-      sigma_grid: f32['1 x y z c'],
+      sigma_grid: f32['1 x y z c'],  # pyrefly: ignore[not-a-type]
       nerf_model_weights: Tree[jnp.ndarray],
       points: Optional[types.SamplePoints] = None,
   ) -> Union[
       types.RenderedRays,
-      Tuple[types.RenderedRays, f32['k num_classes']]]:
+      Tuple[types.RenderedRays, f32['k num_classes']]]:  # pyrefly: ignore[not-a-type]
     """Apply VolumetricSemanticModel.
 
     Args:
@@ -124,7 +124,7 @@ class VolumetricSemanticModel(nn.Module):
     # Construct ray representation for the inside coordinate system.
     rays_in = outer_to_inner.forward(rays)
     chex.assert_shape(rays_in.scene_id, rays.batch_shape + (1,))
-    chex.assert_shape(rays_in.origin, rays.batch_shape + (3,))
+    chex.assert_shape(rays_in.origin, rays.batch_shape + (3,))  # pyrefly: ignore[missing-attribute]
     chex.assert_shape(rays_in.direction, rays.batch_shape + (3,))
 
     if self.static_near_far:
@@ -134,7 +134,7 @@ class VolumetricSemanticModel(nn.Module):
     else:
       # Intersect ray with the [-1, 1]^3. Use the inner coordiante system.
       # Output is independent of the choice of coordinate system.
-      near, far = nerf_utils.calculate_near_and_far(rays_in)
+      near, far = nerf_utils.calculate_near_and_far(rays_in)  # pyrefly: ignore[bad-argument-type]
 
     # Stratified sampling along rays
     #
@@ -143,7 +143,7 @@ class VolumetricSemanticModel(nn.Module):
     #
     z_vals, sample_positions_in = nerf_utils.sample_along_rays(
         key=self.make_rng('sampling') if randomized_sampling else None,
-        origins=rays_in.origin,
+        origins=rays_in.origin,  # pyrefly: ignore[missing-attribute]
         directions=rays_in.direction,
         num_samples=self.num_samples,
         near=near,
@@ -189,9 +189,9 @@ class VolumetricSemanticModel(nn.Module):
 
     # Calculate density, RGB. Operation is applied in the outside coordinate
     # system.
-    nerf_features = self.nerf_model.apply(nerf_model_weights, sample_points)
-    rgb = nn.sigmoid(nerf_features.rgb)
-    sigma = nn.relu(nerf_features.sigma)
+    nerf_features = self.nerf_model.apply(nerf_model_weights, sample_points)  # pyrefly: ignore[bad-argument-type]
+    rgb = nn.sigmoid(nerf_features.rgb)  # pyrefly: ignore[missing-attribute]
+    sigma = nn.relu(nerf_features.sigma)  # pyrefly: ignore[missing-attribute]
 
     # Verify shapes.
     batch_shape = sample_points.batch_shape
@@ -212,14 +212,14 @@ class VolumetricSemanticModel(nn.Module):
 
     # This operation is applied in the inside coordinate system.
     semantic_3d_predictions = semantic_net(
-        outer_to_inner.forward(points), sigma_grid=sigma_grid,
+        outer_to_inner.forward(points), sigma_grid=sigma_grid,  # pyrefly: ignore[bad-argument-type]
         sigma_penultimate_features=None)
 
     return rendered_rays, semantic_3d_predictions
 
   def _apply_threshold(self,
-                       sigma_grid: f32['1 x y z c'],
-                       ) -> f32['1 x y z c']:
+                       sigma_grid: f32['1 x y z c'],  # pyrefly: ignore[not-a-type]
+                       ) -> f32['1 x y z c']:  # pyrefly: ignore[not-a-type]
     """Apply (optional) thresholding and binarization to sigma_grid."""
     if self.binarization:
       return jnp.where(sigma_grid > self.threshold, 1, 0)
@@ -229,7 +229,7 @@ class VolumetricSemanticModel(nn.Module):
                             variables: Tree[jnp.ndarray],
                             sigma_grid_shape: Tuple[int, int, int, int, int],
                             inner_to_outer: geom.Transform,
-                            ) -> f32['1 x y z c']:
+                            ) -> f32['1 x y z c']:  # pyrefly: ignore[not-a-type]
     """Reconstructs NeRF sigma grid.
 
     Args:
@@ -257,10 +257,10 @@ class VolumetricSemanticModel(nn.Module):
     # shape=[1, n, 1]. This operation is applied in the outside coordinate
     # system.
     sample_points = inner_to_outer.forward(sample_points_in)
-    sample_results = self.nerf_model.apply(variables, sample_points)
+    sample_results = self.nerf_model.apply(variables, sample_points)  # pyrefly: ignore[bad-argument-type]
 
     # Apply sigma-to-density transform.
-    sigma_grid = 1. - jnp.exp(-1 * jax.nn.relu(sample_results.sigma))
+    sigma_grid = 1. - jnp.exp(-1 * jax.nn.relu(sample_results.sigma))  # pyrefly: ignore[missing-attribute]
 
     # shape=[1, x, y, z, k]
     sigma_grid = jnp.reshape(sigma_grid, [1, *spatial_shape, 1])
@@ -268,7 +268,7 @@ class VolumetricSemanticModel(nn.Module):
     return sigma_grid
 
 
-def _create_outer_to_inner(angle: f32['']) -> geom.Transform:
+def _create_outer_to_inner(angle: f32['']) -> geom.Transform:  # pyrefly: ignore[not-a-type]
   """Constructs an "outside" box to "inside" box transform.
 
   Consider an "outside" box of shape [-1, 1]^3. We define an "inside" box to

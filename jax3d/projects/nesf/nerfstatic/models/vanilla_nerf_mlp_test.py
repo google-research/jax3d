@@ -42,9 +42,9 @@ def test_simple(use_viewdirs: bool, enable_mipnerf: bool):
                                       enable_mipnerf=enable_mipnerf)
   init_variables = m.init(rng.next(), p)
   output = m.apply(init_variables, p)
-  assert output.rgb.shape == (2, 5, 3)
-  assert output.sigma.shape == (2, 5, 1)
-  assert output.semantic.shape == (2, 5, 0)
+  assert output.rgb.shape == (2, 5, 3)  # pyrefly: ignore[missing-attribute]
+  assert output.sigma.shape == (2, 5, 1)  # pyrefly: ignore[missing-attribute]
+  assert output.semantic.shape == (2, 5, 0)  # pyrefly: ignore[missing-attribute]
 
 
 @pytest.mark.parametrize('use_viewdirs', [True, False])
@@ -69,7 +69,7 @@ def test_sigma_grid(use_viewdirs: bool, enable_mipnerf: bool):
                                       enable_mipnerf=enable_mipnerf)
   init_variables = m.init(rng.next(), p)
   output = m.apply(init_variables, p)
-  assert output.rgb.shape == (2, 5, 3)
-  assert output.sigma.shape == (2, 5, 1)
-  assert output.semantic.shape == (2, 5, 0)
-  assert output.sigma_grid.shape == (1, 2, 2, 2, 1)
+  assert output.rgb.shape == (2, 5, 3)  # pyrefly: ignore[missing-attribute]
+  assert output.sigma.shape == (2, 5, 1)  # pyrefly: ignore[missing-attribute]
+  assert output.semantic.shape == (2, 5, 0)  # pyrefly: ignore[missing-attribute]
+  assert output.sigma_grid.shape == (1, 2, 2, 2, 1)  # pyrefly: ignore[missing-attribute]

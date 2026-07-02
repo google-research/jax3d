@@ -92,7 +92,7 @@ class VanillaNerfMLP(nn.Module):
     if self.enable_sigma_semantic:
       sigma_grid = model_utils.generate_sigma_grid(
           num_scenes=self.num_scenes,
-          grid_size=self.sigma_grid_size,
+          grid_size=self.sigma_grid_size,  # pyrefly: ignore[bad-argument-type]
           embeddings=None,
           grid=None,
           num_posencs=self.num_posencs,

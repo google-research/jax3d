@@ -89,9 +89,9 @@ def _is_tiff(path: j3d.Path) -> bool:
 
 def generate_canvas(height: int,
                     width: int,
-                    color0: f32[3],
-                    color1: f32[3],
-                    checker_size: int = 8) -> f32['height width 3']:
+                    color0: f32[3],  # pyrefly: ignore[not-a-type]
+                    color1: f32[3],  # pyrefly: ignore[not-a-type]
+                    checker_size: int = 8) -> f32['height width 3']:  # pyrefly: ignore[not-a-type]
   """Generates a checkerboard canvas."""
   rows = jnp.floor_divide(jnp.linspace(0, height-1, height), checker_size)
   cols = jnp.floor_divide(jnp.linspace(0, width-1, width), checker_size)
@@ -101,7 +101,7 @@ def generate_canvas(height: int,
   return canvas
 
 
-def apply_canvas(foreground: f32['h w 3'], alpha: f32['h w 1']) -> f32:
+def apply_canvas(foreground: f32['h w 3'], alpha: f32['h w 1']) -> f32:  # pyrefly: ignore[not-a-type]
   """Blends foreground onto a checkerboard canvas, according to alpha [0; 1].
 
   Args:

@@ -35,9 +35,9 @@ class LabeledPointCloud:
   Contains 'n' points, each of which has a 3D location and a semantic class.
 
   """
-  scene_id: i32['n 1']
-  points: f32['n 3']
-  semantics: i32['n 1']
+  scene_id: i32['n 1']  # pyrefly: ignore[not-a-type]
+  points: f32['n 3']  # pyrefly: ignore[not-a-type]
+  semantics: i32['n 1']  # pyrefly: ignore[not-a-type]
 
   @property
   def size(self):
@@ -64,10 +64,10 @@ class Rays:
   # The id of the current scene.
   # We keep a channnel dimension to allow for simpler transformations of the
   # whole dataclass.
-  scene_id: Optional[i32['... 1']]
-  origin: f32['... 3']  # The origin of the ray.
-  direction: f32['... 3']  # The normalized direction of the ray.
-  base_radius: Optional[f32['... 1']] = None  # Used for Mip-Nerf.
+  scene_id: Optional[i32['... 1']]  # pyrefly: ignore[not-a-type]
+  origin: f32['... 3']  # The origin of the ray.  # pyrefly: ignore[not-a-type]
+  direction: f32['... 3']  # The normalized direction of the ray.  # pyrefly: ignore[not-a-type]
+  base_radius: Optional[f32['... 1']] = None  # Used for Mip-Nerf.  # pyrefly: ignore[not-a-type]
 
   @property
   def batch_shape(self) -> Tuple[int, ...]:
@@ -88,15 +88,15 @@ class Views:
   """
   rays: Rays
   # Depth can either be a dummy value (0) or the ground truth depth.
-  depth: f32['... 1']
-  rgb: Optional[f32['... 3']] = None
-  semantics: Optional[i32['... 1']] = None
+  depth: f32['... 1']  # pyrefly: ignore[not-a-type]
+  rgb: Optional[f32['... 3']] = None  # pyrefly: ignore[not-a-type]
+  semantics: Optional[i32['... 1']] = None  # pyrefly: ignore[not-a-type]
   # Image ID matching the on-disk image identifier
   # * In RAY mode: Is `None`
   # * In IMAGE mode: Is a singleton scalar str (so `rgb.shape=(h, w, c)` but
   #   `image_ids.shape=()`)
-  image_ids: Optional[StrArray['...']] = None
-  semantic_mask: Optional[i32['... 1']] = None
+  image_ids: Optional[StrArray['...']] = None  # pyrefly: ignore[not-a-type]
+  semantic_mask: Optional[i32['... 1']] = None  # pyrefly: ignore[not-a-type]
 
   @property
   def batch_shape(self) -> Tuple[int, ...]:
@@ -125,7 +125,7 @@ class Views:
     semantics = np.reshape(self.semantics, (-1, 1))
     select_semantics = semantics[mask]
 
-    scene_id = np.reshape(self.rays.scene_id, (-1, 1))
+    scene_id = np.reshape(self.rays.scene_id, (-1, 1))  # pyrefly: ignore[no-matching-overload]
     select_scene_id = scene_id[mask]
 
     return LabeledPointCloud(scene_id=select_scene_id,
@@ -195,11 +195,11 @@ class Batch:
         target_view=placeholder_target_views,
     )
 
-  def pop_image_id_stateless(self) -> Tuple['Batch', Optional[i32['... 1']]]:
+  def pop_image_id_stateless(self) -> Tuple['Batch', Optional[i32['... 1']]]:  # pyrefly: ignore[not-a-type]
     """Returns a copy of the batch without the image_ids."""
     image_ids = self.target_view.image_ids
-    batch = self.replace(
-        target_view=self.target_view.replace(image_ids=None),
+    batch = self.replace(  # pyrefly: ignore[missing-attribute]
+        target_view=self.target_view.replace(image_ids=None),  # pyrefly: ignore[missing-attribute]
     )
     return batch, image_ids
 
@@ -207,10 +207,10 @@ class Batch:
 @chex.dataclass
 class SamplePoints:
   """Sample points along a ray inside the NeRF renderer."""
-  scene_id: f32['... 1']
-  position: f32['... num_samples 3']
-  direction: f32['... 3']
-  covariance: Optional[f32['... 3']] = None  # Covariance for Mip-NeRF.
+  scene_id: f32['... 1']  # pyrefly: ignore[not-a-type]
+  position: f32['... num_samples 3']  # pyrefly: ignore[not-a-type]
+  direction: f32['... 3']  # pyrefly: ignore[not-a-type]
+  covariance: Optional[f32['... 3']] = None  # Covariance for Mip-NeRF.  # pyrefly: ignore[not-a-type]
 
   @property
   def batch_shape(self) -> Tuple[int, ...]:
@@ -221,11 +221,11 @@ class SamplePoints:
 @chex.dataclass
 class SampleResults:
   """Values along the ray inside the NeRF Renderer."""
-  rgb: f32['b num_samples 3']
-  sigma: f32['b num_samples 1']
-  semantic: f32['b num_samples num_classes']
-  sigma_penultimate_embeddings: f32['b num_samples num_embeddings']
-  sigma_grid: Optional[f32['... num_features']] = None
+  rgb: f32['b num_samples 3']  # pyrefly: ignore[not-a-type]
+  sigma: f32['b num_samples 1']  # pyrefly: ignore[not-a-type]
+  semantic: f32['b num_samples num_classes']  # pyrefly: ignore[not-a-type]
+  sigma_penultimate_embeddings: f32['b num_samples num_embeddings']  # pyrefly: ignore[not-a-type]
+  sigma_grid: Optional[f32['... num_features']] = None  # pyrefly: ignore[not-a-type]
   # aux dict, which contains selected activations for debugging.
   # If those are not used, XLA optimization will ensure they cause no overhead.
   aux: Optional[AuxiliaryDict] = None
@@ -246,13 +246,13 @@ SemanticSampleStoreFn = Callable[[
     # Query sample points.
     SamplePoints,
     # sigma grid: Dense grid containing the sigma predictions.
-    f32['...'],
+    f32['...'],  # pyrefly: ignore[not-a-type]
     # sigma_penultimate_features: Penaltimate feature activations from the sigma
     # MLP.
-    f32['...']
+    f32['...']  # pyrefly: ignore[not-a-type]
 ],
                                  # Output: semantic predictions.
-                                 f32['...'],]
+                                 f32['...'],]  # pyrefly: ignore[not-a-type]
 
 
 @chex.dataclass
@@ -263,20 +263,20 @@ class RenderedRays:
   * `batch_size`: Output of the model.
   * `batch_size height width`: Output of a rendered image during eval.
   """
-  rgb: f32['... 3']
-  foreground_rgb: f32['... 3']
-  disparity: f32['... 1']
-  opacity: f32['... 1']
-  contribution: Optional[f32['... num_samples']]
-  semantic: f32['... num_classes']
-  foreground_semantic: f32['... num_classes']
+  rgb: f32['... 3']  # pyrefly: ignore[not-a-type]
+  foreground_rgb: f32['... 3']  # pyrefly: ignore[not-a-type]
+  disparity: f32['... 1']  # pyrefly: ignore[not-a-type]
+  opacity: f32['... 1']  # pyrefly: ignore[not-a-type]
+  contribution: Optional[f32['... num_samples']]  # pyrefly: ignore[not-a-type]
+  semantic: f32['... num_classes']  # pyrefly: ignore[not-a-type]
+  foreground_semantic: f32['... num_classes']  # pyrefly: ignore[not-a-type]
   # aux dict, which contains selected activations for debugging.
   # If those are not used, XLA optimization will ensure they cause no overhead.
   aux: Optional[Dict[str, Any]] = None
-  sigma_grid: Optional[f32['...']] = None
+  sigma_grid: Optional[f32['...']] = None  # pyrefly: ignore[not-a-type]
   # Optional ray history. Used in mip-nerf-360 for computing the ray
   # regularization.
-  ray_z_vals: Optional[f32['...']] = None
+  ray_z_vals: Optional[f32['...']] = None  # pyrefly: ignore[not-a-type]
 
 
 @chex.dataclass
@@ -302,10 +302,10 @@ class LossTerm:
   """A single loss object with a multiplier."""
 
   # Loss. May include be a non-scalar array when used within vmap.
-  loss: f32['...']
+  loss: f32['...']  # pyrefly: ignore[not-a-type]
 
   # Weight multiplier associated with this loss term.
-  weight: f32['...']
+  weight: f32['...']  # pyrefly: ignore[not-a-type]
 
   @property
   def value(self) -> float:
@@ -350,28 +350,28 @@ class SemanticModelStats():
 @chex.dataclass
 class IOU:
   """IOU metrics."""
-  mean_iou: f32['']
-  per_class_iou: f32['num_classes']
+  mean_iou: f32['']  # pyrefly: ignore[not-a-type]
+  per_class_iou: f32['num_classes']  # pyrefly: ignore[not-a-type, unknown-name]
 
 
 @chex.dataclass
 class MlpOutputs:
   """Outputs of the MLP model."""
-  predictions: f32['... num_outputs']  # Network predictions.
-  penultimate_features: f32['...']  # Penultimate features.
+  predictions: f32['... num_outputs']  # Network predictions.  # pyrefly: ignore[not-a-type]
+  penultimate_features: f32['...']  # Penultimate features.  # pyrefly: ignore[not-a-type]
 
 
 @chex.dataclass
 class BoundingBox3d:
   """3D axis aligned bounding box."""
-  min_corner: f32[3]
-  max_corner: f32[3]
+  min_corner: f32[3]  # pyrefly: ignore[not-a-type]
+  max_corner: f32[3]  # pyrefly: ignore[not-a-type]
 
   @property
   def size(self):
     return self.max_corner - self.min_corner
 
-  def intersect_rays(self, rays: Rays) -> Tuple[f32['...'], f32['...']]:
+  def intersect_rays(self, rays: Rays) -> Tuple[f32['...'], f32['...']]:  # pyrefly: ignore[not-a-type]
     """Calculates the intersection of rays with this bbox.
 
     This method will return the near and far intersection of the rays with the

@@ -24,10 +24,10 @@ from jax3d.projects.nesf.nerfstatic.utils import types
 from jax3d.projects.nesf.utils.typing import ActivationFn, f32  # pylint: disable=g-multiple-import
 
 
-def _lift_gaussian(d: f32['... num_samples 3'],
-                   t_mean: f32,
-                   t_var: f32,
-                   r_var: f32):
+def _lift_gaussian(d: f32['... num_samples 3'],  # pyrefly: ignore[not-a-type]
+                   t_mean: f32,  # pyrefly: ignore[not-a-type]
+                   t_var: f32,  # pyrefly: ignore[not-a-type]
+                   r_var: f32):  # pyrefly: ignore[not-a-type]
   """Lift a Gaussian defined along ray axes to world-unit coordinates."""
   mean = d[..., None, :] * t_mean[..., None]
 
@@ -41,7 +41,7 @@ def _lift_gaussian(d: f32['... num_samples 3'],
   return mean, cov_diag
 
 
-def _conical_frustum_to_gaussian(z_vals: f32['... num_samples 1'],
+def _conical_frustum_to_gaussian(z_vals: f32['... num_samples 1'],  # pyrefly: ignore[not-a-type]
                                  rays: types.Rays):
   """Approximate a conical frustum as a Gaussian distribution (mean+cov).
 
@@ -68,7 +68,7 @@ def _conical_frustum_to_gaussian(z_vals: f32['... num_samples 1'],
   denom = jnp.maximum(eps, 3 * mu**2 + hw**2)
   t_var = (hw**2) / 3 - (4 / 15) * hw**4 * (12 * mu**2 - hw**2) / denom**2
   r_var = (mu**2) / 4 + (5 / 12) * hw**2 - (4 / 15) * (hw**4) / denom
-  r_var *= rays.base_radius**2
+  r_var *= rays.base_radius**2  # pyrefly: ignore[unsupported-operation]
   means, covs = _lift_gaussian(rays.direction, t_mean, t_var, r_var)
   means = means + rays.origin[..., None, :]
   return means, covs, mu
@@ -136,8 +136,8 @@ class NerfRenderer(nn.Module):
                           sample_store: types.SampleStoreFn,
                           semantic_sample_store: Optional[
                               types.SemanticSampleStoreFn],
-                          z_vals: f32['... num_samples 1'],
-                          sample_positions: f32['... num_samples 3'],
+                          z_vals: f32['... num_samples 1'],  # pyrefly: ignore[not-a-type]
+                          sample_positions: f32['... num_samples 3'],  # pyrefly: ignore[not-a-type]
                           rays: types.Rays,
                           randomized_sampling: bool,
                           deterministic: bool,
@@ -239,7 +239,7 @@ class NerfRenderer(nn.Module):
       randomized_sampling: bool,
       deterministic: bool = True,
       points: Optional[types.SamplePoints] = None,
-  ) -> Tuple[Optional[types.RenderResult], Optional[f32['... num_classes']]]:
+  ) -> Tuple[Optional[types.RenderResult], Optional[f32['... num_classes']]]:  # pyrefly: ignore[not-a-type]
     """Nerf Model.
 
     Note querying 3D semantics in mipnerf mode is currently NOT supported!
@@ -290,7 +290,7 @@ class NerfRenderer(nn.Module):
       coarse_result = None
       if self.num_fine_samples > 0:
         coarse_result = self.render_single_stage(
-            sample_store=self.coarse_sample_store,
+            sample_store=self.coarse_sample_store,  # pyrefly: ignore[bad-argument-type]
             semantic_sample_store=None,
             z_vals=z_vals,
             sample_positions=sample_positions,
@@ -313,7 +313,7 @@ class NerfRenderer(nn.Module):
         # defined by these bin-posts (note that n bin_posts define n-1 bins), we
         # have a weight.
         bin_posts = .5 * (z_vals[..., 1:] + z_vals[..., :-1])
-        bin_weights = weights[..., 1:-1]
+        bin_weights = weights[..., 1:-1]  # pyrefly: ignore[unsupported-operation]
 
         z_vals, sample_positions = nerf_utils.sample_pdf(
             key=self.make_rng('sampling') if randomized_sampling else None,

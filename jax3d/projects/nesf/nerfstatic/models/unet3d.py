@@ -38,7 +38,7 @@ class UNet3D(nn.Module):
 
   @nn.compact
   def __call__(self,
-               input_features: f32['... input_dims']) -> f32['... feat_dims']:
+               input_features: f32['... input_dims']) -> f32['... feat_dims']:  # pyrefly: ignore[not-a-type]
     """Applies the convnet on the input features.
 
     Args:
@@ -48,7 +48,7 @@ class UNet3D(nn.Module):
       convnet output.
     """
 
-    def apply_convblock(feature: f32['... dims'],
+    def apply_convblock(feature: f32['... dims'],  # pyrefly: ignore[not-a-type]
                         feature_sizes: Tuple[int, int]):
       latent = feature
       for feature_size in feature_sizes:
@@ -59,8 +59,8 @@ class UNet3D(nn.Module):
         latent = self.params.activation_fn(latent)
       return latent
 
-    def apply_transpose_convblock(feature: f32['... m_dims'],
-                                  skip_feature: f32['... n_dims'],
+    def apply_transpose_convblock(feature: f32['... m_dims'],  # pyrefly: ignore[not-a-type]
+                                  skip_feature: f32['... n_dims'],  # pyrefly: ignore[not-a-type]
                                   feature_sizes: Tuple[int, int]):
       latent = feature
       for i, feature_size in enumerate(feature_sizes):
@@ -81,7 +81,7 @@ class UNet3D(nn.Module):
     for i in range(self.params.depth):
       output_convblocks.append(apply_convblock(
           feature=features,
-          feature_sizes=self.params.feature_size[i:i+2]))
+          feature_sizes=self.params.feature_size[i:i+2]))  # pyrefly: ignore[bad-argument-type]
       if i < self.params.depth - 1:
         features = nn.max_pool(output_convblocks[i],
                                window_shape=(2,)*self.num_spatial_dims,
@@ -93,7 +93,7 @@ class UNet3D(nn.Module):
       features = apply_transpose_convblock(
           feature=features,
           skip_feature=output_convblocks[self.params.depth - i - 2],
-          feature_sizes=self.params.feature_size[self.params.depth -
+          feature_sizes=self.params.feature_size[self.params.depth -  # pyrefly: ignore[bad-argument-type]
                                                  i:self.params.depth - i -
                                                  2:-1])
 

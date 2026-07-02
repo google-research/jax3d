@@ -52,24 +52,24 @@ class PredictionImageLog:
     self._image_keys: List[Optional[str]] = []
 
     # Predicted RGB images.
-    self._rgb: List[f32["h w 3"]] = []
+    self._rgb: List[f32["h w 3"]] = []  # pyrefly: ignore[not-a-type]
 
     # Ground truth RGB images.
-    self._rgb_ground_truth: List[f32["h w 3"]] = []
+    self._rgb_ground_truth: List[f32["h w 3"]] = []  # pyrefly: ignore[not-a-type]
 
     # Color coded predicted semantic images.
-    self._semantic: List[i32["h w 1"]] = []
+    self._semantic: List[i32["h w 1"]] = []  # pyrefly: ignore[not-a-type]
 
     # Color coded ground truth semantic images.
-    self._semantic_ground_truth: List[i32["h w 1"]] = []
+    self._semantic_ground_truth: List[i32["h w 1"]] = []  # pyrefly: ignore[not-a-type]
 
   def append_images(
       self,
       image_key: Optional[str],
-      rgb: f32["h w 3"],
-      rgb_ground_truth: f32["h w 3"],
-      semantic_logits: Optional[f32["h w c"]],
-      semantic_ground_truth: Optional[i32["h w 1"]],
+      rgb: f32["h w 3"],  # pyrefly: ignore[not-a-type]
+      rgb_ground_truth: f32["h w 3"],  # pyrefly: ignore[not-a-type]
+      semantic_logits: Optional[f32["h w c"]],  # pyrefly: ignore[not-a-type]
+      semantic_ground_truth: Optional[i32["h w 1"]],  # pyrefly: ignore[not-a-type]
   ):
     """Append a set of images to the log.
 
@@ -100,19 +100,19 @@ class PredictionImageLog:
       self._semantic_ground_truth.append(jax.device_get(semantic_ground_truth))
 
   @property
-  def rgb(self) -> f32["n h w 3"]:
+  def rgb(self) -> f32["n h w 3"]:  # pyrefly: ignore[not-a-type]
     return np.stack(self._rgb, axis=0)
 
   @property
-  def rgb_ground_truth(self) -> f32["n h w 3"]:
+  def rgb_ground_truth(self) -> f32["n h w 3"]:  # pyrefly: ignore[not-a-type]
     return np.stack(self._rgb_ground_truth, axis=0)
 
   @property
-  def semantic(self) -> i32["n h w 1"]:
+  def semantic(self) -> i32["n h w 1"]:  # pyrefly: ignore[not-a-type]
     return np.stack(self._semantic, axis=0)
 
   @property
-  def semantic_ground_truth(self) -> i32["n h w 1"]:
+  def semantic_ground_truth(self) -> i32["n h w 1"]:  # pyrefly: ignore[not-a-type]
     return np.stack(self._semantic_ground_truth, axis=0)
 
   @property

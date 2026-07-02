@@ -25,5 +25,5 @@ def test_simple():
   params = mlp.MlpParams(depth=3, width=10, num_outputs=20)
   m = mlp.MLP(params=params)
   init_variables = m.init(init_key, p)
-  output = m.apply(init_variables, p).predictions
+  output = m.apply(init_variables, p).predictions  # pyrefly: ignore[missing-attribute]
   assert output.shape == (2, 3, 4, 20)

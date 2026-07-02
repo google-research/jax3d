@@ -28,7 +28,7 @@ GridShape = Sequence[int]
 
 def compute_corner_indices(
     grid_shape: GridShape,
-    points: f32['... num_dims']) -> i32['... 2**num_dims num_dims']:
+    points: f32['... num_dims']) -> i32['... 2**num_dims num_dims']:  # pyrefly: ignore[not-a-type]
   """Computes the indices of the 2^num_dims corners surrounding points.
 
   This assumes the point grid has grid_size points in each dimension.
@@ -53,9 +53,9 @@ def compute_corner_indices(
     surround each point in points.
   """
 
-  grid_shape = jnp.asarray(grid_shape, dtype=jnp.int32)
+  grid_shape = jnp.asarray(grid_shape, dtype=jnp.int32)  # pyrefly: ignore[bad-assignment]
   # Convert points to grid coordinates
-  points = points * (grid_shape -  1)
+  points = points * (grid_shape -  1)  # pyrefly: ignore[unsupported-operation]
   # Get the floor of the points (lower left corner of a 2D voxel)
   points = points.astype(jnp.int32)[..., None, :]
   # For the above example: points.shape[-1] == 2
@@ -68,13 +68,13 @@ def compute_corner_indices(
   for i in range(points.shape[-1]):
     offset = jnp.asarray([int(i == j) for j in range(points.shape[-1])])
     points = jnp.concatenate([points, points + offset], axis=-2)
-  points = jnp.clip(points, 0, grid_shape - 1)
+  points = jnp.clip(points, 0, grid_shape - 1)  # pyrefly: ignore[unsupported-operation]
   return points
 
 
 def compute_corner_weights(
     grid_shape: GridShape,
-    points: f32['... num_dims']) -> f32['... 2**num_dims']:
+    points: f32['... num_dims']) -> f32['... 2**num_dims']:  # pyrefly: ignore[not-a-type]
   """Computes the weights of the 8 corners surrounding points.
 
   This function calculates the weight of each of the 2**num_dims corners, when
@@ -91,10 +91,10 @@ def compute_corner_weights(
   """
   num_dims = points.shape[-1]
   weights = jnp.ones(points.shape[:-1] + (1,))
-  grid_shape = jnp.asarray(grid_shape)
+  grid_shape = jnp.asarray(grid_shape)  # pyrefly: ignore[bad-assignment]
   # The weight depends on how far away the corner is from the point.
   # This is then computed by getting the modulus of the point and the corner
-  channel_weight = jnp.fmod(points * (grid_shape - 1), 1)
+  channel_weight = jnp.fmod(points * (grid_shape - 1), 1)  # pyrefly: ignore[unsupported-operation]
 
   # Example:
   # grid_shape = [11, 11]
@@ -128,10 +128,10 @@ class InterpolationFn(abc.ABC):
   def __call__(
       self,
       grid_size: GridShape,
-      points: f32['... num_dims'],
-      latents: f32['... 2**num_dims num_features'],
-      corner_indices: i32['... 2**num_dims num_dims']
-      ) -> f32['... num_features']:
+      points: f32['... num_dims'],  # pyrefly: ignore[not-a-type]
+      latents: f32['... 2**num_dims num_features'],  # pyrefly: ignore[not-a-type]
+      corner_indices: i32['... 2**num_dims num_dims']  # pyrefly: ignore[not-a-type]
+      ) -> f32['... num_features']:  # pyrefly: ignore[not-a-type]
     """Interpolate between corners inside a single voxel.
 
     Args:
@@ -154,10 +154,10 @@ class TrilinearInterpolation(InterpolationFn):
   def __call__(
       self,
       grid_size: GridShape,
-      points: f32['... num_dims'],
-      latents: f32['... 2**num_dims num_features'],
-      corner_indices: i32['... 2**num_dims num_dims']
-      ) -> f32['... num_features']:
+      points: f32['... num_dims'],  # pyrefly: ignore[not-a-type]
+      latents: f32['... 2**num_dims num_features'],  # pyrefly: ignore[not-a-type]
+      corner_indices: i32['... 2**num_dims num_dims']  # pyrefly: ignore[not-a-type]
+      ) -> f32['... num_features']:  # pyrefly: ignore[not-a-type]
     """Interpolate between corners inside a single voxel.
 
     Args:
@@ -183,10 +183,10 @@ class GridInterpolator(nn.Module):
 
   @nn.compact
   def __call__(self,
-               voxel_embeddings: f32['num_grids, ..., num_features'],
-               grid_indexes: i32['... 1'],
-               points: f32['... num_dims']
-               ) -> f32['... grid_features']:
+               voxel_embeddings: f32['num_grids, ..., num_features'],  # pyrefly: ignore[not-a-type, unknown-name]
+               grid_indexes: i32['... 1'],  # pyrefly: ignore[not-a-type]
+               points: f32['... num_dims']  # pyrefly: ignore[not-a-type]
+               ) -> f32['... grid_features']:  # pyrefly: ignore[not-a-type]
     """Tri-Linearly interpolate the latent code in the latent grid.
 
     For all points outside of the [-1; 1] bounding box, this module will return

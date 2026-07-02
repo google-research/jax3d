@@ -208,7 +208,7 @@ def get_num_scenes(params: nerf_config.ConfigParams):
 
 def params_to_str(params: flax.core.FrozenDict, filter_fn=None) -> str:
   """Match params with filter_fn and return them as loggable string."""
-  params = flax.core.unfreeze(params)
+  params = flax.core.unfreeze(params)  # pyrefly: ignore[bad-assignment]
   flat_dict = traverse_util.flatten_dict(params)
   result = []
   for key, value in flat_dict.items():
@@ -224,7 +224,7 @@ def _l2_norm(tree):
   return jnp.sqrt(sum(jnp.vdot(x, x) for x in leaves))
 
 
-def clip_values_by_global_norm(pytree, max_norm: Optional[f32]):
+def clip_values_by_global_norm(pytree, max_norm: Optional[f32]):  # pyrefly: ignore[not-a-type]
   """Clips values in a pytree by global L2 norm."""
   if max_norm is None:
     return pytree
@@ -262,7 +262,7 @@ def log_rays_per_scene_counts(batch_scene_id):
   logging.info("\n".join(lines))
 
 
-def log_rays_per_semantic_class_counts(semantics: i32["..."],
+def log_rays_per_semantic_class_counts(semantics: i32["..."],  # pyrefly: ignore[not-a-type]
                                        labels: List[str]):
   """Log the number of rays assigned to each semantic class."""
   unique, counts = jnp.unique(semantics, return_counts=True)
@@ -274,9 +274,9 @@ def log_rays_per_semantic_class_counts(semantics: i32["..."],
   # Construct an int-to-string mapping. If labels is empty, then create a fake
   # label for every class.
   if labels:
-    labels = {i: name for (i, name) in enumerate(labels)}
+    labels = {i: name for (i, name) in enumerate(labels)}  # pyrefly: ignore[bad-assignment]
   else:
-    labels = {i: f"class{i}" for i in unique}
+    labels = {i: f"class{i}" for i in unique}  # pyrefly: ignore[bad-assignment]
 
   # Validate int-to-string mapping.
   for value in unique:
@@ -323,10 +323,10 @@ def log_loss_miou_per_scene(scene_ids, stats, summary_writer, step):
 
 
 def create_sample_points_for_smoothness_regularization(
-    scene_id: i32[""],
+    scene_id: i32[""],  # pyrefly: ignore[not-a-type]
     num_points: int,
     stddev: float,
-    rng: PRNGKey,
+    rng: PRNGKey,  # pyrefly: ignore[not-a-type]
 ) -> types.SamplePoints:
   """Constructs sample points fro smoothness regulariztion.
 

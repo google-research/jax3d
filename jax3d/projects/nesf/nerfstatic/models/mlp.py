@@ -45,7 +45,7 @@ class MLP(nn.Module):
   params: MlpParams  # Network parameters.
 
   @nn.compact
-  def __call__(self, input_feats: f32['... feature']) -> types.MlpOutputs:
+  def __call__(self, input_feats: f32['... feature']) -> types.MlpOutputs:  # pyrefly: ignore[not-a-type]
     """Evaluate the MLP.
 
     Args:

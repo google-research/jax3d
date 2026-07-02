@@ -93,14 +93,14 @@ class Scale(Transform):
   Attributes:
     scale: Amount to scale each coordinate.
   """
-  scale: f32['3']
+  scale: f32['3']  # pyrefly: ignore[not-a-type]
 
   def _forward(self, rays: types.Rays) -> types.Rays:
-    return rays.replace(origin=(rays.origin * self.scale),
+    return rays.replace(origin=(rays.origin * self.scale),  # pyrefly: ignore[missing-attribute]
                         direction=(rays.direction * self.scale))
 
   def _backward(self, rays: types.Rays) -> types.Rays:
-    return rays.replace(origin=(rays.origin / self.scale),
+    return rays.replace(origin=(rays.origin / self.scale),  # pyrefly: ignore[missing-attribute]
                         direction=(rays.direction / self.scale))
 
 
@@ -112,17 +112,17 @@ class Rotate(Transform):
     axis: The axis to rotate around.
     radians: The amount to rotate counter-clockwis.
   """
-  axis: f32['3']
+  axis: f32['3']  # pyrefly: ignore[not-a-type]
   radians: float
 
   def _forward(self, rays: types.Rays) -> types.Rays:
     rotmat = self._rotation_matrix
-    return rays.replace(origin=jnp.dot(rays.origin, rotmat.T),
+    return rays.replace(origin=jnp.dot(rays.origin, rotmat.T),  # pyrefly: ignore[missing-attribute]
                         direction=jnp.dot(rays.direction, rotmat.T))
 
   def _backward(self, rays: types.Rays) -> types.Rays:
     rotmat = self._rotation_matrix
-    return rays.replace(origin=jnp.dot(rays.origin, rotmat),
+    return rays.replace(origin=jnp.dot(rays.origin, rotmat),  # pyrefly: ignore[missing-attribute]
                         direction=jnp.dot(rays.direction, rotmat))
 
   @property
@@ -146,14 +146,14 @@ class Translate(Transform):
   Attributes:
     offset: amount by which to translate.
   """
-  offset: f32['3']
+  offset: f32['3']  # pyrefly: ignore[not-a-type]
 
   def _forward(self, rays: types.Rays) -> types.Rays:
-    return rays.replace(origin=(rays.origin + self.offset),
+    return rays.replace(origin=(rays.origin + self.offset),  # pyrefly: ignore[missing-attribute]
                         direction=rays.direction)
 
   def _backward(self, rays: types.Rays) -> types.Rays:
-    return rays.replace(origin=(rays.origin - self.offset),
+    return rays.replace(origin=(rays.origin - self.offset),  # pyrefly: ignore[missing-attribute]
                         direction=rays.direction)
 
 

@@ -52,7 +52,7 @@ class NerfParams(model_utils.ModelParams):
 
     # Convert non-serializable fields back to their native types.
     # Note: Enum fields don't need to be manually converted.
-    result.unet_activation_fn = getattr(nn, result.unet_activation_fn)
+    result.unet_activation_fn = getattr(nn, result.unet_activation_fn)  # pyrefly: ignore[bad-argument-type]
 
     return result
 
@@ -215,7 +215,7 @@ def construct_nerf(
       rays=placeholder_batch.target_view.rays,
       randomized_sampling=args.randomized)
 
-  return types.InitializedModel(model=model, variables=init_variables)
+  return types.InitializedModel(model=model, variables=init_variables)  # pyrefly: ignore[bad-argument-type]
 
 
 # TODO(anyone): Fold nerf_sigma_grid, nerf_model_weights into
@@ -227,7 +227,7 @@ def construct_volumetric_semantic_model(
     args: model_utils.ModelParams,
     nerf_model: vanilla_nerf_mlp.VanillaNerfMLP,
     nerf_variables: Tree[jnp.ndarray],
-    nerf_sigma_grid: f32["..."],
+    nerf_sigma_grid: f32["..."],  # pyrefly: ignore[not-a-type]
     ) -> types.InitializedModel:
   """Constructs a VolumetricSemanticModel instance.
 
@@ -281,4 +281,4 @@ def construct_volumetric_semantic_model(
       is_train=True,
       sigma_grid=nerf_sigma_grid,
       nerf_model_weights=nerf_variables)
-  return types.InitializedModel(model=model, variables=variables)
+  return types.InitializedModel(model=model, variables=variables)  # pyrefly: ignore[bad-argument-type]
