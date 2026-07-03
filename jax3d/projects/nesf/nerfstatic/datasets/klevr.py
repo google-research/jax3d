@@ -131,7 +131,7 @@ class UnrealMetadataHandler(MetadataHandler):
 
 def _make_cameras(
     scene_cameras: Dict[str, Any],
-    ids: i32['n'],
+    ids: i32['n'],  # pyrefly: ignore[not-a-type, unknown-name]
     width: int,
     height: int,
     use_unreal_axes: bool = False,
@@ -189,7 +189,7 @@ def _choose_image_ids(selected: Union[None, int, Sequence[int]],
 
 
 def _rescale_scene_boundaries(original: types.BoundingBox3d,
-                              scale: f32['3']) -> types.BoundingBox3d:
+                              scale: f32['3']) -> types.BoundingBox3d:  # pyrefly: ignore[not-a-type]
   """Rescale scene boundaries by multiplier 'scale'."""
   chex.assert_shape(scale, (3,))
   lower = original.min_corner
@@ -208,7 +208,7 @@ def _make_examples_impl(
     metadata_cls: Type[MetadataHandler],
     image_idxs: Union[None, int, Sequence[int]],
     enable_sqrt2_buffer: bool,
-    scene_semantic_images: Optional[Dict[int, i32['h w']]] = None,
+    scene_semantic_images: Optional[Dict[int, i32['h w']]] = None,  # pyrefly: ignore[not-a-type]
     **kwargs,
 ) -> Tuple[types.Batch, dataset_utils.DatasetMetadata]:
   """Load examples from the sub-directory.

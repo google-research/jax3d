@@ -91,7 +91,7 @@ class BatchSizeField(j3d.utils.DataclassField[int, BatchSize]):
         value used if `DatasetParams.batch_size` is not provided.
     """
     self._total = total
-    super().__init__()
+    super().__init__()  # pyrefly: ignore[bad-argument-type]
 
   def _default(self) -> int:  # pytype: disable=signature-mismatch
     # Lazy construct the field to avoid `jax` calls at import time, before
@@ -351,19 +351,19 @@ def _in_memory_examples_loader(
 
     # Add the scene ids to the target view rays
     scene_rays = scene_exs.target_view.rays
-    scene_rays = scene_rays.replace(
+    scene_rays = scene_rays.replace(  # pyrefly: ignore[missing-attribute]
         scene_id=np.full(
             (*scene_rays.batch_shape, 1),
             scene_id,
             dtype=np.int32,
         ))
-    scene_exs.target_view = scene_exs.target_view.replace(rays=scene_rays)
+    scene_exs.target_view = scene_exs.target_view.replace(rays=scene_rays)  # pyrefly: ignore[missing-attribute]
 
     # For MipNeRF, add ray base radii.
     if args.enable_mipnerf:
       scene_exs = _add_base_radii(scene_exs)
 
-    all_exs.append(scene_exs)
+    all_exs.append(scene_exs)  # pyrefly: ignore[bad-argument-type]
     all_metadata.append(scene_metadata)
   return all_exs, all_metadata
 
@@ -411,16 +411,16 @@ def _streaming_example_loader(
   # * IMAGE: target_view=(h, w)
 
   if args.crop_views:
-    ds = ds.map(_crop_views(crop=args.crop_views))   # pylint: disable=no-value-for-parameter
+    ds = ds.map(_crop_views(crop=args.crop_views))   # pylint: disable=no-value-for-parameter  # pyrefly: ignore[missing-attribute]
 
   # For MipNeRF, add ray base radii.
   if args.enable_mipnerf:
-    ds = ds.map(_add_base_radii)
+    ds = ds.map(_add_base_radii)  # pyrefly: ignore[missing-attribute]
 
   # Shuffle and batch dataset
   if example_type == ExampleType.RAY:
     # Image ids are not used in RAY mode, so remove them
-    ds = ds.map(_pop_image_ids)
+    ds = ds.map(_pop_image_ids)  # pyrefly: ignore[missing-attribute]
 
     # Shuffle rays
     ds = ds.shuffle(args.ray_shuffle_buffer_size)
@@ -438,7 +438,7 @@ def _streaming_example_loader(
   # * IMAGE: target_view=(h, w)
 
   # Add the dummy ds_state
-  ds = ds.map(lambda x: (None, x))
+  ds = ds.map(lambda x: (None, x))  # pyrefly: ignore[missing-attribute]
   return ds, all_metadata
 
 
@@ -486,7 +486,7 @@ def _get_scene_range(
       raise ValueError(
           'When is_novel_scenes=True, train and eval scene should be identical. '
           f'Got: train_scenes={train_scenes!r} vs eval_scenes={eval_scenes!r}')
-    if set(train_range) & set(novel_range):
+    if set(train_range) & set(novel_range):  # pyrefly: ignore[bad-argument-type]
       raise ValueError(
           'Train and novel scenes should not overlap. Got: train_scenes='
           f'{train_scenes!r} vs novel_scenes={novel_scenes!r}')
@@ -532,8 +532,8 @@ def _remove_ignore_scenes(
   """Remove entries from 'scenes' that also appear in 'ignore'."""
   if scenes is None or ignore is None:
     return scenes
-  ignore = set(ignore)
-  return [s for s in scenes if s not in ignore]
+  ignore = set(ignore)  # pyrefly: ignore[bad-assignment]
+  return [s for s in scenes if s not in ignore]  # pyrefly: ignore[not-iterable]
 
 
 def num_scenes(scene_selection: Optional[SceneSelection]) -> int:
@@ -640,7 +640,7 @@ class DatasetIterable:
     # `pop_image_id_stateless()` crash as `input_views` is `NoneTensorSpec()`
     ex = j3d.types_like(ex)
     ex, _ = ex.pop_image_id_stateless()
-    return None, j3d.zeros_like(ex)
+    return None, j3d.zeros_like(ex)  # pyrefly: ignore[bad-return]
 
   @j3d.utils.cached_property
   def semantic_labels(self) -> List[str]:
@@ -716,10 +716,10 @@ def _make_in_memory_dataset(
       'example_type': example_type,
       'batch_size': batch_size,
   }
-  gen_batch = _gen_batch_unconditional(**gen_batch_kwargs)
+  gen_batch = _gen_batch_unconditional(**gen_batch_kwargs)  # pyrefly: ignore[bad-argument-type]
 
   ds = tf.data.Dataset.from_generator(
-      gen_batch,
+      gen_batch,  # pyrefly: ignore[bad-argument-type]
       output_signature=j3d.tensor_spec_like(next(gen_batch())),
   )
   if example_type == ExampleType.RAY:
@@ -782,7 +782,7 @@ def _gen_batch_unconditional(
 
   if example_type == ExampleType.IMAGE:
     # Concatenate all scenes together
-    examples = _concat_examples(examples)
+    examples = _concat_examples(examples)  # pyrefly: ignore[bad-assignment]
     # Shuffle images across scenes
     examples = jax.tree.map(_shuffle_deterministically, examples)
 
@@ -830,9 +830,9 @@ def _next_batch_rays_from_scenes(examples: List[types.Batch],
 
   num_scenes_in_dataset = len(examples)
   num_rays_per_batch = batch_size.per_process
-  num_rays_per_scene, remainder = divmod(
+  num_rays_per_scene, remainder = divmod(  # pyrefly: ignore[no-matching-overload]
       num_rays_per_batch, args.num_scenes_per_batch)
-  num_scenes_per_process = args.num_scenes_per_batch * jax.local_device_count()
+  num_scenes_per_process = args.num_scenes_per_batch * jax.local_device_count()  # pyrefly: ignore[unsupported-operation]
 
   if remainder != 0:
     raise ValueError(
@@ -885,7 +885,7 @@ def _next_batch_rays_all_scenes(examples: List[types.Batch],
   del args
 
   # Concatenate all scenes together.
-  examples = _concat_examples(examples)
+  examples = _concat_examples(examples)  # pyrefly: ignore[bad-assignment]
 
   # Shuffle rays across scenes.
   examples = jax.tree.map(_shuffle_deterministically, examples)
@@ -953,7 +953,7 @@ def to_ds_state_int(state: DsState) -> DsState:
 
 def _valid_ray_dir(ray_dir: tf.Tensor) -> tf.Tensor:
   """Return a boolean mask which encodes whether the ray_dir is valid."""
-  return tf.reduce_mean(abs(ray_dir), axis=-1) > 0
+  return tf.reduce_mean(abs(ray_dir), axis=-1) > 0  # pyrefly: ignore[bad-argument-type]
 
 
 def _compute_base_radii(rays: types.Rays) -> tf.Tensor:
@@ -1040,8 +1040,8 @@ def _crop_views(ex: types.Batch,
 
 def _pop_image_ids(ex: types.Batch) -> types.Batch:
   """Remove the image_ids from the batch."""
-  target_view = ex.target_view.replace(image_ids=None)
-  return ex.replace(
+  target_view = ex.target_view.replace(image_ids=None)  # pyrefly: ignore[missing-attribute]
+  return ex.replace(  # pyrefly: ignore[missing-attribute]
       target_view=target_view,
   )
 

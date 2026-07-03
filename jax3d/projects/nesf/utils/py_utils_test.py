@@ -74,7 +74,7 @@ def test_reraise():
   with pytest.raises(Exception, match='Caught: '):
     with jax3d.utils.try_reraise('Caught: '):
       ex = CustomError(123, {})
-      ex.args = 'Not a tuple'
+      ex.args = 'Not a tuple'  # pyrefly: ignore[bad-assignment]
       raise ex
 
   with pytest.raises(
@@ -95,7 +95,7 @@ def test_reraise():
     assert e.node_def is None
     # Only a single cause is set (so avoid nested context)
     assert e.__cause__ is None
-    assert e.__context__ is e_origin
+    assert e.__context__ is e_origin  # pyrefly: ignore[unbound-name]
   else:
     raise ValueError('Exception not catched')
 

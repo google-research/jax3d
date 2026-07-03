@@ -322,7 +322,7 @@ def test_example_loader():
   )
   exs = dataset._concat_examples(exs)
   # 2 scenes of 1 examples
-  assert exs.target_view.rgb.shape == (1 * 2, 28, 28, 3)
+  assert exs.target_view.rgb.shape == (1 * 2, 28, 28, 3)  # pyrefly: ignore[missing-attribute]
   exs, _ = dataset._in_memory_examples_loader(
       registered_dataset=registered_ds,
       split='train',

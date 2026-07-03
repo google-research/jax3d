@@ -36,7 +36,7 @@ def test_sunds_ray(lego_builder: sunds.core.DatasetBuilder):  # pylint: disable=
   ds = datasets.get_dataset(
       split='train',
       args=args,
-      model_args=None,
+      model_args=None,  # pyrefly: ignore[bad-argument-type]
       example_type=datasets.ExampleType.RAY,
   )
 
@@ -63,13 +63,13 @@ def test_sunds_image(lego_builder: sunds.core.DatasetBuilder):  # pylint: disabl
   ds = datasets.get_dataset(
       split='train',
       args=args,
-      model_args=None,
+      model_args=None,  # pyrefly: ignore[bad-argument-type]
       example_type=datasets.ExampleType.IMAGE,
   )
 
   _, ex = next(iter(ds))
   assert ex.target_view.batch_shape == (800, 800)
-  assert ex.target_view.image_ids.shape == ()  # pylint: disable=g-explicit-bool-comparison
+  assert ex.target_view.image_ids.shape == ()  # pylint: disable=g-explicit-bool-comparison  # pyrefly: ignore[missing-attribute]
   assert ex.target_view.image_ids == 'lego-lego_train_frame0000-default_camera'
 
 
@@ -85,12 +85,12 @@ def test_sunds_scene_id(lego_builder: sunds.core.DatasetBuilder):  # pylint: dis
   ds = datasets.get_dataset(
       split='train',
       args=args,
-      model_args=None,
+      model_args=None,  # pyrefly: ignore[bad-argument-type]
       example_type=datasets.ExampleType.RAY,
   )
 
   _, ex = next(iter(ds))
-  np.testing.assert_allclose(ex.target_view.rays.scene_id,
+  np.testing.assert_allclose(ex.target_view.rays.scene_id,  # pyrefly: ignore[no-matching-overload]
                              np.zeros((1, 4096, 1), dtype=np.int32))
 
   # TODO(duckworthd): Write a variant of this test for a dataset where

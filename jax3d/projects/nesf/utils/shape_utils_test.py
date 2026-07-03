@@ -28,7 +28,7 @@ def test_shape_utils():
 
   ones = [
       # tf.data.Dataset
-      tf.data.Dataset.from_generator(lambda: (), output_signature={
+      tf.data.Dataset.from_generator(lambda: (), output_signature={  # pyrefly: ignore[bad-argument-type]
           'b': tf.TensorSpec((2,), dtype=tf.int32),
           'c': tf.TensorSpec((3,), dtype=tf.float32),
       }),

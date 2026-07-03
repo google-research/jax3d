@@ -33,7 +33,7 @@ _ArrayInput = Union[
     Tensor,
     tf.TensorSpec,
     jax.ShapeDtypeStruct,
-    Array,
+    Array,  # pyrefly: ignore[not-a-type]
 ]
 _T1 = TypeVar(
     '_T1',
@@ -41,7 +41,7 @@ _T1 = TypeVar(
     Tensor,
     tf.TensorSpec,
     jax.ShapeDtypeStruct,
-    Array,
+    Array,  # pyrefly: ignore[not-a-type]
 )
 _T2 = TypeVar('_T2')
 
@@ -107,7 +107,7 @@ def _standardize_array(
         return array
       else:
         raise TypeError(f'Unknown array-like type: {array!r}')
-    return fn(shaped_array)
+    return fn(shaped_array)  # pyrefly: ignore[bad-argument-type]
 
   return decorated
 

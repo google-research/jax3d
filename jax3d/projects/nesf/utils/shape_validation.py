@@ -64,7 +64,7 @@ def assert_typing(fn: _Fn) -> _Fn:
         fn_name = getattr(fn, '__qualname__', fn)
         py_utils.reraise(e, f'Error in {fn_name}:\n')
 
-  return decorated
+  return decorated  # pyrefly: ignore[bad-return]
 
 
 @dataclasses.dataclass(frozen=True, eq=False)

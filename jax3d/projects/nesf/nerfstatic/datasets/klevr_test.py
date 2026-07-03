@@ -46,4 +46,4 @@ def test_make_examples():
 
 def _get_image_ids(exs: types.Batch) -> List[int]:
   """Returns the image ids from the examples."""
-  return [s[0, 0, 0] for s in exs.target_view.semantics]
+  return [s[0, 0, 0] for s in exs.target_view.semantics]  # pyrefly: ignore[not-iterable]

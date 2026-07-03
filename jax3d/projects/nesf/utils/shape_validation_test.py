@@ -31,14 +31,14 @@ def shapeguard_scope():
 @pytest.mark.usefixtures('shapeguard_scope')
 def test_assert_type():
   # Scalar int and float are accepted as-is
-  i32[''].check(12)
-  f32[''].check(12.)
+  i32[''].check(12)  # pyrefly: ignore[bad-argument-type]
+  f32[''].check(12.)  # pyrefly: ignore[bad-argument-type]
 
   with pytest.raises(ValueError, match='Dtype do not match'):
-    i32[''].check(12.)
+    i32[''].check(12.)  # pyrefly: ignore[bad-argument-type]
 
   with pytest.raises(ValueError, match='Dtype do not match'):
-    f32[''].check(12)
+    f32[''].check(12)  # pyrefly: ignore[bad-argument-type]
 
   # Number of dimensions should match and new dimensions are registered
   f32[''].check(jnp.zeros(()))
@@ -58,7 +58,7 @@ def test_assert_type():
     f32['b h w'].check(jnp.zeros((2, 3, 10,)))
 
   with pytest.raises(TypeError, match='Expected .* array'):
-    f32['b h w'].check(dict())
+    f32['b h w'].check(dict())  # pyrefly: ignore[bad-argument-type]
 
   # TODO(epot): There should be a cleaner API to check shapes values
   assert shape_validation._ShapeTracker.current().resolve_spec(
@@ -69,10 +69,10 @@ def test_assert_type():
 def test_assert_type_incomplete():
 
   # No dtype and no shape
-  Array.check(12)
+  Array.check(12)  # pyrefly: ignore[bad-argument-type]
   Array.check(jnp.zeros((1, 2, 3)))
   with pytest.raises(TypeError, match='Expected .* array'):
-    Array.check({})
+    Array.check({})  # pyrefly: ignore[bad-argument-type]
 
   # Shape but no dtype
   Array['h w c'].check(jnp.zeros((1, 2, 3)))
@@ -96,7 +96,7 @@ def test_assert_type_outside_scope():
 def test_shape_valid():
 
   @jax3d.assert_typing
-  def fn(x: f32['b h w c'], y: f32['']) -> f32['b h w']:
+  def fn(x: f32['b h w c'], y: f32['']) -> f32['b h w']:  # pyrefly: ignore[not-a-type]
     return (x + y).mean(axis=-1)
 
   # 2 independent function calls can have different dimensions
@@ -113,7 +113,7 @@ def test_shape_valid():
 def test_shape_valid_args():
 
   @jax3d.assert_typing
-  def fn(x: f32['b h'], y: f32['b w']) -> None:
+  def fn(x: f32['b h'], y: f32['b w']) -> None:  # pyrefly: ignore[not-a-type]
     del x, y
     return
 
@@ -126,7 +126,7 @@ def test_shape_valid_args():
 def test_shape_valid_inner():
 
   @jax3d.assert_typing
-  def fn(x: f32['b l']) -> f32['l b']:
+  def fn(x: f32['b l']) -> f32['l b']:  # pyrefly: ignore[not-a-type]
     x = einops.rearrange(x, 'b l -> l b')
     f32['l b'].check(x)
 
@@ -140,7 +140,7 @@ def test_shape_valid_inner():
 def test_shape_valid_nested():
 
   @jax3d.assert_typing
-  def fn(x: f32['h w c'], nest: bool = True) -> i32['']:
+  def fn(x: f32['h w c'], nest: bool = True) -> i32['']:  # pyrefly: ignore[not-a-type]
     if nest:
 
       # Nested call should also trigger error
@@ -159,7 +159,7 @@ def test_shape_valid_nested():
 def test_shape_valid_bad_return_type():
 
   @jax3d.assert_typing
-  def fn(x: f32['batch length'], rearrange: str) -> f32['length batch']:
+  def fn(x: f32['batch length'], rearrange: str) -> f32['length batch']:  # pyrefly: ignore[not-a-type]
     return einops.rearrange(x, rearrange)
 
   assert fn(jnp.zeros((1, 2)), 'b l -> l b').shape == (2, 1)
@@ -171,7 +171,7 @@ def test_shape_valid_bad_return_type():
 def test_shape_valid_args_kwargs():
 
   @jax3d.assert_typing
-  def fn(*args: f32['b'], **kwargs: f32['']) -> int:
+  def fn(*args: f32['b'], **kwargs: f32['']) -> int:  # pyrefly: ignore[not-a-type, unknown-name]
     return len(args) + len(kwargs)
 
   assert fn() == 0

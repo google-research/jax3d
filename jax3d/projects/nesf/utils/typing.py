@@ -85,7 +85,7 @@ class ArrayAliasMeta(type):
       shape: Optional[_ShapeSpecInput],
       dtype: Optional[Type[DType]],
   ):
-    dtype = np.dtype(dtype) if dtype else None
+    dtype = np.dtype(dtype) if dtype else None  # pyrefly: ignore[bad-assignment, internal-error]
     # Normalize to str
     if shape is None:
       shape = '...'
@@ -93,7 +93,7 @@ class ArrayAliasMeta(type):
       shape = ' '.join(_normalize_shape_item(x) for x in shape)
     else:
       shape = _normalize_shape_item(shape)
-    return super().__new__(cls, DTYPE_NP_TO_COMPACT_STR[dtype], (cls,), {
+    return super().__new__(cls, DTYPE_NP_TO_COMPACT_STR[dtype], (cls,), {  # pyrefly: ignore[bad-index]
         'shape': shape,
         'dtype': dtype,
     })
@@ -105,7 +105,7 @@ class ArrayAliasMeta(type):
   def __getitem__(cls, shape: _ShapeSpecInput) -> 'ArrayAliasMeta':
     return ArrayAliasMeta(shape=shape, dtype=cls.dtype)  # pytype: disable=wrong-arg-types  # numpy-scalars
 
-  def __eq__(cls, other: 'ArrayAliasMeta') -> bool:
+  def __eq__(cls, other: 'ArrayAliasMeta') -> bool:  # pyrefly: ignore[bad-override]
     return (
         isinstance(other, ArrayAliasMeta)
         and cls.shape == other.shape
@@ -132,7 +132,7 @@ class ArrayAliasMeta(type):
   def check(cls, array: jnp.ndarray) -> None:
     """Check that the given array match the specs."""
     from jax3d.projects.nesf.utils import shape_validation  # pylint: disable=g-import-not-at-top
-    shape_validation.assert_match_array_alias(array, cls)
+    shape_validation.assert_match_array_alias(array, cls)  # pyrefly: ignore[bad-argument-type]
 
 
 def _normalize_shape_item(item: _ShapeItem) -> ShapeSpec:
@@ -158,7 +158,7 @@ StrArray = ArrayAliasMeta(shape=None, dtype=np.dtype('O'))  # pytype: disable=wr
 PRNGKey = ui32[2]
 
 # Any activation function for f32.
-ActivationFn = Callable[[f32['...']], f32['...']]
+ActivationFn = Callable[[f32['...']], f32['...']]  # pyrefly: ignore[not-a-type]
 
 _ArrayT = TypeVar('_ArrayT', bound=ArrayAliasMeta)
 

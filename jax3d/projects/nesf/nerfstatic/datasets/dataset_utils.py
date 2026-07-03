@@ -154,7 +154,7 @@ def make_examples(
 @contextlib.contextmanager
 def mock_sunds(examples: types.Batch):
   """Mock sunds to returns the dummy examples."""
-  ds = tf.data.Dataset.from_tensor_slices(examples)
+  ds = tf.data.Dataset.from_tensor_slices(examples)  # pyrefly: ignore[bad-argument-type]
 
   def mock_streaming_make_examples_fn(**kwargs):
     del kwargs
@@ -181,10 +181,10 @@ class ImageSet:
   glob_pattern: str
 
   # RGB
-  rgb: f32['h w 3']
-  rgb_ground_truth: f32['h w 3']
-  semantic: i32['h w']
-  semantic_ground_truth: i32['h w']
+  rgb: f32['h w 3']  # pyrefly: ignore[not-a-type]
+  rgb_ground_truth: f32['h w 3']  # pyrefly: ignore[not-a-type]
+  semantic: i32['h w']  # pyrefly: ignore[not-a-type]
+  semantic_ground_truth: i32['h w']  # pyrefly: ignore[not-a-type]
 
 
 class DeepLabImageLoader:
@@ -199,10 +199,10 @@ class DeepLabImageLoader:
     self._image_dir = xm_work_unit_dir / 'vis' / 'segmentation_results'
 
   def step(self) -> int:
-    return np.nan
+    return np.nan  # pyrefly: ignore[bad-return]
 
   def load_all(self) -> List[ImageSet]:
-    return tree_utils.parallel_map(lambda x: self[x], list(range(len(self))))
+    return tree_utils.parallel_map(lambda x: self[x], list(range(len(self))))  # pyrefly: ignore[bad-return]
 
   def __getitem__(self, key: int) -> ImageSet:
     return ImageSet(
@@ -249,10 +249,10 @@ class DeepLabSemanticMapLoader:
     self._image_dir = xm_work_unit_dir / 'vis' / 'raw_segmentation_results'
 
   def step(self) -> int:
-    return np.nan
+    return np.nan  # pyrefly: ignore[bad-return]
 
   def load_all(self) -> List[ImageSet]:
-    return tree_utils.parallel_map(lambda x: self[x], list(range(len(self))))
+    return tree_utils.parallel_map(lambda x: self[x], list(range(len(self))))  # pyrefly: ignore[bad-return]
 
   def __getitem__(self, key: int) -> ImageSet:
     filepath = self._filepaths[key]
@@ -309,7 +309,7 @@ class DeepLabSemanticMapLoader:
 
 
 def filter_images_per_scene(all_images: List[ImageSet],
-                            scene_name: str) -> Dict[int, i32['h w']]:
+                            scene_name: str) -> Dict[int, i32['h w']]:  # pyrefly: ignore[not-a-type]
   result = {}
   for image in all_images:
     if image.scene_name == scene_name:

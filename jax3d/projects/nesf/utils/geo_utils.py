@@ -21,15 +21,15 @@ from jax3d.projects.nesf.utils.typing import Array, ArrayLike, f32, i32  # pylin
 import numpy as np
 
 
-_MinMaxValue = Union[int, float, ArrayLike[Array['d']]]
+_MinMaxValue = Union[int, float, ArrayLike[Array['d']]]  # pyrefly: ignore[not-a-type, unknown-name]
 
 
 def interp(
-    x: Array['*d'],
+    x: Array['*d'],  # pyrefly: ignore[not-a-type]
     from_: Tuple[_MinMaxValue, _MinMaxValue],
     to: Tuple[_MinMaxValue, _MinMaxValue],
     axis: int = -1,
-) -> f32['*d']:
+) -> f32['*d']:  # pyrefly: ignore[not-a-type]
   """Linearly scale the given value by the given range.
 
   Somehow similar to `np.interp` or `scipy.interpolate.inter1d` with some
@@ -90,8 +90,8 @@ def interp(
     )
 
   # Note: This should be static arguments so we use numpy instead of jnp
-  from_ = tuple(np.array(v) for v in from_)
-  to = tuple(np.array(v) for v in to)
+  from_ = tuple(np.array(v) for v in from_)  # pyrefly: ignore[bad-assignment]
+  to = tuple(np.array(v) for v in to)  # pyrefly: ignore[bad-assignment]
 
   # `a` can be scalar or array of shape=(x.shape[-1],), same for `b`
   a, b = _linear_interp_factors(*from_, *to)  # pytype: disable=wrong-arg-types
@@ -103,16 +103,16 @@ def _linear_interp_factors(
     old_max: _MinMaxValue,
     new_min: _MinMaxValue,
     new_max: _MinMaxValue,
-) -> Tuple[Union[float, f32['d']], Union[float, f32['d']]]:
+) -> Tuple[Union[float, f32['d']], Union[float, f32['d']]]:  # pyrefly: ignore[not-a-type, unknown-name]
   """Resolve the `y = a * x + b` equation and returns the factors."""
-  a = (new_min - new_max) / (old_min - old_max)
-  b = (old_min * new_max - new_min * old_max) / (old_min - old_max)
+  a = (new_min - new_max) / (old_min - old_max)  # pyrefly: ignore[unsupported-operation]
+  b = (old_min * new_max - new_min * old_max) / (old_min - old_max)  # pyrefly: ignore[unsupported-operation]
   return a, b
 
 
 def get_coords_grid(
     grid_shape: Tuple[int, ...],
-) -> i32['*grid_shape len(grid_shape)']:
+) -> i32['*grid_shape len(grid_shape)']:  # pyrefly: ignore[not-a-type]
   """Returns an array containing the coordinates grid.
 
   For example: `get_coords_grid((28, 28))` returns `f32[28, 28, 2]`.
