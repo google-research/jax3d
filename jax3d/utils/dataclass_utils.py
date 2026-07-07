@@ -93,7 +93,7 @@ class DataclassField(Generic[_InT, _OutT]):
     # Called as `MyDataclass.my_path`
     if obj is None:
       if not self._is_missing:
-        return self._default_value
+        return self._default_value  # pyrefly: ignore[bad-return]
       # If `_default` is overwritten, we need to send `default_factory`
       # to dataclass.
       if self.is_default_overwritten() and self._first_getattr_call:
@@ -112,18 +112,19 @@ class DataclassField(Generic[_InT, _OutT]):
         # If no default value is provided, `MyDataclass.my_path` should raise
         # AttributeError.
         raise AttributeError(
+            # pyrefly: ignore[missing-attribute]
             f"type object '{self._objtype.__qualname__}' has no attribute "
             f"'{self._attribute_name}'"
         )
     # Called as `my_dataclass.my_path`
-    return _getattr(
+    return _getattr(  # pyrefly: ignore[bad-return]
         obj,
-        self._attribute_name,
+        self._attribute_name,  # pyrefly: ignore[bad-argument-type]
         dataclasses.MISSING if self._is_missing else self._default_value
     )
 
   def __set__(self, obj: Dataclass, value: _InT) -> None:
-    _setattr(obj, self._attribute_name, self._validate(value))
+    _setattr(obj, self._attribute_name, self._validate(value))  # pyrefly: ignore[bad-argument-type]
 
   def is_default_overwritten(self) -> bool:
     return type(self)._default is not DataclassField._default
@@ -148,7 +149,7 @@ class DataclassField(Generic[_InT, _OutT]):
     Returns:
       value: The value, eventually converted/updated.
     """
-    return value
+    return value  # pyrefly: ignore[bad-return]
 
 
 def _getattr(
@@ -230,12 +231,12 @@ class EnumField(DataclassField[Union[str, _EnumT], _EnumT]):
     # Try to auto-infer enum type from the param.
     if isinstance(default, enum.Enum):
       if enum_cls is None:
-        enum_cls = type(default)
+        enum_cls = type(default)  # pyrefly: ignore[bad-assignment]
       elif not isinstance(default, enum_cls):
         raise ValueError(f'Conflicting enum types: {default} is not {enum_cls}')
     self._enum_cls: Type[_EnumT] = enum_cls  # pytype: disable=annotation-type-mismatch
     self._str2enum = {x.name.lower(): x for x in self._enum_cls}
-    super().__init__(default, **kwargs)
+    super().__init__(default, **kwargs)  # pyrefly: ignore[bad-argument-type]
 
   def _validate(self, value: Union[str, None, _EnumT]) -> Optional[_EnumT]:  # pytype: disable=signature-mismatch
     """Validate the value."""

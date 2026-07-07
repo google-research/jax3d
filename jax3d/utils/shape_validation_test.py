@@ -104,7 +104,7 @@ def test_assert_type_outside_scope():
 def test_shape_valid():
 
   @j3d.assert_typing
-  def fn(x: f32['b h w c'], y: f32['']) -> f32['b h w']:
+  def fn(x: f32['b h w c'], y: f32['']) -> f32['b h w']:  # pyrefly: ignore[not-a-type]
     return (x + y).mean(axis=-1)
 
   # 2 independent function calls can have different dimensions
@@ -121,7 +121,7 @@ def test_shape_valid():
 def test_shape_valid_args():
 
   @j3d.assert_typing
-  def fn(x: f32['b h'], y: f32['b w']) -> None:
+  def fn(x: f32['b h'], y: f32['b w']) -> None:  # pyrefly: ignore[not-a-type]
     del x, y
     return
 
@@ -134,7 +134,7 @@ def test_shape_valid_args():
 def test_shape_valid_inner():
 
   @j3d.assert_typing
-  def fn(x: f32['b l']) -> f32['l b']:
+  def fn(x: f32['b l']) -> f32['l b']:  # pyrefly: ignore[not-a-type]
     x = einops.rearrange(x, 'b l -> l b')
     check(f32['l b'], x)
 
@@ -148,7 +148,7 @@ def test_shape_valid_inner():
 def test_shape_valid_nested():
 
   @j3d.assert_typing
-  def fn(x: f32['h w c'], nest: bool = True) -> i32['']:
+  def fn(x: f32['h w c'], nest: bool = True) -> i32['']:  # pyrefly: ignore[not-a-type]
     if nest:
 
       # Nested call should also trigger error
@@ -167,7 +167,7 @@ def test_shape_valid_nested():
 def test_shape_valid_bad_return_type():
 
   @j3d.assert_typing
-  def fn(x: f32['batch length'], rearrange: str) -> f32['length batch']:
+  def fn(x: f32['batch length'], rearrange: str) -> f32['length batch']:  # pyrefly: ignore[not-a-type]
     return einops.rearrange(x, rearrange)
 
   assert fn(jnp.zeros((1, 2)), 'b l -> l b').shape == (2, 1)
@@ -179,7 +179,7 @@ def test_shape_valid_bad_return_type():
 def test_shape_valid_args_kwargs():
 
   @j3d.assert_typing
-  def fn(*args: f32['b'], **kwargs: f32['']) -> int:
+  def fn(*args: f32['b'], **kwargs: f32['']) -> int:  # pyrefly: ignore[not-a-type, unknown-name]
     return len(args) + len(kwargs)
 
   assert fn() == 0

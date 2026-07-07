@@ -64,7 +64,7 @@ def assert_typing(fn: _Fn) -> _Fn:
         fn_name = getattr(fn, '__qualname__', fn)
         py_utils.reraise(e, f'Error in {fn_name}:\n')
 
-  return decorated
+  return decorated  # pyrefly: ignore[bad-return]
 
 
 @dataclasses.dataclass(frozen=True, eq=False)
@@ -179,7 +179,7 @@ def assert_match_array_alias(
     # if dtype1 < dtype2:
     if (
         not isinstance(expected_spec.dtype, enp.dtypes.AnyDType)
-        and expected_spec.dtype.np_dtype != array.dtype
+        and expected_spec.dtype.np_dtype != array.dtype  # pyrefly: ignore[missing-attribute]
     ):
       raise ValueError('Dtype do not match')
     elif expected_spec.shape != '...':

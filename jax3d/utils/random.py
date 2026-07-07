@@ -35,7 +35,7 @@ class RandomState:
 
   """
 
-  def __init__(self, seed_or_rng: Union[int, PRNGKey]):
+  def __init__(self, seed_or_rng: Union[int, PRNGKey]):  # pyrefly: ignore[not-a-type]
     """Constructor."""
     if isinstance(seed_or_rng, (np.ndarray, jnp.ndarray)):
       self.curr_key = seed_or_rng
@@ -45,11 +45,11 @@ class RandomState:
       raise TypeError(f'Invalid seed or key: {seed_or_rng}')
 
   @overload
-  def next(self, n: None = None) -> PRNGKey:
+  def next(self, n: None = None) -> PRNGKey:  # pyrefly: ignore[not-a-type]
     ...
 
   @overload
-  def next(self, n: int) -> ui32['n 2']:
+  def next(self, n: int) -> ui32['n 2']:  # pyrefly: ignore[not-a-type]
     ...
 
   def next(self, n=None):

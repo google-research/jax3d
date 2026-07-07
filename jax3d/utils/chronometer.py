@@ -55,7 +55,7 @@ TIME_UNITS = {
 if FLAX_AVAILABLE:
   # if flax is available define a ChronoState that can be stored in checkpoints.
 
-  @flax.struct.dataclass
+  @flax.struct.dataclass  # pyrefly: ignore[unbound-name]
   class ChronoState:
     """State of a Chrono object as a flax dataclass for checkpointing."""
     accumulated_times: Dict[str, jnp.ndarray] = flax.struct.field(
@@ -310,7 +310,7 @@ class Chrono:
           self.accumulated_times(
               time_unit=time_unit,
               per_labels=per_labels,
-              **{device_kind: num_cores}))
+              **{device_kind: num_cores}))  # pyrefly: ignore[bad-argument-type]
 
     normalize_by = get_normalizer_from_time_unit_str(time_unit)
     times[f"{time_unit}_uptime"] = (self.uptime / normalize_by)

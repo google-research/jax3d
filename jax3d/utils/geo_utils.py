@@ -21,7 +21,7 @@ import jax.numpy as jnp
 
 
 def get_coords_grid(
-    grid_shape: Tuple[int, ...],) -> i32['*grid_shape len(grid_shape)']:
+    grid_shape: Tuple[int, ...],) -> i32['*grid_shape len(grid_shape)']:  # pyrefly: ignore[not-a-type]
   """Returns an array containing the coordinates grid.
 
   For example: `get_coords_grid((28, 28))` returns `f32[28, 28, 2]`.

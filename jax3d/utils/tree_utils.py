@@ -46,7 +46,7 @@ def filter_tree(variable_dict: flax.core.FrozenDict,
   Returns:
     Filtered copy of variable_dict containing all keys where filter_fn is True.
   """
-  variable_dict = unfreeze(variable_dict)
+  variable_dict = unfreeze(variable_dict)  # pyrefly: ignore[bad-assignment]
   flat_dict = traverse_util.flatten_dict(variable_dict, keep_empty_nodes=True)
   new_dict = {}
   for key, value in _sorted_items(flat_dict):
@@ -75,8 +75,8 @@ def merge_trees(destination: flax.core.FrozenDict, source: flax.core.FrozenDict,
     Frozen dict copy of destination with values of source for all keys
     that exist in both destination and source.
   """
-  destination = unfreeze(destination)
-  source = unfreeze(source)
+  destination = unfreeze(destination)  # pyrefly: ignore[bad-assignment]
+  source = unfreeze(source)  # pyrefly: ignore[bad-assignment]
   flat_destination = traverse_util.flatten_dict(
       destination, keep_empty_nodes=True)
   flat_source = traverse_util.flatten_dict(source, keep_empty_nodes=True)

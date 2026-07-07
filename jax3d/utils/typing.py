@@ -38,4 +38,4 @@ Tensor = Union[tf.Tensor, tf.RaggedTensor, tf.SparseTensor]
 DType = Union[np.dtype, Type[np.generic]]
 
 # Any activation function for f32.
-ActivationFn = Callable[[f32['...']], f32['...']]
+ActivationFn = Callable[[f32['...']], f32['...']]  # pyrefly: ignore[not-a-type]
