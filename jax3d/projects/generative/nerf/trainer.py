@@ -148,7 +148,7 @@ class Trainer:
       scratch: Updated scratch state object.
     """
     del inputs
-    return train_state.replace(step=train_state.step + 1), None, scratch
+    return train_state.replace(step=train_state.step + 1), None, scratch  # pyrefly: ignore[missing-attribute]
 
   def init_state(self) -> TrainState:
     """Initializes training state."""
@@ -217,7 +217,7 @@ class Trainer:
     scratch = None
     collected_summary_data = []
     while state.step < self.max_steps:
-      inputs = next(data_loader)
+      inputs = next(data_loader)  # pyrefly: ignore[bad-argument-type]
       state, summary_data, scratch = self.train_step(state, inputs, scratch)
       collected_summary_data.append(summary_data)
 
@@ -236,9 +236,9 @@ class Trainer:
         self.save_checkpoint(state)
         checkpoint_state = state
 
-      if (state.step - log_state.last_log_step) >= self.log_every:
+      if (state.step - log_state.last_log_step) >= self.log_every:  # pyrefly: ignore[unbound-name]
         logging.info("Training Step %d / %d", state.step, self.max_steps)
-        self.write_summaries(summary_writer, collected_summary_data, state.step)
+        self.write_summaries(summary_writer, collected_summary_data, state.step)  # pyrefly: ignore[unbound-name]
         collected_summary_data = []
         log_state = self.write_utilization_summary(summary_writer, state.step,
                                                    log_state)

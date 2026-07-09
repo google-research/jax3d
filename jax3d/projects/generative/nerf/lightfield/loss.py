@@ -33,11 +33,11 @@ def lightfield_loss_fn(
     model_parameters: models.ModelParameters,
     inputs: models.ModelInputs,
     data: Dict[str, Any],
-    rng: PRNGKey,
+    rng: PRNGKey,  # pyrefly: ignore[not-a-type]
     step: jnp.ndarray,
     mask_mode: str = "none",
     reconstruct_gamma_rgb: bool = True
-) -> Tuple[FloatArray, Dict[str, FloatArray]]:
+) -> Tuple[FloatArray, Dict[str, FloatArray]]:  # pyrefly: ignore[not-a-type]
   """The main GLO NeRF loss function including all terms.
 
   Args:
@@ -66,7 +66,7 @@ def lightfield_loss_fn(
   data = jax.tree.map(flatten_views, data)
   latent_tokens = inputs.latent_tokens
   latent_tokens = jax.tree.map(flatten_views, latent_tokens)
-  inputs = inputs.replace(latent_tokens=latent_tokens)
+  inputs = inputs.replace(latent_tokens=latent_tokens)  # pyrefly: ignore[missing-attribute]
 
   origins, directions = jax.vmap(jax_camera.pixels_to_rays)(
       data["camera"], data["pixel_coordinates"])
@@ -96,10 +96,10 @@ def lightfield_loss_fn(
     # gamma decoding their images this is effectively the loss they are using.
     # (https://en.wikipedia.org/wiki/Gamma_correction).
     gt_rgb = data["gamma_rgb"]
-    predicted_rgb = render["gamma_rgb"]
+    predicted_rgb = render["gamma_rgb"]  # pyrefly: ignore[bad-index]
   else:
     gt_rgb = image_utility.srgb_gamma_to_linear(data["gamma_rgb"])
-    predicted_rgb = render["linear_rgb"]
+    predicted_rgb = render["linear_rgb"]  # pyrefly: ignore[bad-index]
 
   if mask_mode == "multiply":
     gt_rgb *= foreground_mask
@@ -115,7 +115,7 @@ def lightfield_loss_fn(
   gt_rgb = data["gamma_rgb"]
   if mask_mode == "multiply":
     gt_rgb *= foreground_mask
-  psnr = metrics.psnr(render["gamma_rgb"], gt_rgb)
+  psnr = metrics.psnr(render["gamma_rgb"], gt_rgb)  # pyrefly: ignore[bad-index]
   loss_terms["Training PSNR"] = psnr
 
   return total_loss, loss_terms

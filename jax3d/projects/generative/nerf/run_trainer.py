@@ -49,7 +49,7 @@ def main(argv):
       bindings=FLAGS.gin_bindings,
       skip_unknown=False)
 
-  trainer = configs.ExperimentConfig().trainer(
+  trainer = configs.ExperimentConfig().trainer(  # pyrefly: ignore[not-callable]
       experiment_name=FLAGS.experiment_name, working_dir=FLAGS.base_folder)
 
   if FLAGS.mode == "train":

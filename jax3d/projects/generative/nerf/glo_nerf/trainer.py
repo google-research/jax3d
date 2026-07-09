@@ -40,11 +40,11 @@ class TransformerNeRFTrainState(trainer.TrainState):
   model_parameters: models.ModelParameters
   latent_table: np.ndarray
   optimizer_state: optax.OptState
-  rng: PRNGKey
+  rng: PRNGKey  # pyrefly: ignore[not-a-type]
 
   def to_serializable(self) -> "TransformerNeRFTrainState":
     """Transforms the state values into a form suitable for serialization."""
-    return self.replace(
+    return self.replace(  # pyrefly: ignore[missing-attribute]
         model_parameters=jax_utils.unreplicate(self.model_parameters),
         optimizer_state=jax_utils.unreplicate(self.optimizer_state),
     )
@@ -52,7 +52,7 @@ class TransformerNeRFTrainState(trainer.TrainState):
   def from_serializable(self) -> "TransformerNeRFTrainState":
     """Transforms deserialized values into a form suitable for training."""
     state = self
-    state = state.replace(
+    state = state.replace(  # pyrefly: ignore[missing-attribute]
         latent_table=np.copy(state.latent_table),
         model_parameters=jax_utils.replicate(state.model_parameters),
         optimizer_state=jax_utils.replicate(state.optimizer_state),
@@ -99,7 +99,7 @@ class TransformerNeRFTrainer(trainer.Trainer):
     latent_table = np.zeros((self.data_reader.identity_count,
                              self.num_latent_tokens, self.latent_token_dim))
 
-    rng = jax.random.PRNGKey(self.random_seed)
+    rng = jax.random.PRNGKey(self.random_seed)  # pyrefly: ignore[bad-argument-type]
     train_rng, model_init_rng = jax.random.split(rng)
     model_parameters = self.model.initialize_parameters(model_init_rng,
                                                         self.num_latent_tokens,
@@ -155,7 +155,7 @@ class TransformerNeRFTrainer(trainer.Trainer):
 
     return jax.pmap(per_device_train_step, "replicas")
 
-  def train_step(
+  def train_step(  # pyrefly: ignore[bad-override]
       self, train_state: TransformerNeRFTrainState, inputs: Dict[str, Any],
       scratch: Optional[Dict[str, Any]]
   ) -> Tuple[TransformerNeRFTrainState, Dict[str, Any], Dict[str, Any]]:
@@ -199,7 +199,7 @@ class TransformerNeRFTrainer(trainer.Trainer):
     steps = -latent_learning_rate * latent_grad
     train_state.latent_table[latent_ids] += steps
 
-    new_train_state = train_state.replace(
+    new_train_state = train_state.replace(  # pyrefly: ignore[missing-attribute]
         model_parameters=new_model_parameters,
         optimizer_state=new_optimizer_state,
         latent_table=train_state.latent_table,
@@ -208,7 +208,7 @@ class TransformerNeRFTrainer(trainer.Trainer):
 
     return new_train_state, loss_terms, scratch
 
-  def eval_step(self, train_state: TransformerNeRFTrainState,
+  def eval_step(self, train_state: TransformerNeRFTrainState,  # pyrefly: ignore[bad-override]
                 summary_writer: tensorboard.SummaryWriter,
                 scratch: Optional[Any]) -> Any:
     """Performs evaluation on a model checkpoint.

@@ -21,12 +21,12 @@ import jax.numpy as jnp
 
 
 def sinusoidal(
-    position: FloatArray,
+    position: FloatArray,  # pyrefly: ignore[not-a-type]
     minimum_frequency_power: int,
     maximum_frequency_power: int,
     include_identity: bool = False,
-    filter_fn: Optional[Callable[[FloatArray],
-                                 FloatArray]] = None) -> FloatArray:
+    filter_fn: Optional[Callable[[FloatArray],  # pyrefly: ignore[not-a-type]
+                                 FloatArray]] = None) -> FloatArray:  # pyrefly: ignore[not-a-type]
   """Computes the psotional encoding value from sample positions.
 
   Arguments:

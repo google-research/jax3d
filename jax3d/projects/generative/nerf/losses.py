@@ -38,10 +38,10 @@ def _get_norm_fn(name: str) -> Callable[[jnp.ndarray], jnp.ndarray]:
 
 
 @gin.configurable(allowlist=["low_threshold", "high_threshold"])
-def tri_mode_clipping(ground_truth: FloatArray[..., "C"],
-                      predicted: FloatArray[..., "C"],
+def tri_mode_clipping(ground_truth: FloatArray[..., "C"],  # pyrefly: ignore[not-a-type, unknown-name]
+                      predicted: FloatArray[..., "C"],  # pyrefly: ignore[not-a-type, unknown-name]
                       low_threshold: float = 0.0,
-                      high_threshold: float = 1.0) -> FloatArray[..., "C"]:
+                      high_threshold: float = 1.0) -> FloatArray[..., "C"]:  # pyrefly: ignore[not-a-type, unknown-name]
   """An error clipping scheme for data saturated outside a given range.
 
   For ground truth pixels outside this range, predicted pixels only affect the
@@ -81,12 +81,12 @@ def tri_mode_clipping(ground_truth: FloatArray[..., "C"],
 
 @gin.configurable(
     "reconstruction_loss", allowlist=["weight", "norm", "use_tri_mode"])
-def reconstruction(ground_truth: FloatArray[..., "C"],
-                   predicted: FloatArray[..., "C"],
-                   mask: Optional[FloatArray[...]] = None,
+def reconstruction(ground_truth: FloatArray[..., "C"],  # pyrefly: ignore[not-a-type, unknown-name]
+                   predicted: FloatArray[..., "C"],  # pyrefly: ignore[not-a-type, unknown-name]
+                   mask: Optional[FloatArray[...]] = None,  # pyrefly: ignore[not-a-type]
                    weight: float = 1.0,
                    norm: str = "l2",
-                   use_tri_mode: bool = False) -> Tuple[FloatArray, float]:
+                   use_tri_mode: bool = False) -> Tuple[FloatArray, float]:  # pyrefly: ignore[not-a-type]
   """A photometric reconstruction loss.
 
   Args:
@@ -118,12 +118,12 @@ def reconstruction(ground_truth: FloatArray[..., "C"],
 @gin.configurable(
     "normal_consistency_loss",
     allowlist=["weight", "mode", "hold_analytic_normals_constant"])
-def normal_consistency(analytic_normals: FloatArray[..., 3],
-                       predicted_normals: FloatArray[..., 3],
-                       mask: Optional[FloatArray[...]] = None,
+def normal_consistency(analytic_normals: FloatArray[..., 3],  # pyrefly: ignore[not-a-type]
+                       predicted_normals: FloatArray[..., 3],  # pyrefly: ignore[not-a-type]
+                       mask: Optional[FloatArray[...]] = None,  # pyrefly: ignore[not-a-type]
                        weight: float = 0.0,
                        hold_analytic_normals_constant: bool = True,
-                       mode: str = "error") -> Tuple[FloatArray, float]:
+                       mode: str = "error") -> Tuple[FloatArray, float]:  # pyrefly: ignore[not-a-type]
   """Loss for enforcing consistency between predicted and analytic normals.
 
   Args:
@@ -158,9 +158,9 @@ def normal_consistency(analytic_normals: FloatArray[..., 3],
 
 
 @gin.configurable("color_correction_regularization", allowlist=["weight"])
-def color_correction_regularization(error: FloatArray[...],
+def color_correction_regularization(error: FloatArray[...],  # pyrefly: ignore[not-a-type]
                                     weight: float = 0.0
-                                   ) -> Tuple[FloatArray, float]:
+                                   ) -> Tuple[FloatArray, float]:  # pyrefly: ignore[not-a-type]
   """Color correction regularization.
 
   Args:
@@ -175,8 +175,8 @@ def color_correction_regularization(error: FloatArray[...],
 
 
 @gin.configurable("hard_surface_loss", allowlist=["weight"])
-def hard_surface(sample_weights: FloatArray[...],
-                 weight: float = 0.0) -> Tuple[FloatArray, float]:
+def hard_surface(sample_weights: FloatArray[...],  # pyrefly: ignore[not-a-type]
+                 weight: float = 0.0) -> Tuple[FloatArray, float]:  # pyrefly: ignore[not-a-type]
   """Hard surface density regularizer loss.
 
   Args:

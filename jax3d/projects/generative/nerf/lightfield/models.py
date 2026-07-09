@@ -274,7 +274,7 @@ class Model(nn.Module):
 
   def __call__(self,
                inputs: ModelInputs,
-               rays: FloatArray["K R", 6],
+               rays: FloatArray["K R", 6],  # pyrefly: ignore[not-a-type]
                rng=None,
                step=None,
                is_training=False):
@@ -387,13 +387,13 @@ class Model(nn.Module):
 
       for key in results:
         result_i = jnp.concatenate(results[key])
-        results[key] = result_i.reshape(height, width, *result_i.shape[1:])
+        results[key] = result_i.reshape(height, width, *result_i.shape[1:])  # pyrefly: ignore[unsupported-operation]
 
       return results
 
     return render_image
 
-  def initialize_parameters(self, rng_key: PRNGKey, num_tokens,
+  def initialize_parameters(self, rng_key: PRNGKey, num_tokens,  # pyrefly: ignore[not-a-type]
                             token_dim) -> ModelParameters:
     batch_size = 7
     num_rays = 13  # Prime numbers to help catch shape errors.

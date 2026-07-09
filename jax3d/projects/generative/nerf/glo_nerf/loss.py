@@ -32,11 +32,11 @@ def transformer_nerf_loss_fn(
     model_parameters: models.ModelParameters,
     inputs: models.ModelInputs,
     data: Dict[str, Any],
-    rng: PRNGKey,
+    rng: PRNGKey,  # pyrefly: ignore[not-a-type]
     step: jnp.ndarray,
     mask_mode: str = "alpha_supervision",
     reconstruct_gamma_rgb: bool = True
-) -> Tuple[FloatArray, Dict[str, FloatArray]]:
+) -> Tuple[FloatArray, Dict[str, FloatArray]]:  # pyrefly: ignore[not-a-type]
   """The main GLO NeRF loss function including all terms.
 
   Args:
@@ -65,7 +65,7 @@ def transformer_nerf_loss_fn(
   data = jax.tree.map(flatten_views, data)
   latent_tokens = inputs.latent_tokens
   latent_tokens = jax.tree.map(flatten_views, latent_tokens)
-  inputs = inputs.replace(latent_tokens=latent_tokens)
+  inputs = inputs.replace(latent_tokens=latent_tokens)  # pyrefly: ignore[missing-attribute]
 
   origins, directions = jax.vmap(jax_camera.pixels_to_rays)(
       data["camera"], data["pixel_coordinates"])
@@ -96,10 +96,10 @@ def transformer_nerf_loss_fn(
     # gamma decoding their images this is effectively the loss they are using.
     # (https://en.wikipedia.org/wiki/Gamma_correction).
     gt_rgb = data["gamma_rgb"]
-    predicted_rgb = render["gamma_rgb"]
+    predicted_rgb = render["gamma_rgb"]  # pyrefly: ignore[bad-index]
   else:
     gt_rgb = image_utility.srgb_gamma_to_linear(data["gamma_rgb"])
-    predicted_rgb = render["linear_rgb"]
+    predicted_rgb = render["linear_rgb"]  # pyrefly: ignore[bad-index]
 
   if mask_mode == "multiply":
     gt_rgb *= foreground_mask
@@ -115,19 +115,19 @@ def transformer_nerf_loss_fn(
   gt_rgb = data["gamma_rgb"]
   if mask_mode == "multiply":
     gt_rgb *= foreground_mask
-  psnr = metrics.psnr(render["gamma_rgb"], gt_rgb)
+  psnr = metrics.psnr(render["gamma_rgb"], gt_rgb)  # pyrefly: ignore[bad-index]
   loss_terms["Training PSNR"] = psnr
 
   if mask_mode == "alpha_supervision":
     with gin.config_scope("alpha"):
       alpha_loss, alpha_loss_weight = losses.reconstruction(
-          foreground_mask, render["alpha"])
+          foreground_mask, render["alpha"])  # pyrefly: ignore[bad-index]
     if alpha_loss_weight != 0.0:
       loss_terms["Alpha"] = alpha_loss
       total_loss += alpha_loss_weight * alpha_loss
 
   hard_surface_loss, hard_surface_loss_weight = losses.hard_surface(
-      render["sample_weights"])
+      render["sample_weights"])  # pyrefly: ignore[bad-index]
   loss_terms["Hard Surface"] = hard_surface_loss
   total_loss += hard_surface_loss_weight * hard_surface_loss
 

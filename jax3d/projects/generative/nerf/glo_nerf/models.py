@@ -313,11 +313,11 @@ class Model(nn.Module):
 
   def evaluate_nerf(
       self,
-      points: FloatArray["N", ..., 3],
-      directions: FloatArray["N", ..., 3],
+      points: FloatArray["N", ..., 3],  # pyrefly: ignore[not-a-type, unknown-name]
+      directions: FloatArray["N", ..., 3],  # pyrefly: ignore[not-a-type, unknown-name]
       inputs: ModelInputs,
       step: int,
-      noise_rng: Optional[PRNGKey] = None) -> Dict[str, FloatArray]:
+      noise_rng: Optional[PRNGKey] = None) -> Dict[str, FloatArray]:  # pyrefly: ignore[not-a-type]
     """NeRF decoder forward pass."""
     density, rgb = self.decoder(points, inputs.latent_tokens)
 
@@ -325,8 +325,8 @@ class Model(nn.Module):
     return results
 
   def surface_normal_from_density(
-      self, points: FloatArray["N", ..., 3], inputs, step: int
-  ) -> FloatArray["N", ..., 3]:
+      self, points: FloatArray["N", ..., 3], inputs, step: int  # pyrefly: ignore[not-a-type, unknown-name]
+  ) -> FloatArray["N", ..., 3]:  # pyrefly: ignore[not-a-type, unknown-name]
     """Compute the normals of the density field at the given points."""
 
     # Input points are of the form [ N, ..., 3]. Compute the product of the
@@ -349,7 +349,7 @@ class Model(nn.Module):
 
   def __call__(self,
                inputs: ModelInputs,
-               rays: FloatArray["K R", 6],
+               rays: FloatArray["K R", 6],  # pyrefly: ignore[not-a-type]
                rng=None,
                near=None,
                far=None,
@@ -404,7 +404,7 @@ class Model(nn.Module):
 
     initial_nerf_result = self.evaluate_nerf(initial_sample_coordinates,
                                              initial_sample_directions, inputs,
-                                             step, initial_noise_rng)
+                                             step, initial_noise_rng)  # pyrefly: ignore[bad-argument-type]
 
     initial_render_results = volume_rendering.volume_rendering(
         sample_values=(),  # We ignore the accumulated RGB from initial samples
@@ -448,7 +448,7 @@ class Model(nn.Module):
 
       combined_nerf_result = self.evaluate_nerf(combined_sample_coordinates,
                                                 combined_sample_directions,
-                                                inputs, step,
+                                                inputs, step,  # pyrefly: ignore[bad-argument-type]
                                                 importance_noise_rng)
 
     else:
@@ -473,7 +473,7 @@ class Model(nn.Module):
 
       importance_nerf_result = self.evaluate_nerf(importance_sample_coordinates,
                                                   importance_sample_directions,
-                                                  inputs, step,
+                                                  inputs, step,  # pyrefly: ignore[bad-argument-type]
                                                   importance_noise_rng)
 
       # We first append importance sample depths and values along the sample
@@ -556,7 +556,7 @@ class Model(nn.Module):
     surface_points = origins + directions * expected_depth
     return_values["depth"] = expected_depth
 
-    normals = self.surface_normal_from_density(surface_points, inputs, step)
+    normals = self.surface_normal_from_density(surface_points, inputs, step)  # pyrefly: ignore[bad-argument-type]
     return_values["analytic_normal"] = normals
 
     if return_additional_sample_data:
@@ -565,7 +565,7 @@ class Model(nn.Module):
     alpha = render_results.ray_alpha[..., None]
     return_values["alpha"] = alpha
 
-    foreground_rgb = render_results.ray_values["rgb"]
+    foreground_rgb = render_results.ray_values["rgb"]  # pyrefly: ignore[bad-index]
 
     if self.use_background_model:
       background_latent = inputs.latent_tokens[..., 0, :]
@@ -574,7 +574,7 @@ class Model(nn.Module):
       # need to add it to the attenuated background value.
       pixel_rgb = foreground_rgb + (1.0 - alpha) * background_rgb
     else:
-      background_rgb = jnp.zeros_like(foreground_rgb)
+      background_rgb = jnp.zeros_like(foreground_rgb)  # pyrefly: ignore[bad-argument-type]
       pixel_rgb = foreground_rgb
 
     # Up until this point RGB values could be interpreted a gamma encoded or
@@ -726,13 +726,13 @@ class Model(nn.Module):
 
       for key in results:
         result_i = jnp.concatenate(results[key])
-        results[key] = result_i.reshape(height, width, *result_i.shape[1:])
+        results[key] = result_i.reshape(height, width, *result_i.shape[1:])  # pyrefly: ignore[unsupported-operation]
 
       return results
 
     return render_image
 
-  def initialize_parameters(self, rng_key: PRNGKey, num_tokens,
+  def initialize_parameters(self, rng_key: PRNGKey, num_tokens,  # pyrefly: ignore[not-a-type]
                             token_dim) -> ModelParameters:
     batch_size = 7
     num_rays = 13  # Prime numbers to help catch shape errors.

@@ -30,10 +30,10 @@ from jax3d.projects.generative.nerf.autoencoder import models
 def transformer_loss_fn(
     model_parameters: models.ModelParameters,
     data: Dict[str, Any],
-    rng: PRNGKey,
+    rng: PRNGKey,  # pyrefly: ignore[not-a-type]
     step: jnp.ndarray,
     pixel_batch_size=512,
-) -> Tuple[FloatArray, Dict[str, FloatArray]]:
+) -> Tuple[FloatArray, Dict[str, FloatArray]]:  # pyrefly: ignore[not-a-type]
   """The main autoencoder loss function.
 
   Args:
@@ -92,7 +92,7 @@ def transformer_loss_fn(
     total_loss += reconstruction_loss * reconstruction_loss_weight
 
   # Always compute PSNR on gamma values for consistency
-  psnr = metrics.psnr(predicted_rgb, gt_rgb)
+  psnr = metrics.psnr(predicted_rgb, gt_rgb)  # pyrefly: ignore[bad-argument-type]
   loss_terms["Training PSNR"] = psnr
 
   return total_loss, loss_terms
