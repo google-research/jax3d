@@ -43,7 +43,7 @@ def sample_1d(
     strategy: SamplingStrategy,
     rng: jax.Array,
     dtype: jnp.dtype = jnp.float32,
-) -> FloatArray["*batch_shape S"]:
+) -> FloatArray["*batch_shape S"]:  # pyrefly: ignore[not-a-type]
   """Samples points from the 1D domain [0, 1) using the specified strategy.
 
   Note that 'SamplingStrategy.STRATIFIED' will yield samples sorted in ascending
@@ -81,7 +81,7 @@ def sample_1d(
     t = jax.random.uniform(rng, t.shape, dtype=dtype)
     perturbation = 0.0
 
-  t += perturbation
+  t += perturbation  # pyrefly: ignore[unbound-name]
   return jnp.clip(t, 0.0, 1.0 - jnp.finfo(dtype).eps)
 
 
@@ -90,7 +90,7 @@ def sample_1d_grid(
     sample_count: int,
     batch_shape: Sequence[int],
     dtype: jnp.dtype = jnp.float32,
-) -> FloatArray["*batch_shape S"]:
+) -> FloatArray["*batch_shape S"]:  # pyrefly: ignore[not-a-type]
   """Samples points on a regular grid from the 1D domain [0, 1).
 
   Args:
@@ -112,15 +112,15 @@ def sample_1d_grid(
 
 def sample_along_rays(
     *,
-    ray_origins: FloatArray[..., 3],
-    ray_directions: FloatArray[..., 3],
-    near: Union[float, FloatArray[...]],
-    far: Union[float, FloatArray[...]],
+    ray_origins: FloatArray[..., 3],  # pyrefly: ignore[not-a-type]
+    ray_directions: FloatArray[..., 3],  # pyrefly: ignore[not-a-type]
+    near: Union[float, FloatArray[...]],  # pyrefly: ignore[not-a-type]
+    far: Union[float, FloatArray[...]],  # pyrefly: ignore[not-a-type]
     sample_count: int,
     deterministic: bool,
     rng: Optional[jax.Array] = None,
     use_linear_disparity: bool = False,
-) -> Tuple[FloatArray[..., "S"], FloatArray[..., "S", 3]]:
+) -> Tuple[FloatArray[..., "S"], FloatArray[..., "S", 3]]:  # pyrefly: ignore[not-a-type, unknown-name]
   """Randomly or uniformly samples positions along rays for volume rendering.
 
   Args:
@@ -165,7 +165,7 @@ def sample_along_rays(
         batch_shape=batch_shape,
         strategy=SamplingStrategy.STRATIFIED,
         dtype=dtype,
-        rng=rng)
+        rng=rng)  # pyrefly: ignore[bad-argument-type]
 
   # Convert to sample depth values along the rays
   near = jnp.broadcast_to(near, batch_shape)[..., None]
@@ -191,18 +191,18 @@ def sample_along_rays(
 @chex.dataclass(frozen=True)
 class VolumeRenderingResult:
   """A struct containing return values from a call to volume_rendering."""
-  ray_values: Tree[FloatArray[..., "N"]]
-  ray_alpha: FloatArray[...]
-  ray_depth: FloatArray[...]
-  sample_weights: FloatArray[..., "S"]
-  sample_intervals: FloatArray[..., "S"]
+  ray_values: Tree[FloatArray[..., "N"]]  # pyrefly: ignore[not-a-type, unknown-name]
+  ray_alpha: FloatArray[...]  # pyrefly: ignore[not-a-type]
+  ray_depth: FloatArray[...]  # pyrefly: ignore[not-a-type]
+  sample_weights: FloatArray[..., "S"]  # pyrefly: ignore[not-a-type, unknown-name]
+  sample_intervals: FloatArray[..., "S"]  # pyrefly: ignore[not-a-type, unknown-name]
 
 
 def volume_rendering(
     *,
-    sample_values: Tree[FloatArray[..., "S N"]],
-    sample_density: FloatArray[..., "S"],
-    depths: FloatArray[..., "S"],
+    sample_values: Tree[FloatArray[..., "S N"]],  # pyrefly: ignore[not-a-type]
+    sample_density: FloatArray[..., "S"],  # pyrefly: ignore[not-a-type, unknown-name]
+    depths: FloatArray[..., "S"],  # pyrefly: ignore[not-a-type, unknown-name]
     background_values: Optional[Any] = None,
     opaque_final_sample: bool = False,
 ) -> VolumeRenderingResult:
@@ -295,13 +295,13 @@ def volume_rendering(
 
 def sample_piecewise_constant_pdf(
     *,
-    bin_edges: FloatArray[..., "B+1"],
-    weights: FloatArray[..., "B"],
+    bin_edges: FloatArray[..., "B+1"],  # pyrefly: ignore[not-a-type, unknown-name]
+    weights: FloatArray[..., "B"],  # pyrefly: ignore[not-a-type, unknown-name]
     sample_count: int,
     deterministic: bool,
     rng: Optional[jax.Array] = None,
     epsilon: float = 1e-5,
-) -> FloatArray[..., "sample_count"]:
+) -> FloatArray[..., "sample_count"]:  # pyrefly: ignore[not-a-type, unknown-name]
   """Draws samples from an empircal 1D PDF using inverse transform sampling.
 
   Given a 1-dimensional domain divided into a contiguous sequence of bins
@@ -356,7 +356,7 @@ def sample_piecewise_constant_pdf(
         batch_shape=batch_shape,
         strategy=SamplingStrategy.UNIFORM,
         dtype=dtype,
-        rng=rng)
+        rng=rng)  # pyrefly: ignore[bad-argument-type]
 
   # Find the which bins in the CDF contain the samples
   mask = u[..., None, :] >= cdf[..., :, None]

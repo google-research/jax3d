@@ -23,7 +23,7 @@ from jax3d.projects.nesf.utils.typing import f32, i32  # pylint: disable=g-multi
 
 
 def l1_regularization(variables: flax.core.scope.FrozenVariableDict,
-                      ) -> f32['']:
+                      ) -> f32['']:  # pyrefly: ignore[not-a-type]
   """Computes the L1 regularization loss on the model variables.
 
   Args:
@@ -42,7 +42,7 @@ def l1_regularization(variables: flax.core.scope.FrozenVariableDict,
 
 
 def l2_regularization(variables: flax.core.scope.FrozenVariableDict,
-                      ) -> f32['']:
+                      ) -> f32['']:  # pyrefly: ignore[not-a-type]
   """Computes the L2 regularization loss on the model variables.
 
   Args:
@@ -61,7 +61,7 @@ def l2_regularization(variables: flax.core.scope.FrozenVariableDict,
 
 
 def scenes_l1_regularization(variables: flax.core.scope.FrozenVariableDict,
-                             ) -> f32['']:
+                             ) -> f32['']:  # pyrefly: ignore[not-a-type]
   """Computes the L2 regularization loss on the scene parameters.
 
   Args:
@@ -79,8 +79,8 @@ def scenes_l1_regularization(variables: flax.core.scope.FrozenVariableDict,
   return l1_regularization(v)
 
 
-def l1_smoothness_regularization(original: f32['n k'],
-                                 perturbed: f32['n k']) -> f32['']:
+def l1_smoothness_regularization(original: f32['n k'],  # pyrefly: ignore[not-a-type]
+                                 perturbed: f32['n k']) -> f32['']:  # pyrefly: ignore[not-a-type]
   """Computes the average absolute difference between original and perturbed.
 
   Args:
@@ -93,7 +93,7 @@ def l1_smoothness_regularization(original: f32['n k'],
   return jnp.mean(jnp.abs(original - perturbed))
 
 
-def l2_loss(labels: f32['...'], predictions: f32['...']) -> f32['']:
+def l2_loss(labels: f32['...'], predictions: f32['...']) -> f32['']:  # pyrefly: ignore[not-a-type]
   """Computes the reconstruction loss between the labels and the predictions.
 
   Args:
@@ -109,10 +109,10 @@ def l2_loss(labels: f32['...'], predictions: f32['...']) -> f32['']:
 
 
 def softmax_cross_entropy_loss(
-    logits: Optional[f32['... num_classes']],
-    labels: i32['... 1'],
-    mask: Optional[i32['... 1']] = None,
-    ) -> f32['']:
+    logits: Optional[f32['... num_classes']],  # pyrefly: ignore[not-a-type]
+    labels: i32['... 1'],  # pyrefly: ignore[not-a-type]
+    mask: Optional[i32['... 1']] = None,  # pyrefly: ignore[not-a-type]
+    ) -> f32['']:  # pyrefly: ignore[not-a-type]
   """Computes the softmax cross entropy loss between the logits and the labels.
 
   Args:
@@ -140,9 +140,9 @@ def softmax_cross_entropy_loss(
 
 
 def ray_interval_regularization(
-    z_values: f32['...'],
-    weights: f32['...']
-    ) -> f32['']:
+    z_values: f32['...'],  # pyrefly: ignore[not-a-type]
+    weights: f32['...']  # pyrefly: ignore[not-a-type]
+    ) -> f32['']:  # pyrefly: ignore[not-a-type]
   """Computes the regularization loss for a ray interval.
 
   Args:
@@ -166,8 +166,8 @@ def ray_interval_regularization(
   return jnp.mean(losses_cross + losses_self)
 
 
-def charbonnier_loss(labels: f32['...'], predictions: f32['...'], epsilon: f32
-                     ) -> f32['']:
+def charbonnier_loss(labels: f32['...'], predictions: f32['...'], epsilon: f32  # pyrefly: ignore[not-a-type]
+                     ) -> f32['']:  # pyrefly: ignore[not-a-type]
   """Computes the reconstruction loss between the labels and the predictions.
 
   Args:

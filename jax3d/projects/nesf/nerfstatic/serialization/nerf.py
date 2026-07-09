@@ -42,7 +42,7 @@ class NerfState:
   variables: Tree[jnp.ndarray]
 
   # Density grid derived from the model.
-  density_grid: f32['x y z 1']
+  density_grid: f32['x y z 1']  # pyrefly: ignore[not-a-type]
 
 
 class NerfSaver:
