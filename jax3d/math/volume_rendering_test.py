@@ -224,7 +224,7 @@ def test_volume_rendering(value_type: str, use_background: bool,
 
   def sample_values_from_ray(ray_value, background_value=None):
     if use_background:
-      fg_value = ray_value - background_value * (1 - ray_alpha[..., None])
+      fg_value = ray_value - background_value * (1 - ray_alpha[..., None])  # pyrefly: ignore[unsupported-operation]
     else:
       fg_value = ray_value
     sample_values = jax.random.normal(
@@ -278,21 +278,21 @@ def test_volume_rendering(value_type: str, use_background: bool,
       sample_values = jax.tree.map(sample_values_from_ray, ray_values)
 
   cast = lambda x: x.astype(dtype)
-  sample_values = jax.tree.map(cast, sample_values)
+  sample_values = jax.tree.map(cast, sample_values)  # pyrefly: ignore[unbound-name]
   if use_background:
-    background_values = jax.tree.map(cast, background_values)
+    background_values = jax.tree.map(cast, background_values)  # pyrefly: ignore[unbound-name]
 
   render_result = volume_rendering.volume_rendering(
       sample_values=sample_values,
       sample_density=sample_density.astype(dtype),
       depths=sample_depth.astype(dtype),
-      background_values=background_values,
+      background_values=background_values,  # pyrefly: ignore[unbound-name]
       opaque_final_sample=opaque_final_sample)
 
   # Accumulated values should be consistent with the generated inputs
   allclose = lambda x, y: jnp.allclose(x, y, atol=200 * jnp.finfo(dtype).eps)
   assert jax.tree_util.tree_all(
-      jax.tree.map(allclose, render_result.ray_values, ray_values))
+      jax.tree.map(allclose, render_result.ray_values, ray_values))  # pyrefly: ignore[unbound-name]
 
   # Ray alpha values should be consistent with the generated inputs
   assert jax.tree_util.tree_all(

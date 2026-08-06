@@ -98,4 +98,4 @@ def test_simple():
       points=points)
 
   assert rendered_rays.semantic.shape == (2, num_semantic_classes)
-  assert semantic_3d_predictions.shape == (8, 1, num_semantic_classes)
+  assert semantic_3d_predictions.shape == (8, 1, num_semantic_classes)  # pyrefly: ignore[missing-attribute]

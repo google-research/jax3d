@@ -77,7 +77,7 @@ def predict_fn_3d(
       nerf_model_weights=nerf_variables,
       points=points)
 
-  assert predictions.shape[1] == 1
+  assert predictions.shape[1] == 1  # pyrefly: ignore[missing-attribute]
   return jax.lax.all_gather(predictions[:, 0, :], axis_name="batch")  # pyrefly: ignore[bad-index]
 
 
