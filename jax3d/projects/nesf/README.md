@@ -22,7 +22,7 @@ Using conda, create and activate a virtual environment, which will allow safe
 installation of dependencies (based on Python 3.10.8):
 
 ```shell
-conda create -m nesf
+conda create -n nesf
 conda activate nesf
 conda install python
 ```
