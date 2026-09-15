@@ -42,7 +42,7 @@ def sample_1d(
     batch_shape: Sequence[int],
     strategy: SamplingStrategy,
     rng: jax.Array,
-    dtype: jnp.dtype = jnp.float32,
+    dtype: jnp.dtype = jnp.float32,  # pyrefly: ignore[bad-function-definition]
 ) -> FloatArray["*batch_shape S"]:  # pyrefly: ignore[not-a-type]
   """Samples points from the 1D domain [0, 1) using the specified strategy.
 
@@ -89,7 +89,7 @@ def sample_1d_grid(
     *,
     sample_count: int,
     batch_shape: Sequence[int],
-    dtype: jnp.dtype = jnp.float32,
+    dtype: jnp.dtype = jnp.float32,  # pyrefly: ignore[bad-function-definition]
 ) -> FloatArray["*batch_shape S"]:  # pyrefly: ignore[not-a-type]
   """Samples points on a regular grid from the 1D domain [0, 1).
 

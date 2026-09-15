@@ -147,11 +147,11 @@ def _normalize_shape_item(item: _ShapeItem) -> ShapeSpec:
 
 
 Array = ArrayAliasMeta(shape=None, dtype=None)
-f32 = ArrayAliasMeta(shape=None, dtype=jnp.float32)
-ui8 = ArrayAliasMeta(shape=None, dtype=jnp.uint8)
-ui32 = ArrayAliasMeta(shape=None, dtype=jnp.uint32)
-i32 = ArrayAliasMeta(shape=None, dtype=jnp.int32)
-bool_ = ArrayAliasMeta(shape=None, dtype=jnp.bool_)
+f32 = ArrayAliasMeta(shape=None, dtype=jnp.float32)  # pyrefly: ignore[bad-argument-type]
+ui8 = ArrayAliasMeta(shape=None, dtype=jnp.uint8)  # pyrefly: ignore[bad-argument-type]
+ui32 = ArrayAliasMeta(shape=None, dtype=jnp.uint32)  # pyrefly: ignore[bad-argument-type]
+i32 = ArrayAliasMeta(shape=None, dtype=jnp.int32)  # pyrefly: ignore[bad-argument-type]
+bool_ = ArrayAliasMeta(shape=None, dtype=jnp.bool_)  # pyrefly: ignore[bad-argument-type]
 StrArray = ArrayAliasMeta(shape=None, dtype=np.dtype('O'))  # pytype: disable=wrong-arg-types  # typed-numpy
 
 # Random number generator jax key
