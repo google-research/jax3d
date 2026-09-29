@@ -155,7 +155,7 @@ class DataclassField(Generic[_InT, _OutT]):
 def _getattr(
     obj: Dataclass,
     attribute_name: str,
-    default: Union[_OutT, type(dataclasses.MISSING)],
+    default: Union[_OutT, type(dataclasses.MISSING)],  # pyrefly: ignore[invalid-annotation]
 ) -> _OutT:
   """Returns the `obj.attribute_name`."""
   _init_dataclass_state(obj)
@@ -215,7 +215,7 @@ class EnumField(DataclassField[Union[str, _EnumT], _EnumT]):
   def __init__(
       self,
       default: Union[
-          str, None, _EnumT, type(dataclasses.MISSING)
+          str, None, _EnumT, type(dataclasses.MISSING)  # pyrefly: ignore[invalid-annotation]
       ] = dataclasses.MISSING,  # pylint: disable=bad-whitespace
       *,
       enum_cls: Optional[Type[_EnumT]] = None,

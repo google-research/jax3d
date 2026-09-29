@@ -174,7 +174,7 @@ def compute_batch_psnr(
   # Use a constant RNG as randomness is not required
   rng = jax.random.PRNGKey(step)
 
-  inputs = models.ModelInputs(latent_tokens=latents)
+  inputs = models.ModelInputs(latent_tokens=latents)  # pyrefly: ignore[bad-argument-type]
 
   render = models.Model().apply(
       model_parameters, inputs, rays, rng=rng, step=step)

@@ -65,7 +65,7 @@ def image_to_byte_array(image: np.ndarray, image_format: str) -> bytes:
   """
   image = Image.fromarray(np.squeeze(image))
   image_byte_array = io.BytesIO()
-  image.save(image_byte_array, image_format)
+  image.save(image_byte_array, image_format)  # pyrefly: ignore[missing-attribute]
   return image_byte_array.getvalue()
 
 

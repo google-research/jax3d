@@ -891,7 +891,7 @@ def _next_batch_rays_all_scenes(examples: List[types.Batch],
   examples = jax.tree.map(_shuffle_deterministically, examples)
 
   def next_batch_fn(rng):
-    idx = rng.integers(examples.batch_shape[0],
+    idx = rng.integers(examples.batch_shape[0],  # pyrefly: ignore[missing-attribute]
                        size=(batch_size.per_process,))  # pytype: disable=attribute-error
     return jax.tree.map(lambda t: t[idx], examples)
 
