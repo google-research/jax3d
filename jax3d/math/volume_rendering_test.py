@@ -17,6 +17,7 @@
 import jax
 import jax.numpy as jnp
 from jax3d.math import volume_rendering
+import numpy as np
 import pytest
 
 
@@ -211,7 +212,7 @@ def test_volume_rendering(value_type: str, use_background: bool,
       jax.random.uniform(rngs[2], sample_alpha.shape) + epsilon, axis=-1)
   intervals = sample_depth[..., 1:] - sample_depth[..., :-1]
   before_intervals = jnp.concatenate([intervals[..., :1], intervals], axis=-1)
-  after_intervals = jnp.concatenate([intervals, intervals[..., :1]], axis=-1)
+  after_intervals = jnp.concatenate([intervals, intervals[..., -1:]], axis=-1)
   sample_intervals = (before_intervals + after_intervals) / 2
   sample_density = -jnp.log(1.0 - sample_alpha) / sample_intervals
 
@@ -309,6 +310,56 @@ def test_volume_rendering(value_type: str, use_background: bool,
   # Sample intervals should be consistent with the generated inputs
   assert jax.tree_util.tree_all(
       jax.tree.map(allclose, render_result.sample_intervals, sample_intervals))
+
+
+@pytest.mark.parametrize("depths, expected_intervals", [
+    ([0., 1., 4.], [1., 2., 3.]),
+    ([0., 4., 5.], [4., 2.5, 1.]),
+    ([0., 2., 4.], [2., 2., 2.]),
+    ([0., 3.], [3., 3.]),
+])
+@pytest.mark.parametrize("compiled", [False, True])
+@pytest.mark.parametrize("opaque_final_sample", [False, True])
+def test_volume_rendering_terminal_interval(
+    depths, expected_intervals, compiled, opaque_final_sample):
+  # The two rays have different spacings, with explicitly specified intervals.
+  depths = np.asarray(depths, dtype=np.float32)
+  depths = np.stack([depths, 2 * depths + 1])
+  expected_intervals = np.asarray(expected_intervals, dtype=np.float32)
+  expected_intervals = np.stack([expected_intervals, 2 * expected_intervals])
+  density = np.full(depths.shape, 0.25, dtype=np.float32)
+  values = np.arange(depths.size * 2, dtype=np.float32).reshape(
+      depths.shape + (2,)) / 10
+  background = np.array([0.25, 0.75], dtype=np.float32)
+
+  mass = density * expected_intervals
+  transmittance = np.exp(-np.concatenate(
+      [np.zeros_like(mass[..., :1]), np.cumsum(mass[..., :-1], axis=-1)],
+      axis=-1))
+  alpha = -np.expm1(-mass)
+  if opaque_final_sample:
+    alpha[..., -1] = 1
+  weights = alpha * transmittance
+  ray_alpha = weights.sum(axis=-1)
+  ray_values = (values * weights[..., None]).sum(axis=-2)
+  ray_values += (1 - ray_alpha[..., None]) * background
+
+  render = volume_rendering.volume_rendering
+  if compiled:
+    render = jax.jit(render, static_argnames=("opaque_final_sample",))
+  result = render(
+      sample_values=jnp.asarray(values),
+      sample_density=jnp.asarray(density),
+      depths=jnp.asarray(depths),
+      background_values=jnp.asarray(background),
+      opaque_final_sample=opaque_final_sample)
+
+  np.testing.assert_allclose(result.sample_intervals, expected_intervals)
+  np.testing.assert_allclose(result.sample_weights, weights, rtol=1e-6)
+  np.testing.assert_allclose(result.ray_alpha, ray_alpha, rtol=1e-6)
+  np.testing.assert_allclose(result.ray_values, ray_values, rtol=1e-6)
+  np.testing.assert_allclose(
+      result.ray_depth, (weights * depths).sum(axis=-1), rtol=1e-6)
 
 
 @pytest.mark.parametrize("deterministic", [True, False])
