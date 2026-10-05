@@ -96,7 +96,7 @@ def test_log_params_to_disk(tmp_path: pathlib.Path):
   A.a = 1
   B.b = 'hello'
   """)
-  params = Params()  # Ensure C.a is referenced.   # pytype: disable=missing-parameter
+  params = Params()  # Ensure C.a is referenced.
   path = tmp_path / 'args.params.py'
   gin_utils.log_params_to_disk(path, params)
   assert path.read_text() == textwrap.dedent(
@@ -140,7 +140,7 @@ def test_config_field():
           ),
       )"""
   )
-  assert params.to_gin_operative_repr() == textwrap.dedent(  # pytype: disable=attribute-error
+  assert params.to_gin_operative_repr() == textwrap.dedent(  # pyrefly: ignore[missing-attribute]
       """\
       Params(
           model=A(
@@ -169,7 +169,7 @@ def test_config_field():
   )
 
   # Values can be passed directly
-  params = Params(model=C(b=234))   # pytype: disable=missing-parameter
+  params = Params(model=C(b=234))  # pyrefly: ignore[missing-argument]
   assert params.model == C(a=1, b=234, c=3)
 
   # Invalid value
@@ -226,7 +226,7 @@ def test_to_gin_operative_repr():
   C.c2 = 4
   """)
 
-  assert C(a=1).to_gin_operative_repr() == textwrap.dedent(  # pytype: disable=missing-parameter,attribute-error
+  assert C(a=1).to_gin_operative_repr() == textwrap.dedent(  # pyrefly: ignore[missing-argument, missing-attribute]
       """\
       C(
           a=1,
@@ -258,7 +258,7 @@ def test_scope():
   assert params.model.a == 10
   assert params.model.b == 20
   assert params.model.c == 3
-  assert params.to_gin_operative_repr() == textwrap.dedent(  # pytype: disable=attribute-error
+  assert params.to_gin_operative_repr() == textwrap.dedent(  # pyrefly: ignore[missing-attribute]
       """\
       Params(
           model=C(
@@ -286,7 +286,7 @@ def test_scope():
   assert params.x.c2 == 2
   assert params.y.a == 100
   assert params.y.b == 200
-  assert params.to_gin_operative_repr() == textwrap.dedent(  # pytype: disable=attribute-error
+  assert params.to_gin_operative_repr() == textwrap.dedent(  # pyrefly: ignore[missing-attribute]
       """\
       ChildParams(
           model=C(
@@ -363,7 +363,7 @@ def test_scope_nested():
           ),
       )"""
   )
-  assert params.to_gin_operative_repr() == textwrap.dedent(  # pytype: disable=attribute-error
+  assert params.to_gin_operative_repr() == textwrap.dedent(  # pyrefly: ignore[missing-attribute]
       """\
       NestedParams(
           option0=NestedParamsOption(
@@ -598,4 +598,4 @@ def test_gin_scope_order(config):
   with gin.config_scope('root'):
     with gin.config_scope('parent'):
       with gin.config_scope('child'):
-        assert gin_utils._get_bindings('fn_in_scope') == {'x': 'expected'}  # pytype: disable=wrong-arg-types
+        assert gin_utils._get_bindings('fn_in_scope') == {'x': 'expected'}  # pyrefly: ignore[bad-argument-type]

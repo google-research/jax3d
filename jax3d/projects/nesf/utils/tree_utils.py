@@ -37,7 +37,7 @@ def parallel_map(
     *trees: Tree[_Tin],  # _Tin0, _Tin1,...
     max_workers: int = 32,
     report_progress: bool = False,
-) -> Tree[_Tout]:  # pytype: disable=invalid-annotation
+) -> Tree[_Tout]:
   """Same as `jax.tree.map` but apply map_fn in parallel.
 
   Args:

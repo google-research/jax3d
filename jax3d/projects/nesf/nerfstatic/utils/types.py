@@ -25,7 +25,7 @@ from jax3d.projects.nesf.utils.typing import Array, StrArray, f32, i32  # pylint
 import numpy as np
 
 # Nested dictionary of additional data
-AuxiliaryDict = Dict[str, Union[Array[...], 'AuxiliaryDict']]  # pytype: disable=not-supported-yet
+AuxiliaryDict = Dict[str, Union[Array[...], 'AuxiliaryDict']]  # pyrefly: ignore[not-a-type]
 
 
 @chex.dataclass
@@ -311,7 +311,7 @@ class LossTerm:
   def value(self) -> float:
     result = jnp.mean(self.weight * self.loss)
     assert not result.shape, result.shape
-    return result  # pytype: disable=bad-return-type  # jnp-type
+    return result  # pyrefly: ignore[bad-return]
 
 
 @chex.dataclass
@@ -344,7 +344,7 @@ class SemanticModelStats():
     value1 = jnp.array(self.semantic_loss.value)
     value2 = jnp.array(self.smoothness_regularization_loss.value)
     assert (not value1.shape) and (not value2.shape)
-    return value1 + value2  # pytype: disable=bad-return-type  # jnp-type
+    return value1 + value2  # pyrefly: ignore[bad-return]
 
 
 @chex.dataclass

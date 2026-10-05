@@ -28,7 +28,7 @@ def test_shape_utils():
 
   ones = [
       # tf.data.Dataset
-      tf.data.Dataset.from_generator(lambda: (), output_signature={  # pyrefly: ignore[bad-argument-type]
+      tf.data.Dataset.from_generator(lambda: (), output_signature={
           'b': tf.TensorSpec((2,), dtype=tf.int32),
           'c': tf.TensorSpec((3,), dtype=tf.float32),
       }),
@@ -113,7 +113,7 @@ def test_standardized():
   with pytest.raises(TypeError, match='Unknown array-like type'):
     jax3d.types_like(tree_struct)
 
-  assert jax3d.types_like(tree_struct, skip_non_arrays=True) == {  # pytype: disable=wrong-keyword-args
+  assert jax3d.types_like(tree_struct, skip_non_arrays=True) == {  # pyrefly: ignore[unexpected-keyword]
       'a': i32[2, 1],
       'b': 'some non-array value',
   }

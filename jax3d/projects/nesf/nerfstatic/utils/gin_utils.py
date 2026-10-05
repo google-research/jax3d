@@ -119,7 +119,7 @@ def dataclass_configurable(cls: _ClsT) -> _ClsT:
   # This allow `ConfigField(DatasetParams)` to initialize any child (e.g
   # `KlevrParams`)
   # Params(dataset='KlevrParams')  # params.dataset is a KlevrParams() instance
-  cls._CONFIG_SUBCLASS = {cls.__name__: cls}  # pylint: disable=protected-access  # pyrefly: ignore[bad-argument-count, bad-argument-type, missing-attribute]
+  cls._CONFIG_SUBCLASS = {cls.__name__: cls}  # pylint: disable=protected-access  # pyrefly: ignore[missing-attribute]
   cls.__init_subclass__ = classmethod(__init_subclass__)  # pyrefly: ignore[bad-assignment]
 
   # Apply gin.configurable first before wrapping the __init__ (as gin also
@@ -300,7 +300,7 @@ class ConfigField(j3d.utils.DataclassField[_Cls, _Cls]):
     self._required = required
     super().__init__()  # pyrefly: ignore[bad-argument-type]
 
-  def _default(self) -> str:  # pytype: disable=signature-mismatch
+  def _default(self) -> str:  # pyrefly: ignore[bad-override]
     # Returns as string so the construction happens in `_validate` (with
     # correct scope and checks).
     if self._required:
@@ -395,7 +395,7 @@ def _add_parent_kwargs(init_fn: Callable[..., None]) -> Callable[..., None]:
       return init_fn(self, **init_kwargs)
     except TypeError as e:  # Bad arguments
       lines = [
-          f'    {cls.__qualname__}: {list(kwargs)}'  # pytype: disable=attribute-error  # py39-upgrade
+          f'    {cls.__qualname__}: {list(kwargs)}'  # pyrefly: ignore[missing-attribute]
           for cls, kwargs in cls_to_kwargs.items()
       ]
       lines = '\n'.join(lines)
@@ -413,7 +413,7 @@ def _assert_bindings_defined_once(
 ) -> None:
   """Validate that bindings are only extracted once."""
   common_kwargs = {
-      k: common_classes for k, common_classes in common_kwargs.items()  # pytype: disable=annotation-type-mismatch
+      k: common_classes for k, common_classes in common_kwargs.items()
       if len(common_classes) != 1
   }
   if not common_kwargs:

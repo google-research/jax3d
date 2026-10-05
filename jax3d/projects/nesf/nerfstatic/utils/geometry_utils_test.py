@@ -36,7 +36,7 @@ def test_scale():
   rays3 = transform.backward(rays2)
 
   jax.tree.map(np.testing.assert_allclose, rays, rays3)
-  np.testing.assert_allclose(rays2.origin[0, 1], 2)  # pytype: disable=attribute-error
+  np.testing.assert_allclose(rays2.origin[0, 1], 2)  # pyrefly: ignore[missing-attribute]
 
 
 def test_rotate():
@@ -47,7 +47,7 @@ def test_rotate():
   rays3 = transform.backward(rays2)
 
   jax.tree.map(np.testing.assert_allclose, rays, rays3)
-  np.testing.assert_allclose(rays2.origin[0], np.array([-1, 1, 0]))  # pytype: disable=attribute-error
+  np.testing.assert_allclose(rays2.origin[0], np.array([-1, 1, 0]))  # pyrefly: ignore[missing-attribute]
   np.testing.assert_allclose(rays2.direction[0],
                              np.array([1/np.sqrt(2), 1/np.sqrt(2), 0]))
 
@@ -60,7 +60,7 @@ def test_translate():
   rays3 = transform.backward(rays2)
 
   jax.tree.map(np.testing.assert_allclose, rays, rays3)
-  np.testing.assert_allclose(rays2.origin[0], np.array([2, 3, 3]))  # pytype: disable=attribute-error
+  np.testing.assert_allclose(rays2.origin[0], np.array([2, 3, 3]))  # pyrefly: ignore[missing-attribute]
   np.testing.assert_allclose(rays2.direction[0],
                              np.array([1/np.sqrt(2), -1/np.sqrt(2), 0]))
 
@@ -77,7 +77,7 @@ def test_compose():
   rays3 = transform.backward(rays2)
 
   jax.tree.map(np.testing.assert_allclose, rays, rays3)
-  np.testing.assert_allclose(rays2.origin[0], np.zeros(3))  # pytype: disable=attribute-error
+  np.testing.assert_allclose(rays2.origin[0], np.zeros(3))  # pyrefly: ignore[missing-attribute]
   np.testing.assert_allclose(rays2.direction[0],
                              np.array([2/np.sqrt(2), 1/np.sqrt(2), 0]))
 
@@ -94,7 +94,7 @@ def test_inverse():
   rays3 = transform.backward(rays2)
 
   jax.tree.map(np.testing.assert_allclose, rays, rays3)
-  np.testing.assert_allclose(rays2.origin[0], np.array([1, 0.5, -3]))  # pytype: disable=attribute-error
+  np.testing.assert_allclose(rays2.origin[0], np.array([1, 0.5, -3]))  # pyrefly: ignore[missing-attribute]
   np.testing.assert_allclose(rays2.direction[0],
                              np.array([1/np.sqrt(2), -1/np.sqrt(2), 0]))
 

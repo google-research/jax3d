@@ -26,7 +26,7 @@ from jax3d.projects.nesf.utils import np_utils
 from jax3d.projects.nesf.utils.typing import Array, Tensor, Tree  # pylint: disable=g-multiple-import
 import numpy as np
 import tensorflow as tf
-from typing_extensions import Final  # pylint: disable=g-multiple-import  # pytype: disable=not-supported-yet
+from typing_extensions import Final  # pylint: disable=g-multiple-import
 
 
 _ArrayInput = Union[
@@ -55,7 +55,7 @@ _UNKNOWN_TYPE: Final = _UnknownType
 
 def _tree_map(
     fn: Callable[[_T1], _T2],
-) -> Callable[[Tree[_T1]], Tree[_T2]]:  # pytype: disable=invalid-annotation
+) -> Callable[[Tree[_T1]], Tree[_T2]]:
   """Decorator which wraps the function inside `jax.tree.map`.
 
   Additionally, it also recurses into `tf.data.Dataset` (into the inner

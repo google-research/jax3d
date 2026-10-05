@@ -41,7 +41,7 @@ FLAGS = flags.FLAGS
 class TrainParams:
   """Train Params."""
   # TODO(svora): Move train_dir to ConfigParams / alternate configurable class.
-  train_dir: j3d.Path = j3d.utils.PathField()  # pytype: disable=annotation-type-mismatch
+  train_dir: j3d.Path = j3d.utils.PathField()  # pyrefly: ignore[bad-argument-type, bad-assignment]
   lr_init: float = 5e-4  # The initial learning rate.
   lr_final: float = 1e-5  # The final learning rate.
   lr_delay_steps: int = 0  # The number of steps at the beginning of training
@@ -183,7 +183,7 @@ def root_config_from_flags() -> ConfigParams:
   gin_utils.validate_scope_names()
   params = ConfigParams()
   logging.info(
-      f"parsed the following params:\n{params.to_gin_operative_repr()}"  # pytype: disable=attribute-error
+      f"parsed the following params:\n{params.to_gin_operative_repr()}"  # pyrefly: ignore[missing-attribute]
   )
   return params
 

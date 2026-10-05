@@ -191,12 +191,12 @@ class cached_property(property):  # pylint: disable=invalid-name
     # See https://docs.python.org/3/howto/descriptor.html#properties
     if obj is None:
       return self
-    if self.fget is None:  # pytype: disable=attribute-error
+    if self.fget is None:
       raise AttributeError('Unreadable attribute.')
-    attr = '__cached_' + self.fget.__name__  # pytype: disable=attribute-error
+    attr = '__cached_' + self.fget.__name__
     cached = getattr(obj, attr, None)
     if cached is None:
-      cached = self.fget(obj)  # pytype: disable=attribute-error
+      cached = self.fget(obj)
       # Use `object.__setattr__` for compatibility with frozen dataclasses
       object.__setattr__(obj, attr, cached)
     return cached

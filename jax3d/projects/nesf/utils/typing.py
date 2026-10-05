@@ -85,7 +85,7 @@ class ArrayAliasMeta(type):
       shape: Optional[_ShapeSpecInput],
       dtype: Optional[Type[DType]],
   ):
-    dtype = np.dtype(dtype) if dtype else None  # pyrefly: ignore[bad-assignment, internal-error]
+    dtype = np.dtype(dtype) if dtype else None  # pyrefly: ignore[bad-assignment]
     # Normalize to str
     if shape is None:
       shape = '...'
@@ -100,10 +100,10 @@ class ArrayAliasMeta(type):
 
   def __init__(cls, shape: Optional[ShapeSpec], dtype: Optional[Type[DType]]):
     del shape, dtype
-    super().__init__(cls, cls.__name__, (cls,), {})  # pytype: disable=wrong-arg-count
+    super().__init__(cls, cls.__name__, (cls,), {})  # pyrefly: ignore[no-matching-overload]
 
   def __getitem__(cls, shape: _ShapeSpecInput) -> 'ArrayAliasMeta':
-    return ArrayAliasMeta(shape=shape, dtype=cls.dtype)  # pytype: disable=wrong-arg-types  # numpy-scalars
+    return ArrayAliasMeta(shape=shape, dtype=cls.dtype)  # pyrefly: ignore[bad-argument-type]
 
   def __eq__(cls, other: 'ArrayAliasMeta') -> bool:  # pyrefly: ignore[bad-override]
     return (
@@ -152,7 +152,7 @@ ui8 = ArrayAliasMeta(shape=None, dtype=jnp.uint8)  # pyrefly: ignore[bad-argumen
 ui32 = ArrayAliasMeta(shape=None, dtype=jnp.uint32)  # pyrefly: ignore[bad-argument-type]
 i32 = ArrayAliasMeta(shape=None, dtype=jnp.int32)  # pyrefly: ignore[bad-argument-type]
 bool_ = ArrayAliasMeta(shape=None, dtype=jnp.bool_)  # pyrefly: ignore[bad-argument-type]
-StrArray = ArrayAliasMeta(shape=None, dtype=np.dtype('O'))  # pytype: disable=wrong-arg-types  # typed-numpy
+StrArray = ArrayAliasMeta(shape=None, dtype=np.dtype('O'))  # pyrefly: ignore[bad-argument-type]
 
 # Random number generator jax key
 PRNGKey = ui32[2]

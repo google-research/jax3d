@@ -94,7 +94,7 @@ def interp(
   to = tuple(np.array(v) for v in to)  # pyrefly: ignore[bad-assignment]
 
   # `a` can be scalar or array of shape=(x.shape[-1],), same for `b`
-  a, b = _linear_interp_factors(*from_, *to)  # pytype: disable=wrong-arg-types
+  a, b = _linear_interp_factors(*from_, *to)
   return  a * x + b
 
 
