@@ -53,7 +53,7 @@ class ModelParams:
   rgb_activation: str = "sigmoid"  # activation function used to produce RGB.
   sigma_activation: str = "relu"  # activation function used to produce density.
   background: types.BackgroundType = jax3d.utils.EnumField(  # pyrefly: ignore[bad-assignment]
-      types.BackgroundType.WHITE    # pytype: disable=annotation-type-mismatch
+      types.BackgroundType.WHITE
   )
   noise_std: float = 0.0  # Noise to add to sigma during training.
   # Semantic Model Params.
@@ -64,7 +64,7 @@ class ModelParams:
   num_semantic_classes: int = 0  # number of semantic classes.
 
   interpolation_type: types.InterpolationType = jax3d.utils.EnumField(  # pyrefly: ignore[bad-assignment]
-      types.InterpolationType.TRILINEAR)  # pytype: disable=annotation-type-mismatch
+      types.InterpolationType.TRILINEAR)
 
   grid_features: int = 32  # Number of features stored in the latent grid.
                            # This setting is only used for --model=psf and for

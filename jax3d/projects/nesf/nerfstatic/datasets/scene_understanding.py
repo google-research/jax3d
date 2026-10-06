@@ -218,7 +218,7 @@ def _make_view(
   Returns:
     types.Views instance representing the same content as `ex_cam`.
   """
-  *batch_shape, _ = ex_cam['color_image'].shape  # pytype: disable=attribute-error
+  *batch_shape, _ = ex_cam['color_image'].shape
 
   # Create dummy arrays for values in the Batch that aren't defined. Downstream
   # code is not capable of handling "None" values.

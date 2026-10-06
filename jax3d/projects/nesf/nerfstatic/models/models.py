@@ -97,7 +97,7 @@ def get_model(rng: jax3d.RandomState,
   placeholder_batch = jax3d.zeros_like(
       types.Batch.as_types(target_batch_shape=(1, 1),
                            enable_base_radii=args.enable_mipnerf))  # B N
-  return model_dict[type(args)](rng, num_scenes, placeholder_batch, args)  # pytype: disable=wrong-arg-types
+  return model_dict[type(args)](rng, num_scenes, placeholder_batch, args)  # pyrefly: ignore[bad-argument-type, bad-index]
 
 
 def create_semantic_model(

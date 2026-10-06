@@ -154,7 +154,7 @@ def make_examples(
 @contextlib.contextmanager
 def mock_sunds(examples: types.Batch):
   """Mock sunds to returns the dummy examples."""
-  ds = tf.data.Dataset.from_tensor_slices(examples)  # pyrefly: ignore[bad-argument-type]
+  ds = tf.data.Dataset.from_tensor_slices(examples)
 
   def mock_streaming_make_examples_fn(**kwargs):
     del kwargs

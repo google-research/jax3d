@@ -93,7 +93,7 @@ class BatchSizeField(j3d.utils.DataclassField[int, BatchSize]):
     self._total = total
     super().__init__()  # pyrefly: ignore[bad-argument-type]
 
-  def _default(self) -> int:  # pytype: disable=signature-mismatch
+  def _default(self) -> int:  # pyrefly: ignore[bad-override]
     # Lazy construct the field to avoid `jax` calls at import time, before
     # `absl.main` is called.
     return self._total
@@ -154,9 +154,9 @@ class DatasetParams:
     pseudo_semantic_labels_path: If set, loads the semantic labels for training
       from the given path.
   """
-  data_dir: j3d.Path = j3d.utils.PathField()  # pytype: disable=annotation-type-mismatch
+  data_dir: j3d.Path = j3d.utils.PathField()  # pyrefly: ignore[bad-argument-type, bad-assignment]
   dataset: str = 'klevr'
-  batch_size: BatchSize = BatchSizeField(4096)  # pytype: disable=annotation-type-mismatch
+  batch_size: BatchSize = BatchSizeField(4096)  # pyrefly: ignore[bad-assignment]
 
   specific_params: Optional[gin_utils.ConfigurableDataclass] = None
 
@@ -719,7 +719,7 @@ def _make_in_memory_dataset(
   gen_batch = _gen_batch_unconditional(**gen_batch_kwargs)  # pyrefly: ignore[bad-argument-type]
 
   ds = tf.data.Dataset.from_generator(
-      gen_batch,  # pyrefly: ignore[bad-argument-type]
+      gen_batch,
       output_signature=j3d.tensor_spec_like(next(gen_batch())),
   )
   if example_type == ExampleType.RAY:
@@ -892,7 +892,7 @@ def _next_batch_rays_all_scenes(examples: List[types.Batch],
 
   def next_batch_fn(rng):
     idx = rng.integers(examples.batch_shape[0],  # pyrefly: ignore[missing-attribute]
-                       size=(batch_size.per_process,))  # pytype: disable=attribute-error
+                       size=(batch_size.per_process,))
     return jax.tree.map(lambda t: t[idx], examples)
 
   return next_batch_fn
@@ -953,7 +953,7 @@ def to_ds_state_int(state: DsState) -> DsState:
 
 def _valid_ray_dir(ray_dir: tf.Tensor) -> tf.Tensor:
   """Return a boolean mask which encodes whether the ray_dir is valid."""
-  return tf.reduce_mean(abs(ray_dir), axis=-1) > 0  # pyrefly: ignore[bad-argument-type]
+  return tf.reduce_mean(abs(ray_dir), axis=-1) > 0
 
 
 def _compute_base_radii(rays: types.Rays) -> tf.Tensor:
