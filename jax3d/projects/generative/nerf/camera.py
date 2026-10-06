@@ -144,7 +144,7 @@ def _radial_and_tangential_undistort(
   return x, y
 
 
-def make_camera(  # pytype: disable=annotation-type-mismatch  # jax-ndarray
+def make_camera(
     orientation: jnp.ndarray,
     position: jnp.ndarray,
     focal_length: Union[jnp.ndarray, float],
@@ -267,9 +267,9 @@ def pixels_to_points(camera, pixels: jnp.ndarray, depth: jnp.ndarray):
     [A1, ..., An, 3] tensor containing 3d world space points.
   """
   rays_through_pixels = pixels_to_rays(camera, pixels)
-  cosa = jnp.matmul(rays_through_pixels, camera["orientation"][2, :])  # pytype: disable=wrong-arg-types  # jnp-type
+  cosa = jnp.matmul(rays_through_pixels, camera["orientation"][2, :])  # pyrefly: ignore[bad-argument-type]
   points = (
-      rays_through_pixels * depth[..., jnp.newaxis] / cosa[..., jnp.newaxis] +  # pytype: disable=unsupported-operands  # jax-operator-types
+      rays_through_pixels * depth[..., jnp.newaxis] / cosa[..., jnp.newaxis] +  # pyrefly: ignore[unsupported-operation]
       camera["position"])
   return points
 
@@ -439,4 +439,4 @@ def generate_pixel_grid(height: int, width: int) -> np.ndarray:
 
   # Offset coordinates by 0.5 to center sample points within each pixel.
   pixel_coordinates = pixel_indices.astype(jnp.float32) + 0.5
-  return pixel_coordinates  # pytype: disable=bad-return-type  # jnp-type
+  return pixel_coordinates  # pyrefly: ignore[bad-return]

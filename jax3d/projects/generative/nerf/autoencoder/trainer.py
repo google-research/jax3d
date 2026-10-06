@@ -168,7 +168,7 @@ class TransformerTrainer(trainer.Trainer):
     (new_model_parameters, new_optimizer_state,
      loss_terms) = scratch["parallel_train_step"](
          train_state.model_parameters, train_state.optimizer_state,
-         inputs, current_rngs, jax_utils.replicate(train_state.step))  # pytype: disable=wrong-arg-count  # trace-all-classes
+         inputs, current_rngs, jax_utils.replicate(train_state.step))
 
     loss_terms = jax.tree.map(np.array, loss_terms)
     loss_terms["param_count"] = scratch["param_count"]
