@@ -247,7 +247,7 @@ def volume_rendering(
 
   # Assign each sample an interval equal to half the intervals before and after
   before_intervals = jnp.concatenate([intervals[..., :1], intervals], axis=-1)
-  after_intervals = jnp.concatenate([intervals, intervals[..., :1]], axis=-1)
+  after_intervals = jnp.concatenate([intervals, intervals[..., -1:]], axis=-1)
   sample_intervals = (before_intervals + after_intervals) / 2
 
   # Compute the "mass" in each interval as the product of density and length
