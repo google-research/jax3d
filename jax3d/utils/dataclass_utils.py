@@ -117,7 +117,7 @@ class DataclassField(Generic[_InT, _OutT]):
             f"'{self._attribute_name}'"
         )
     # Called as `my_dataclass.my_path`
-    return _getattr(  # pyrefly: ignore[bad-return]
+    return _getattr(
         obj,
         self._attribute_name,  # pyrefly: ignore[bad-argument-type]
         dataclasses.MISSING if self._is_missing else self._default_value
@@ -234,14 +234,14 @@ class EnumField(DataclassField[Union[str, _EnumT], _EnumT]):
         enum_cls = type(default)  # pyrefly: ignore[bad-assignment]
       elif not isinstance(default, enum_cls):
         raise ValueError(f'Conflicting enum types: {default} is not {enum_cls}')
-    self._enum_cls: Type[_EnumT] = enum_cls  # pytype: disable=annotation-type-mismatch
+    self._enum_cls: Type[_EnumT] = enum_cls  # pyrefly: ignore[bad-assignment]
     self._str2enum = {x.name.lower(): x for x in self._enum_cls}
     super().__init__(default, **kwargs)  # pyrefly: ignore[bad-argument-type]
 
-  def _validate(self, value: Union[str, None, _EnumT]) -> Optional[_EnumT]:  # pytype: disable=signature-mismatch
+  def _validate(self, value: Union[str, None, _EnumT]) -> Optional[_EnumT]:  # pyrefly: ignore[bad-override]
     """Validate the value."""
     if isinstance(value, str):
-      value = value.lower()  # pytype: disable=attribute-error
+      value = value.lower()
       if value not in self._str2enum:
         raise ValueError(
             f'Enum should be one of {list(self._str2enum.keys())}. '
@@ -249,7 +249,7 @@ class EnumField(DataclassField[Union[str, _EnumT], _EnumT]):
         )
       return self._str2enum[value]
     elif isinstance(value, self._enum_cls):
-      return value  # pytype: disable=bad-return-type
+      return value
     elif value is None:
       return None
     else:

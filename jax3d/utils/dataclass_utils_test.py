@@ -36,34 +36,32 @@ def test_enum_field():
 
   @dataclasses.dataclass
   class A:
-    # pytype: disable=annotation-type-mismatch
-    enum_required: MyEnum = j3d.utils.EnumField(enum_cls=MyEnum)
-    enum_optional: Optional[MyEnum] = j3d.utils.EnumField(None, enum_cls=MyEnum)
-    enum_optional2: MyEnum = j3d.utils.EnumField('default', enum_cls=MyEnum)
-    enum_infered: MyEnum = j3d.utils.EnumField(MyEnum.DEFAULT)
-    # pytype: enable=annotation-type-mismatch
+    enum_required: MyEnum = j3d.utils.EnumField(enum_cls=MyEnum)  # pyrefly: ignore[bad-assignment]
+    enum_optional: Optional[MyEnum] = j3d.utils.EnumField(None, enum_cls=MyEnum)  # pyrefly: ignore[bad-assignment]
+    enum_optional2: MyEnum = j3d.utils.EnumField('default', enum_cls=MyEnum)  # pyrefly: ignore[bad-assignment]
+    enum_infered: MyEnum = j3d.utils.EnumField(MyEnum.DEFAULT)  # pyrefly: ignore[bad-assignment]
 
-  a = A(enum_required='some_value')  # pytype: disable=wrong-arg-types
+  a = A(enum_required='some_value')  # pyrefly: ignore[bad-argument-type]
   assert a.enum_required is MyEnum.SOME_VALUE
   assert a.enum_optional is None
   assert a.enum_optional2 is MyEnum.DEFAULT
   assert a.enum_infered is MyEnum.DEFAULT
 
   # Works on lowercase, uppercase str, enum.Enum
-  a.enum_optional = 'some_value'  # pytype: disable=annotation-type-mismatch
+  a.enum_optional = 'some_value'  # pyrefly: ignore[bad-assignment]
   assert a.enum_optional is MyEnum.SOME_VALUE
 
-  a.enum_optional = 'DEFAULT'  # pytype: disable=annotation-type-mismatch
+  a.enum_optional = 'DEFAULT'  # pyrefly: ignore[bad-assignment]
   assert a.enum_optional is MyEnum.DEFAULT
 
   a.enum_optional = MyEnum.SOME_VALUE
   assert a.enum_optional is MyEnum.SOME_VALUE
 
   with pytest.raises(ValueError, match='Enum should be one of'):
-    a.enum_optional = 'invalid_value'  # pytype: disable=annotation-type-mismatch
+    a.enum_optional = 'invalid_value'  # pyrefly: ignore[bad-assignment]
 
   with pytest.raises(TypeError, match='Invalid input'):
-    a.enum_optional = MyOtherEnum.DEFAULT  # pytype: disable=annotation-type-mismatch
+    a.enum_optional = MyOtherEnum.DEFAULT  # pyrefly: ignore[bad-assignment]
 
 
 class MyField(j3d.utils.DataclassField):
@@ -260,7 +258,7 @@ def test_default_factory(
       eq=eq,
       order=order,
       unsafe_hash=unsafe_hash,
-      frozen=frozen,  # pytype: disable=not-supported-yet
+      frozen=frozen,
   )
 
   @make_dataclass
