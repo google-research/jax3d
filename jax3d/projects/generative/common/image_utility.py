@@ -63,7 +63,7 @@ def image_to_byte_array(image: np.ndarray, image_format: str) -> bytes:
     image: Image array.
     image_format: Image format string. Valid values are 'PNG' and 'JPEG'.
   """
-  image = Image.fromarray(np.squeeze(image))
+  image = Image.fromarray(np.squeeze(image))  # pyrefly: ignore[bad-assignment]
   image_byte_array = io.BytesIO()
   image.save(image_byte_array, image_format)  # pyrefly: ignore[missing-attribute]
   return image_byte_array.getvalue()
