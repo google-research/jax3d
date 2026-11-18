@@ -452,6 +452,7 @@ def save_img(img, path: PathLike):
     else:
       img = np.array(img)
     assert np.amax(img) <= 255, f"Saved image has max {np.amax(img)} > 255."
+    img = np.asarray(img, dtype=np.uint8)
     Image.fromarray(img).save(imgout, format="PNG")
 
 
