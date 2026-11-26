@@ -31,7 +31,7 @@ from jax3d.projects.nesf.nerfstatic.utils import semantic_utils
 from jax3d.projects.nesf.nerfstatic.utils import stopwatch_utils
 from jax3d.projects.nesf.nerfstatic.utils import types
 from jax3d.projects.nesf.utils.typing import PRNGKey, Tree, f32  # pylint: disable=g-multiple-import
-from matplotlib import cm
+import matplotlib
 import mediapy
 import numpy as np
 
@@ -88,7 +88,7 @@ def colorize_depth(depth):
   depth = jnp.where(depth < 0, 0., depth)
   depth = jnp.where(depth >= 1.0, 1.0, depth)
   print(depth.min(), depth.max())
-  return cm.get_cmap("turbo")(depth)[..., 0:3]
+  return matplotlib.colormaps.get_cmap("turbo")(depth)[..., 0:3]
 
 
 def disparity_to_depth(disparity: f32["... 1"],  # pyrefly: ignore[not-a-type]
